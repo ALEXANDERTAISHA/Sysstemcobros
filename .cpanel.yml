@@ -1,0 +1,10 @@
+---
+deployment:
+  tasks:
+    - export APPDIR=/home/systemco/sysstemcobros
+    - /bin/echo "Iniciando deploy en ${APPDIR}"
+    - if [ -x /usr/local/bin/php ]; then /usr/local/bin/php ${APPDIR}/artisan optimize:clear; elif [ -x /usr/bin/php ]; then /usr/bin/php ${APPDIR}/artisan optimize:clear; else /bin/echo "PHP no encontrado en ruta esperada"; fi
+    - if [ -x /usr/local/bin/php ]; then /usr/local/bin/php ${APPDIR}/artisan config:cache; elif [ -x /usr/bin/php ]; then /usr/bin/php ${APPDIR}/artisan config:cache; fi
+    - if [ -x /usr/local/bin/php ]; then /usr/local/bin/php ${APPDIR}/artisan route:cache; elif [ -x /usr/bin/php ]; then /usr/bin/php ${APPDIR}/artisan route:cache; fi
+    - if [ -x /usr/local/bin/php ]; then /usr/local/bin/php ${APPDIR}/artisan view:cache; elif [ -x /usr/bin/php ]; then /usr/bin/php ${APPDIR}/artisan view:cache; fi
+    - /bin/echo "Deploy finalizado"
