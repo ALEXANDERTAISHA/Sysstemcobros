@@ -23,10 +23,12 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:120',
             'email' => 'required|email|max:120|unique:users,email',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:6|confirmed',
             'role' => 'required|in:super_admin,admin,operator,viewer',
             'branch_id' => 'nullable|exists:branches,id',
             'is_active' => 'nullable|boolean',
+        ], [
+            'password.confirmed' => 'La confirmación de contraseña no coincide.',
         ]);
 
         $data['password'] = Hash::make($data['password']);
@@ -49,6 +51,7 @@ class UserController extends Controller
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
+        $passwordChanged = !empty($data['password']);
 
         if (empty($data['password'])) {
             unset($data['password']);
@@ -68,7 +71,12 @@ class UserController extends Controller
 
         $user->update($data);
 
-        return back()->with('success', 'Usuario actualizado correctamente.');
+        $message = 'Usuario actualizado correctamente.';
+        if ($passwordChanged) {
+            $message .= ' La contraseña fue cambiada.';
+        }
+
+        return back()->with('success', $message);
     }
 
     public function destroy(Request $request, User $user)

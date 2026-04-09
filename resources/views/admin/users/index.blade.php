@@ -63,6 +63,28 @@
                             @enderror
                         </div>
                         <div class="form-group">
+                            <label>Confirmar clave *</label>
+                            <div class="input-group">
+                                <input type="password"
+                                    name="password_confirmation"
+                                    id="new_user_password_confirmation"
+                                    autocomplete="new-password"
+                                    class="form-control @error('password_confirmation') is-invalid @enderror"
+                                    required>
+                                <div class="input-group-append">
+                                    <button type="button"
+                                        class="btn btn-outline-secondary js-toggle-password"
+                                        data-target="new_user_password_confirmation"
+                                        title="Mostrar/Ocultar clave">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            @error('password_confirmation')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
                             <label>Rol *</label>
                             <select name="role" class="form-control @error('role') is-invalid @enderror" required>
                                 <option value="operator" {{ old('role', 'operator') === 'operator' ? 'selected' : '' }}>Operador</option>
