@@ -46,6 +46,7 @@
                                 <input type="password"
                                     name="password"
                                     id="new_user_password"
+                                    autocomplete="new-password"
                                     class="form-control @error('password') is-invalid @enderror"
                                     required>
                                 <div class="input-group-append">
@@ -157,6 +158,7 @@
                                                         name="password"
                                                         id="password_update_{{ $user->id }}"
                                                         placeholder="Nueva clave"
+                                                        autocomplete="new-password"
                                                         class="form-control form-control-sm"
                                                         form="user-update-form-{{ $user->id }}">
                                                     <div class="input-group-append">
