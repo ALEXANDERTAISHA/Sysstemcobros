@@ -74,16 +74,34 @@
                     <div class="card-body">
                         <div class="form-group">
                             <label>Contraseña actual</label>
-                            <input type="password" name="current_password"
-                                class="form-control @error('current_password') is-invalid @enderror" required>
+                            <div class="input-group">
+                                <input type="password" name="current_password" id="current_password"
+                                    autocomplete="current-password"
+                                    class="form-control @error('current_password') is-invalid @enderror" required>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary js-toggle-password"
+                                        data-target="current_password" title="Mostrar/Ocultar contraseña">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
                             @error('current_password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label>Nueva contraseña</label>
-                            <input type="password" name="password"
-                                class="form-control @error('password') is-invalid @enderror" required>
+                            <div class="input-group">
+                                <input type="password" name="password" id="new_password"
+                                    autocomplete="new-password"
+                                    class="form-control @error('password') is-invalid @enderror" required>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary js-toggle-password"
+                                        data-target="new_password" title="Mostrar/Ocultar contraseña">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
                             @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -91,7 +109,20 @@
                         </div>
                         <div class="form-group mb-0">
                             <label>Confirmar nueva contraseña</label>
-                            <input type="password" name="password_confirmation" class="form-control" required>
+                            <div class="input-group">
+                                <input type="password" name="password_confirmation" id="password_confirmation"
+                                    autocomplete="new-password"
+                                    class="form-control @error('password_confirmation') is-invalid @enderror" required>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary js-toggle-password"
+                                        data-target="password_confirmation" title="Mostrar/Ocultar contraseña">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            @error('password_confirmation')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="card-footer">
@@ -176,6 +207,21 @@
                     if (this.files.length > 0) {
                         label.textContent = this.files[0].name;
                     }
+                });
+            });
+
+            document.querySelectorAll('.js-toggle-password').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const targetId = this.dataset.target;
+                    const input = document.getElementById(targetId);
+
+                    if (!input) {
+                        return;
+                    }
+
+                    const isPassword = input.type === 'password';
+                    input.type = isPassword ? 'text' : 'password';
+                    this.innerHTML = isPassword ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
                 });
             });
 

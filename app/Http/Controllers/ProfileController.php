@@ -59,7 +59,10 @@ class ProfileController extends Controller
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ], [
+            'current_password.required' => 'Debes ingresar tu contraseña actual.',
             'current_password.current_password' => 'La contraseña actual no es correcta.',
+            'password.required' => 'Debes ingresar una nueva contraseña.',
+            'password.confirmed' => 'La confirmación de la nueva contraseña no coincide.',
         ]);
 
         $user->password = Hash::make($data['password']);
