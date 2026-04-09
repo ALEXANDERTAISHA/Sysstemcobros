@@ -46,7 +46,7 @@ class SendOverdueDebtReminders extends Command
                 continue;
             }
 
-            $totalDebt = $clientCredits->sum(fn ($credit) => (float) $credit->balance);
+            $totalDebt = $clientCredits->sum(fn($credit) => (float) $credit->balance);
             $creditsCount = $clientCredits->count();
             $oldestDueDate = $clientCredits->min('due_date');
 

@@ -54,7 +54,7 @@
                     <tr>
                         <th>Fecha</th>
                         <th>Empresa</th>
-                        <th>Remitente</th>
+                        <th>Sucursal (Remitente)</th>
                         <th>Destinatario</th>
                         <th class="text-right">Monto</th>
                         <th class="text-center">Estado</th>
@@ -72,7 +72,12 @@
                                 </span>
                                 <small>{{ $transfer->company->name }}</small>
                             </td>
-                            <td>{{ $transfer->sender_name }}</td>
+                            <td>
+                                {{ $transfer->branch?->name ?? $transfer->sender_name }}
+                                @if (auth()->user()->isAdmin() && $transfer->branch?->name)
+                                    <small class="text-muted d-block">{{ $transfer->sender_name }}</small>
+                                @endif
+                            </td>
                             <td>{{ $transfer->receiver_name }}</td>
                             <td class="text-right font-weight-bold">${{ number_format($transfer->amount, 2) }}</td>
                             <td class="text-center">

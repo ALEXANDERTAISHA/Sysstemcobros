@@ -6,51 +6,59 @@ use App\Models\Company;
 use App\Models\Credit;
 use App\Models\OtherIncome;
 use App\Models\Transfer;
+use App\Support\BranchContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class FinancialSummaryService
 {
-    public function transferQuery(string $dateFrom, string $dateTo, ?int $companyId = null): Builder
+    public function transferQuery(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null): Builder
     {
-        return Transfer::query()
-            ->with('company')
+        $query = Transfer::query()
+            ->with('company', 'branch')
             ->whereDate('transfer_date', '>=', $dateFrom)
             ->whereDate('transfer_date', '<=', $dateTo)
             ->whereNotIn('status', ['cancelled'])
             ->when($companyId, fn(Builder $query) => $query->where('company_id', $companyId));
+
+        return $this->scopeByBranch($query, $branchId);
     }
 
-    public function debitQuery(string $dateFrom, string $dateTo): Builder
+    public function debitQuery(string $dateFrom, string $dateTo, ?int $branchId = null): Builder
     {
-        return Credit::query()
+        $query = Credit::query()
             ->with('client')
             ->whereDate('granted_date', '>=', $dateFrom)
             ->whereDate('granted_date', '<=', $dateTo);
+
+        return $this->scopeByBranch($query, $branchId);
     }
 
-    public function otherIncomeQuery(string $dateFrom, string $dateTo): Builder
+    public function otherIncomeQuery(string $dateFrom, string $dateTo, ?int $branchId = null): Builder
     {
-        return OtherIncome::query()
+        $query = OtherIncome::query()
             ->with('client')
             ->whereDate('income_date', '>=', $dateFrom)
             ->whereDate('income_date', '<=', $dateTo);
+
+        return $this->scopeByBranch($query, $branchId);
     }
 
-    public function summarizeRange(string $dateFrom, string $dateTo, ?int $companyId = null): array
+    public function summarizeRange(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null): array
     {
-        $transferQuery = $this->transferQuery($dateFrom, $dateTo, $companyId);
-        $debitQuery = $this->debitQuery($dateFrom, $dateTo);
-        $otherIncomeQuery = $this->otherIncomeQuery($dateFrom, $dateTo);
+        $transferQuery = $this->transferQuery($dateFrom, $dateTo, $companyId, $branchId);
+        $debitQuery = $this->debitQuery($dateFrom, $dateTo, $branchId);
+        $otherIncomeQuery = $this->otherIncomeQuery($dateFrom, $dateTo, $branchId);
 
         $totalIncomes = (float) (clone $transferQuery)->sum('amount');
         $totalDebits = (float) (clone $debitQuery)->sum('total_amount');
         $totalOtherIncomes = (float) (clone $otherIncomeQuery)->sum('amount');
         $transfersCount = (int) (clone $transferQuery)->count();
-        $activeCreditBalance = (float) Credit::query()
+        $activeCreditQuery = Credit::query()
             ->whereIn('status', ['active', 'partial'])
-            ->sum(DB::raw('total_amount - paid_amount'));
+            ->selectRaw('SUM(total_amount - paid_amount) as balance_total');
+        $activeCreditBalance = (float) $this->scopeByBranch($activeCreditQuery, $branchId)->value('balance_total');
 
         $valueTotal = $totalIncomes - $totalDebits;
         $sumTotal = $valueTotal + $totalOtherIncomes;
@@ -67,8 +75,18 @@ class FinancialSummaryService
         ];
     }
 
-    public function transferBreakdownByCompany(string $dateFrom, string $dateTo, ?int $companyId = null): Collection
+    public function transferBreakdownByCompany(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null): Collection
     {
+        $effectiveBranchId = $branchId;
+        $restrictByBranch = false;
+
+        if (!BranchContext::isPrivileged()) {
+            $effectiveBranchId = BranchContext::branchId();
+            $restrictByBranch = (bool) $effectiveBranchId;
+        } elseif ($effectiveBranchId) {
+            $restrictByBranch = true;
+        }
+
         return Company::query()
             ->where('is_active', true)
             ->withCount([
@@ -76,6 +94,7 @@ class FinancialSummaryService
                     ->whereDate('transfer_date', '>=', $dateFrom)
                     ->whereDate('transfer_date', '<=', $dateTo)
                     ->whereNotIn('status', ['cancelled'])
+                    ->when($restrictByBranch, fn(Builder $inner) => $inner->where('branch_id', $effectiveBranchId))
                     ->when($companyId, fn(Builder $inner) => $inner->where('company_id', $companyId)),
             ])
             ->withSum([
@@ -83,6 +102,7 @@ class FinancialSummaryService
                     ->whereDate('transfer_date', '>=', $dateFrom)
                     ->whereDate('transfer_date', '<=', $dateTo)
                     ->whereNotIn('status', ['cancelled'])
+                    ->when($restrictByBranch, fn(Builder $inner) => $inner->where('branch_id', $effectiveBranchId))
                     ->when($companyId, fn(Builder $inner) => $inner->where('company_id', $companyId)),
             ], 'amount')
             ->orderByRaw('COALESCE(transfers_total_amount, 0) DESC')
@@ -90,19 +110,28 @@ class FinancialSummaryService
             ->get();
     }
 
-    public function debitEntries(string $dateFrom, string $dateTo): Collection
+    public function debitEntries(string $dateFrom, string $dateTo, ?int $branchId = null): Collection
     {
-        return $this->debitQuery($dateFrom, $dateTo)
+        return $this->debitQuery($dateFrom, $dateTo, $branchId)
             ->orderBy('granted_date')
             ->orderBy('id')
             ->get();
     }
 
-    public function otherIncomeEntries(string $dateFrom, string $dateTo): Collection
+    public function otherIncomeEntries(string $dateFrom, string $dateTo, ?int $branchId = null): Collection
     {
-        return $this->otherIncomeQuery($dateFrom, $dateTo)
+        return $this->otherIncomeQuery($dateFrom, $dateTo, $branchId)
             ->orderBy('income_date')
             ->orderBy('id')
             ->get();
+    }
+
+    private function scopeByBranch(Builder $query, ?int $branchId = null): Builder
+    {
+        if (BranchContext::isPrivileged() && $branchId) {
+            return $query->where('branch_id', $branchId);
+        }
+
+        return BranchContext::scope($query);
     }
 }

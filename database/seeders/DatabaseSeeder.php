@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
+use App\Models\Branch;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -11,11 +12,23 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $branch = Branch::firstOrCreate(
+            ['code' => 'MAIN'],
+            [
+                'name' => 'Sucursal Principal',
+                'address' => null,
+                'is_active' => true,
+            ]
+        );
+
         // Admin user
         User::firstOrCreate(
             ['email' => 'admin@systemcobros.com'],
             [
                 'name'     => 'Administrador',
+                'role'     => 'super_admin',
+                'branch_id' => $branch->id,
+                'is_active' => true,
                 'password' => Hash::make('admin123'),
             ]
         );

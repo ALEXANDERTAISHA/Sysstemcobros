@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Credit extends Model
 {
     protected $fillable = [
+        'branch_id',
         'client_id',
         'company_id',
         'concept',
@@ -36,6 +37,11 @@ class Credit extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function payments(): HasMany

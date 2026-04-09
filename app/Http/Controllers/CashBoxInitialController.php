@@ -2,19 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\CashBoxInitial;
+use App\Support\BranchContext;
 use Illuminate\Http\Request;
 
 class CashBoxInitialController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $today = today()->toDateString();
-        $initial = CashBoxInitial::whereDate('date', $today)->latest('id')->first();
-        $todayTotal = (float) CashBoxInitial::whereDate('date', $today)->sum('initial_amount');
-        $history = CashBoxInitial::orderByDesc('date')->orderByDesc('id')->paginate(20);
+        $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
 
-        return view('cash-box-initial.index', compact('initial', 'today', 'todayTotal', 'history'));
+        $initialQuery = CashBoxInitial::whereDate('date', $today);
+        $todayTotalQuery = CashBoxInitial::whereDate('date', $today);
+        $historyQuery = CashBoxInitial::with('branch');
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $initialQuery->where('branch_id', $branchId);
+            $todayTotalQuery->where('branch_id', $branchId);
+            $historyQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($initialQuery);
+            BranchContext::scope($todayTotalQuery);
+            BranchContext::scope($historyQuery);
+        }
+
+        $initial = $initialQuery->latest('id')->first();
+        $todayTotal = (float) $todayTotalQuery->sum('initial_amount');
+        $history = $historyQuery
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
+        return view('cash-box-initial.index', compact('initial', 'today', 'todayTotal', 'history', 'branches', 'branchId'));
     }
 
     public function store(Request $request)
@@ -30,7 +54,7 @@ class CashBoxInitialController extends Controller
             return back()->withErrors(['date' => 'Solo puedes registrar dinero inicial para hoy (' . today()->format('d/m/Y') . ').']);
         }
 
-        CashBoxInitial::create($data);
+        CashBoxInitial::create(BranchContext::assign($data));
 
         return redirect()->route('cash-box-initial.index')
             ->with('success', 'Dinero inicial registrado correctamente.');
@@ -38,6 +62,8 @@ class CashBoxInitialController extends Controller
 
     public function update(Request $request, CashBoxInitial $cashBoxInitial)
     {
+        BranchContext::abortIfForbidden($cashBoxInitial->branch_id);
+
         $data = $request->validate([
             'initial_amount' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
@@ -54,6 +80,8 @@ class CashBoxInitialController extends Controller
 
     public function destroy(CashBoxInitial $cashBoxInitial)
     {
+        BranchContext::abortIfForbidden($cashBoxInitial->branch_id);
+
         $cashBoxInitial->delete();
 
         return redirect()->route('cash-box-initial.index')

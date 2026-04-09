@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Client;
 use App\Models\Credit;
 use App\Models\CreditPayment;
 use App\Models\OtherIncome;
+use App\Support\BranchContext;
 use App\Services\EmailDeliveryService;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
@@ -17,15 +19,14 @@ class OtherIncomeController extends Controller
     public function __construct(
         private EmailDeliveryService $emailDelivery,
         private WhatsAppService $whatsApp
-    )
-    {
-    }
+    ) {}
     public function index(Request $request)
     {
         $date = $request->get('date', today()->toDateString());
         $selectedClientId = $request->filled('client_id') ? (int) $request->get('client_id') : null;
+        $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
 
-        $incomesQuery = OtherIncome::with('client', 'credit.company')
+        $incomesQuery = OtherIncome::with('client', 'credit.company', 'branch')
             ->whereDate('income_date', $date)
             ->orderByDesc('income_date')
             ->orderByDesc('id');
@@ -34,17 +35,29 @@ class OtherIncomeController extends Controller
             $incomesQuery->where('client_id', $selectedClientId);
         }
 
+        if (BranchContext::isPrivileged() && $branchId) {
+            $incomesQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($incomesQuery);
+        }
+
         $incomes = $incomesQuery->get();
         $total = $incomes->sum('amount');
         $clients = Client::where('is_active', true)->orderBy('name')->get();
 
-        $pendingDebtsQuery = Credit::with('client', 'company')
+        $pendingDebtsQuery = Credit::with('client', 'company', 'branch')
             ->whereIn('status', ['active', 'partial'])
             ->whereDate('granted_date', '<', today()->toDateString())
             ->whereRaw('total_amount > paid_amount')
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
             ->orderBy('due_date')
             ->orderBy('id');
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $pendingDebtsQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($pendingDebtsQuery);
+        }
 
         if (!is_null($selectedClientId)) {
             $pendingDebtsQuery->where('client_id', $selectedClientId);
@@ -59,11 +72,15 @@ class OtherIncomeController extends Controller
             'pending' => (float) $pendingDebtTotal,
         ];
 
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
         return view('other-incomes.index', compact(
             'incomes',
             'date',
             'total',
             'clients',
+            'branches',
+            'branchId',
             'selectedClientId',
             'pendingDebts',
             'pendingDebtTotal',
@@ -80,12 +97,14 @@ class OtherIncomeController extends Controller
             'client_id'   => 'nullable|exists:clients,id',
             'notes'       => 'nullable|string',
         ]);
-        OtherIncome::create($data);
+        OtherIncome::create(BranchContext::assign($data));
         return redirect()->route('other-incomes.index', ['date' => $data['income_date']])->with('success', 'Ingreso registrado.');
     }
 
     public function update(Request $request, OtherIncome $otherIncome)
     {
+        BranchContext::abortIfForbidden($otherIncome->branch_id);
+
         $data = $request->validate([
             'description' => 'required|string|max:250',
             'amount'      => 'required|numeric|min:0.01',
@@ -102,6 +121,8 @@ class OtherIncomeController extends Controller
 
     public function destroy(OtherIncome $otherIncome)
     {
+        BranchContext::abortIfForbidden($otherIncome->branch_id);
+
         $date = $otherIncome->income_date->toDateString();
         $otherIncome->delete();
         return redirect()->route('other-incomes.index', ['date' => $date])->with('success', 'Ingreso eliminado.');
@@ -117,6 +138,7 @@ class OtherIncomeController extends Controller
         ]);
 
         $credit = Credit::with('client')->findOrFail($data['credit_id']);
+        BranchContext::abortIfForbidden($credit->branch_id);
         $remaining = (float) $credit->balance;
 
         if ($remaining <= 0) {
@@ -152,6 +174,7 @@ class OtherIncomeController extends Controller
                 'description' => 'Cobro de débito: ' . $credit->concept,
                 'amount' => $data['amount'],
                 'client_id' => $credit->client_id,
+                'branch_id' => $credit->branch_id,
                 'credit_id' => $credit->id,
                 'notes' => $data['notes'] ?? 'Cobro aplicado desde seguimiento de deudas.',
             ]);
@@ -221,11 +244,20 @@ class OtherIncomeController extends Controller
 
     public function sendOverdueReminders(Request $request)
     {
-        $pendingCredits = Credit::with('client')
+        $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
+
+        $pendingCreditsQuery = Credit::with('client')
             ->whereIn('status', ['active', 'partial'])
             ->whereRaw('total_amount > paid_amount')
-            ->orderBy('due_date')
-            ->get();
+            ->orderBy('due_date');
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $pendingCreditsQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($pendingCreditsQuery);
+        }
+
+        $pendingCredits = $pendingCreditsQuery->get();
 
         if ($pendingCredits->isEmpty()) {
             return redirect()->route('other-incomes.index')

@@ -6,8 +6,10 @@ use App\Models\Client;
 use App\Models\CashBoxInitial;
 use App\Models\Company;
 use App\Models\DailyClosing;
+use App\Models\Branch;
 use App\Models\Transfer;
 use App\Models\User;
+use App\Support\BranchContext;
 use App\Services\FinancialSummaryService;
 use Illuminate\Http\Request;
 
@@ -15,10 +17,28 @@ class DailyClosingController extends Controller
 {
     public function __construct(private FinancialSummaryService $financialSummary) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $closings = DailyClosing::orderByDesc('closing_date')->paginate(20);
-        return view('daily-closings.index', compact('closings'));
+        $branchId = null;
+        if (BranchContext::isPrivileged()) {
+            $branchId = $request->integer('branch_id') ?: null;
+        }
+
+        $closingQuery = DailyClosing::with('branch');
+        if (BranchContext::isPrivileged() && $branchId) {
+            $closingQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($closingQuery);
+        }
+
+        $closings = $closingQuery
+            ->orderByDesc('closing_date')
+            ->paginate(20)
+            ->withQueryString();
+
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
+        return view('daily-closings.index', compact('closings', 'branches', 'branchId'));
     }
 
     public function create(Request $request)
@@ -30,21 +50,24 @@ class DailyClosingController extends Controller
         $transferCompany = $request->get('transfer_company_id');
         $transferListDate = $request->get('transfer_list_date');
 
-        $existing = DailyClosing::whereDate('closing_date', $date)->first();
-        $cashBoxInitialTotal = (float) CashBoxInitial::whereDate('date', $date)->sum('initial_amount');
+        $existing = BranchContext::scope(DailyClosing::whereDate('closing_date', $date))->first();
+        $cashBoxInitialTotal = (float) BranchContext::scope(CashBoxInitial::whereDate('date', $date))->sum('initial_amount');
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $clients = Client::orderBy('name')->get(['id', 'name', 'phone']);
         $users = User::orderBy('name')->get(['id', 'name']);
 
-        $transferQuery = Transfer::with('company')
+        $transferQuery = Transfer::with('company', 'branch')
             ->when($transferListDate, fn($q) => $q->whereDate('transfer_date', $transferListDate))
             ->when($transferSearch, fn($q) => $q->where(function ($subQuery) use ($transferSearch) {
                 $subQuery->where('sender_name', 'like', "%{$transferSearch}%")
                     ->orWhere('receiver_name', 'like', "%{$transferSearch}%")
-                    ->orWhere('transaction_code', 'like', "%{$transferSearch}%");
+                    ->orWhere('transaction_code', 'like', "%{$transferSearch}%")
+                    ->orWhereHas('branch', fn($branchQuery) => $branchQuery->where('name', 'like', "%{$transferSearch}%"));
             }))
             ->when($transferStatus !== 'all', fn($q) => $q->where('status', $transferStatus))
             ->when($transferCompany, fn($q) => $q->where('company_id', $transferCompany));
+
+        $transferQuery = BranchContext::scope($transferQuery);
 
         $transferList = (clone $transferQuery)
             ->latest('id')
@@ -52,7 +75,7 @@ class DailyClosingController extends Controller
             ->withQueryString();
 
         $transferPendingCount = (clone $transferQuery)->where('status', 'pending')->count();
-        $transferTotalCount = Transfer::count();
+        $transferTotalCount = BranchContext::scope(Transfer::query())->count();
 
         return view('daily-closings.create', compact(
             'date',
@@ -89,19 +112,23 @@ class DailyClosingController extends Controller
         $difference = $summary['sum_total'] - (float) $data['existing_value'];
         $finalTotal = $difference;
 
+        $payload = BranchContext::assign([
+            'total_incomes' => $summary['total_incomes'],
+            'total_expenses' => $summary['total_expenses'],
+            'value_total' => $summary['value_total'],
+            'other_incomes_total' => $summary['total_other_incomes'],
+            'sum_total' => $summary['sum_total'],
+            'existing_value' => $data['existing_value'],
+            'difference' => $difference,
+            'final_total' => $finalTotal,
+            'notes' => $data['notes'] ?? null,
+        ]);
+
+        $lookup = BranchContext::assign(['closing_date' => $data['closing_date']]);
+
         DailyClosing::updateOrCreate(
-            ['closing_date' => $data['closing_date']],
-            [
-                'total_incomes' => $summary['total_incomes'],
-                'total_expenses' => $summary['total_expenses'],
-                'value_total' => $summary['value_total'],
-                'other_incomes_total' => $summary['total_other_incomes'],
-                'sum_total' => $summary['sum_total'],
-                'existing_value' => $data['existing_value'],
-                'difference' => $difference,
-                'final_total' => $finalTotal,
-                'notes' => $data['notes'] ?? null,
-            ]
+            $lookup,
+            $payload
         );
 
         return redirect()->route('daily-closings.index')->with('success', 'Cierre de caja guardado correctamente.');
@@ -109,6 +136,8 @@ class DailyClosingController extends Controller
 
     public function show(DailyClosing $dailyClosing)
     {
+        BranchContext::abortIfForbidden($dailyClosing->branch_id);
+
         $date = $dailyClosing->closing_date->toDateString();
         $transfers = $this->financialSummary->transferQuery($date, $date)->get();
         $transfersByCompany = $this->financialSummary->transferBreakdownByCompany($date, $date);
@@ -126,6 +155,8 @@ class DailyClosingController extends Controller
 
     public function destroy(DailyClosing $dailyClosing)
     {
+        BranchContext::abortIfForbidden($dailyClosing->branch_id);
+
         $dailyClosing->delete();
         return redirect()->route('daily-closings.index')->with('success', 'Cierre eliminado.');
     }

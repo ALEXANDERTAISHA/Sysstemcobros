@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class DailyClosing extends Model
 {
     protected $fillable = [
+        'branch_id',
         'closing_date',
         'total_incomes',
         'total_expenses',
@@ -30,4 +31,9 @@ class DailyClosing extends Model
         'difference'          => 'decimal:2',
         'final_total'         => 'decimal:2',
     ];
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }

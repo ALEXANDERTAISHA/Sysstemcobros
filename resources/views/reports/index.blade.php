@@ -21,7 +21,7 @@
                             <label>Hasta</label>
                             <input type="date" name="date_to" class="form-control" value="{{ $dateTo }}" required>
                         </div>
-                        <div class="form-group col-md-4">
+                        <div class="form-group col-md-3">
                             <label>Empresa</label>
                             <select name="company_id" class="form-control">
                                 <option value="">Todas las empresas</option>
@@ -33,6 +33,20 @@
                                 @endforeach
                             </select>
                         </div>
+                        @if (auth()->user()->isAdmin())
+                            <div class="form-group col-md-2">
+                                <label>Sucursal</label>
+                                <select name="branch_id" class="form-control">
+                                    <option value="">Todas</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}"
+                                            {{ (string) $branchId === (string) $branch->id ? 'selected' : '' }}>
+                                            {{ $branch->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
                         <div class="form-group col-md-2 text-right">
                             <button type="submit" class="btn btn-primary btn-block">
                                 <i class="fas fa-search mr-1"></i> Consultar
@@ -86,7 +100,7 @@
     <div class="card card-outline card-secondary">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title mb-0"><i class="fas fa-table mr-1"></i> Detalle de Giros</h3>
-            <a href="{{ route('reports.export-pdf', ['date_from' => $dateFrom, 'date_to' => $dateTo, 'company_id' => $companyId]) }}"
+            <a href="{{ route('reports.export-pdf', ['date_from' => $dateFrom, 'date_to' => $dateTo, 'company_id' => $companyId, 'branch_id' => $branchId]) }}"
                 class="btn btn-danger btn-sm" target="_blank" rel="noopener">
                 <i class="fas fa-file-pdf mr-1"></i> Exportar PDF
             </a>
@@ -97,7 +111,7 @@
                     <tr>
                         <th>Fecha</th>
                         <th>Empresa</th>
-                        <th>Remitente</th>
+                        <th>Sucursal (Remitente)</th>
                         <th>Destinatario</th>
                         <th class="text-center">Estado</th>
                         <th class="text-right">Monto</th>
@@ -108,7 +122,12 @@
                         <tr>
                             <td>{{ $transfer->transfer_date->format('d/m/Y') }}</td>
                             <td>{{ $transfer->company?->name ?? '-' }}</td>
-                            <td>{{ $transfer->sender_name }}</td>
+                            <td>
+                                {{ $transfer->branch?->name ?? $transfer->sender_name }}
+                                @if (auth()->user()->isAdmin() && $transfer->branch?->name)
+                                    <small class="text-muted d-block">{{ $transfer->sender_name }}</small>
+                                @endif
+                            </td>
                             <td>{{ $transfer->receiver_name }}</td>
                             <td class="text-center"><span
                                     class="badge badge-{{ $transfer->status_color }}">{{ $transfer->status_label }}</span>

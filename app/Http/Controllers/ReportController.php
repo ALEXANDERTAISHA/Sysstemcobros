@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
+use App\Models\Branch;
 use App\Models\CashBoxInitial;
 use App\Models\Company;
+use App\Support\BranchContext;
 use App\Services\FinancialSummaryService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -16,46 +18,54 @@ class ReportController extends Controller
 
     public function index(Request $request)
     {
-        [$dateFrom, $dateTo, $companyId] = $this->resolveFilters($request);
+        [$dateFrom, $dateTo, $companyId, $branchId] = $this->resolveFilters($request);
 
-        $transferQuery = $this->financialSummary->transferQuery($dateFrom, $dateTo, $companyId);
+        $transferQuery = $this->financialSummary->transferQuery($dateFrom, $dateTo, $companyId, $branchId);
 
         $transfers = (clone $transferQuery)
             ->latest('transfer_date')
             ->paginate(30)
             ->withQueryString();
 
-        $summary = $this->buildSummary($dateFrom, $dateTo, $companyId);
-        $printable = $this->buildPrintableSections($dateFrom, $dateTo, $companyId, $summary);
+        $summary = $this->buildSummary($dateFrom, $dateTo, $companyId, $branchId);
+        $printable = $this->buildPrintableSections($dateFrom, $dateTo, $companyId, $summary, $branchId);
         $companies = Company::where('is_active', true)->orderBy('name')->get();
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
 
         return view('reports.index', compact(
             'dateFrom',
             'dateTo',
             'companyId',
+            'branchId',
             'transfers',
             'summary',
             'printable',
-            'companies'
+            'companies',
+            'branches'
         ));
     }
 
     public function exportPdf(Request $request)
     {
-        [$dateFrom, $dateTo, $companyId] = $this->resolveFilters($request);
+        [$dateFrom, $dateTo, $companyId, $branchId] = $this->resolveFilters($request);
 
-        $transferQuery = $this->financialSummary->transferQuery($dateFrom, $dateTo, $companyId);
+        $transferQuery = $this->financialSummary->transferQuery($dateFrom, $dateTo, $companyId, $branchId);
 
         $transfers = (clone $transferQuery)
             ->latest('transfer_date')
             ->get();
 
-        $summary = $this->buildSummary($dateFrom, $dateTo, $companyId);
-        $printable = $this->buildPrintableSections($dateFrom, $dateTo, $companyId, $summary);
+        $summary = $this->buildSummary($dateFrom, $dateTo, $companyId, $branchId);
+        $printable = $this->buildPrintableSections($dateFrom, $dateTo, $companyId, $summary, $branchId);
 
         $companyName = null;
         if ($companyId) {
             $companyName = Company::whereKey($companyId)->value('name');
+        }
+
+        $branchName = null;
+        if ($branchId) {
+            $branchName = Branch::whereKey($branchId)->value('name');
         }
 
         $pdf = Pdf::loadView('reports.pdf.daily-report', [
@@ -63,6 +73,8 @@ class ReportController extends Controller
             'dateTo' => $dateTo,
             'companyId' => $companyId,
             'companyName' => $companyName,
+            'branchId' => $branchId,
+            'branchName' => $branchName,
             'transfers' => $transfers,
             'summary' => $summary,
             'printable' => $printable,
@@ -83,31 +95,39 @@ class ReportController extends Controller
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
             'company_id' => 'nullable|exists:companies,id',
+            'branch_id' => 'nullable|exists:branches,id',
         ]);
 
         $dateFrom = $validated['date_from'] ?? today()->toDateString();
         $dateTo = $validated['date_to'] ?? $dateFrom;
         $companyId = $validated['company_id'] ?? null;
+        $branchId = BranchContext::isPrivileged()
+            ? ($validated['branch_id'] ?? null)
+            : BranchContext::branchId();
 
-        return [$dateFrom, $dateTo, $companyId];
+        return [$dateFrom, $dateTo, $companyId, $branchId];
     }
 
-    private function buildSummary(string $dateFrom, string $dateTo, ?int $companyId): array
+    private function buildSummary(string $dateFrom, string $dateTo, ?int $companyId, ?int $branchId): array
     {
-        return $this->financialSummary->summarizeRange($dateFrom, $dateTo, $companyId);
+        return $this->financialSummary->summarizeRange($dateFrom, $dateTo, $companyId, $branchId);
     }
 
-    private function buildPrintableSections(string $dateFrom, string $dateTo, ?int $companyId, array $summary): array
+    private function buildPrintableSections(string $dateFrom, string $dateTo, ?int $companyId, array $summary, ?int $branchId): array
     {
-        $transfersByCompany = $this->financialSummary->transferBreakdownByCompany($dateFrom, $dateTo, $companyId);
-        $debits = $this->financialSummary->debitEntries($dateFrom, $dateTo);
-        $otherIncomes = $this->financialSummary->otherIncomeEntries($dateFrom, $dateTo);
+        $transfersByCompany = $this->financialSummary->transferBreakdownByCompany($dateFrom, $dateTo, $companyId, $branchId);
+        $debits = $this->financialSummary->debitEntries($dateFrom, $dateTo, $branchId);
+        $otherIncomes = $this->financialSummary->otherIncomeEntries($dateFrom, $dateTo, $branchId);
 
         // El valor existente se toma automáticamente del dinero inicial definido
         // para el día o rango del reporte.
-        $existingValue = (float) CashBoxInitial::query()
-            ->whereBetween('date', [$dateFrom, $dateTo])
-            ->sum('initial_amount');
+        $existingValueQuery = CashBoxInitial::query()->whereBetween('date', [$dateFrom, $dateTo]);
+        if (BranchContext::isPrivileged() && $branchId) {
+            $existingValueQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($existingValueQuery);
+        }
+        $existingValue = (float) $existingValueQuery->sum('initial_amount');
         $difference = (float) $summary['sum_total'] - $existingValue;
         $finalTotal = $difference;
 

@@ -39,8 +39,10 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Remitente *</label>
-                                    <input type="text" name="sender_name" class="form-control"
-                                        value="{{ $transfer->sender_name }}" required>
+                                    <input type="text" class="form-control"
+                                        value="{{ $transfer->branch?->name ?? $transfer->sender_name }}" readonly>
+                                    <input type="hidden" name="sender_name" value="{{ $transfer->sender_name }}" required>
+                                    <small class="form-text text-muted">Referencia de sucursal del ingreso.</small>
                                 </div>
                             </div>
                             <div class="col-md-6">

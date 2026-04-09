@@ -51,18 +51,14 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Nombre del Remitente *</label>
-                                    <select name="sender_name" class="form-control @error('sender_name') is-invalid @enderror"
+                                    <input type="text" class="form-control"
+                                        value="{{ auth()->user()->branch?->name ?? (auth()->user()->name ?? 'Usuario actual') }}"
+                                        readonly>
+                                    <input type="hidden" name="sender_name"
+                                        value="{{ old('sender_name', auth()->user()->branch?->name ?? (auth()->user()->name ?? '')) }}"
                                         required>
-                                        <option value="">Seleccionar remitente...</option>
-                                        @foreach ($users as $user)
-                                            <option value="{{ $user->name }}"
-                                                {{ old('sender_name', auth()->user()->name ?? '') === $user->name ? 'selected' : '' }}>
-                                                {{ $user->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
                                     <small class="form-text text-muted">
-                                        Recomendado: {{ auth()->user()->name ?? 'Usuario actual' }}
+                                        Se registra automaticamente la sucursal de la cuenta abierta.
                                     </small>
                                     @error('sender_name')
                                         <div class="invalid-feedback">{{ $message }}</div>

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Credit;
 use App\Models\CreditPayment;
+use App\Support\BranchContext;
 use App\Services\EmailDeliveryService;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
@@ -23,16 +25,24 @@ class ExpenseController extends Controller
         $search = $request->get('search');
         $status = $request->get('status', 'all');
         $date = $request->get('date');
+        $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
 
-        $creditsQuery = Credit::with('client', 'company')
+        $creditsQuery = Credit::with('client', 'company', 'branch')
             ->when($search, fn($query) => $query->whereHas('client', fn($clientQuery) => $clientQuery->where('name', 'like', "%{$search}%")))
             ->when($status !== 'all', fn($query) => $query->where('status', $status))
             ->when($date, fn($query) => $query->whereDate('granted_date', $date))
             ->latest();
 
-        $credits = $creditsQuery->paginate(20);
+        if (BranchContext::isPrivileged() && $branchId) {
+            $creditsQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($creditsQuery);
+        }
 
-        return view('expenses.index', compact('credits', 'search', 'status', 'date'));
+        $credits = $creditsQuery->paginate(20)->withQueryString();
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
+        return view('expenses.index', compact('credits', 'search', 'status', 'date', 'branches', 'branchId'));
     }
 
     public function create()
@@ -41,6 +51,53 @@ class ExpenseController extends Controller
         $companies = Company::where('is_active', true)->orderBy('name')->get();
 
         return view('expenses.create', compact('clients', 'companies'));
+    }
+
+    public function quickStoreClient(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:150',
+            'phone' => 'nullable|string|max:30',
+            'email' => 'nullable|email|max:150',
+            'whatsapp' => 'nullable|string|max:30',
+            'address' => 'nullable|string|max:250',
+            'notes' => 'nullable|string',
+        ]);
+
+        $data['is_active'] = true;
+
+        $client = Client::create($data);
+
+        return response()->json([
+            'message' => 'Cliente registrado correctamente.',
+            'client' => [
+                'id' => $client->id,
+                'name' => $client->name,
+                'phone' => $client->phone,
+            ],
+        ]);
+    }
+
+    public function quickStoreCompany(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:100',
+            'code' => 'required|string|max:20|unique:companies,code',
+            'color' => 'required|string|max:20',
+        ]);
+
+        $data['is_active'] = true;
+
+        $company = Company::create($data);
+
+        return response()->json([
+            'message' => 'Empresa registrada correctamente.',
+            'company' => [
+                'id' => $company->id,
+                'name' => $company->name,
+                'code' => $company->code,
+            ],
+        ]);
     }
 
     public function store(Request $request)
@@ -73,6 +130,7 @@ class ExpenseController extends Controller
 
         $data['paid_amount'] = 0;
         $data['status'] = 'active';
+        $data = BranchContext::assign($data);
 
         $credit = Credit::create($data);
         $client = $credit->client;
@@ -87,6 +145,8 @@ class ExpenseController extends Controller
 
     public function show(Credit $credit)
     {
+        BranchContext::abortIfForbidden($credit->branch_id);
+
         $credit->load('client', 'payments');
 
         return view('expenses.show', compact('credit'));
@@ -94,6 +154,8 @@ class ExpenseController extends Controller
 
     public function edit(Credit $credit)
     {
+        BranchContext::abortIfForbidden($credit->branch_id);
+
         $clients = Client::where('is_active', true)->orderBy('name')->get();
         $companies = Company::where('is_active', true)->orderBy('name')->get();
 
@@ -102,6 +164,8 @@ class ExpenseController extends Controller
 
     public function update(Request $request, Credit $credit)
     {
+        BranchContext::abortIfForbidden($credit->branch_id);
+
         $data = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'company_id' => 'nullable|exists:companies,id',
@@ -119,6 +183,8 @@ class ExpenseController extends Controller
 
     public function storePayment(Request $request, Credit $credit)
     {
+        BranchContext::abortIfForbidden($credit->branch_id);
+
         $data = $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
@@ -181,6 +247,8 @@ class ExpenseController extends Controller
 
     public function sendReminder(Credit $credit)
     {
+        BranchContext::abortIfForbidden($credit->branch_id);
+
         $credit->load('client');
         $client = $credit->client;
 
@@ -217,6 +285,8 @@ class ExpenseController extends Controller
 
     public function destroy(Credit $credit)
     {
+        BranchContext::abortIfForbidden($credit->branch_id);
+
         $credit->payments()->delete();
         $credit->delete();
 

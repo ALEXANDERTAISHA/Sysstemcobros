@@ -36,13 +36,30 @@
 
     <!-- Date Picker -->
     <div class="row mb-3">
-        <div class="col-md-4">
-            <form method="GET" action="{{ route('dashboard') }}" class="d-flex">
-                <input type="date" name="date" class="form-control mr-2" value="{{ $date }}">
-                <button class="btn btn-primary"><i class="fas fa-search"></i></button>
+        <div class="col-md-7">
+            <form method="GET" action="{{ route('dashboard') }}" class="form-row">
+                <div class="col-md-5 mb-2 mb-md-0">
+                    <input type="date" name="date" class="form-control" value="{{ $date }}">
+                </div>
+                @if (auth()->user()->isAdmin())
+                    <div class="col-md-5 mb-2 mb-md-0">
+                        <select name="branch_id" class="form-control">
+                            <option value="">Todas las sucursales</option>
+                            @foreach ($branches as $branch)
+                                <option value="{{ $branch->id }}"
+                                    {{ (string) $branchId === (string) $branch->id ? 'selected' : '' }}>
+                                    {{ $branch->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+                <div class="col-md-2">
+                    <button class="btn btn-primary btn-block"><i class="fas fa-search"></i></button>
+                </div>
             </form>
         </div>
-        <div class="col-md-8 text-right">
+        <div class="col-md-5 text-right">
             <a href="{{ route('daily-closings.create', ['date' => $date]) }}" class="btn btn-info">
                 <i class="fas fa-cash-register mr-1"></i> Hacer Cierre de Caja
             </a>

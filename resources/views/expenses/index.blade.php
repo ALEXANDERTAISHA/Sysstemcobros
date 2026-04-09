@@ -10,6 +10,17 @@
                 <input type="text" name="search" class="form-control mr-2" placeholder="Buscar cliente..."
                     value="{{ $search }}">
                 <input type="date" name="date" class="form-control mr-2" value="{{ $date ?? '' }}">
+                @if (auth()->user()->isAdmin())
+                    <select name="branch_id" class="form-control mr-2">
+                        <option value="">Todas las sucursales</option>
+                        @foreach ($branches as $branch)
+                            <option value="{{ $branch->id }}"
+                                {{ (string) $branchId === (string) $branch->id ? 'selected' : '' }}>
+                                {{ $branch->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
                 <select name="status" class="form-control mr-2">
                     <option value="all" {{ $status === 'all' ? 'selected' : '' }}>Todos</option>
                     <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Activos</option>
@@ -33,6 +44,9 @@
                 <thead class="thead-dark">
                     <tr>
                         <th>Fecha</th>
+                        @if (auth()->user()->isAdmin())
+                            <th>Sucursal</th>
+                        @endif
                         <th>Cliente</th>
                         <th>Empresa</th>
                         <th>Concepto</th>
@@ -45,6 +59,9 @@
                         <tr
                             class="{{ $credit->status === 'paid' ? 'table-success' : ($credit->due_date && $credit->due_date->isPast() && $credit->status !== 'paid' ? 'table-danger' : '') }}">
                             <td>{{ $credit->granted_date->format('d/m/Y') }}</td>
+                            @if (auth()->user()->isAdmin())
+                                <td>{{ $credit->branch?->name ?? 'Sin sucursal' }}</td>
+                            @endif
                             <td>
                                 <a href="{{ route('clients.show', $credit->client) }}">
                                     {{ $credit->client->name }}
@@ -70,7 +87,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">Sin débitos registrados</td>
+                            <td colspan="{{ auth()->user()->isAdmin() ? '7' : '6' }}" class="text-center text-muted py-4">
+                                Sin débitos registrados</td>
                         </tr>
                     @endforelse
                 </tbody>

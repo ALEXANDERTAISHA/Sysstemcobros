@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OtherIncome extends Model
 {
-    protected $fillable = ['income_date', 'description', 'amount', 'client_id', 'credit_id', 'notes'];
+    protected $fillable = ['income_date', 'description', 'amount', 'client_id', 'branch_id', 'credit_id', 'notes'];
 
     protected $casts = [
         'amount'      => 'decimal:2',
@@ -22,5 +22,10 @@ class OtherIncome extends Model
     public function credit(): BelongsTo
     {
         return $this->belongsTo(Credit::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 }

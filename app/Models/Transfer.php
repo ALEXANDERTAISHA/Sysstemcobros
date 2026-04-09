@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Transfer extends Model
 {
     protected $fillable = [
+        'branch_id',
         'company_id',
         'transfer_date',
         'sender_name',
@@ -30,6 +31,11 @@ class Transfer extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function getStatusLabelAttribute(): string

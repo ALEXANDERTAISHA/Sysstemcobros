@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CashBoxInitial extends Model
 {
-    protected $fillable = ['date', 'initial_amount', 'notes'];
+    protected $fillable = ['branch_id', 'date', 'initial_amount', 'notes'];
 
     protected $casts = [
         'date' => 'date',
@@ -16,5 +16,10 @@ class CashBoxInitial extends Model
     public static function getTodayInitial(): ?string
     {
         return (string) static::whereDate('date', today())->sum('initial_amount');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 }

@@ -96,6 +96,42 @@
             color: #8c8c8c;
             font-size: 0.9rem;
         }
+
+        .quick-create-box {
+            margin-top: 1rem;
+            border-top: 1px dashed #e1c15a;
+            padding-top: .9rem;
+        }
+
+        .quick-create-toggle {
+            border: 0;
+            background: transparent;
+            color: #856404;
+            font-weight: 700;
+            padding: 0;
+        }
+
+        .quick-create-form {
+            display: none;
+            margin-top: .85rem;
+            padding: .9rem;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid #f5df95;
+        }
+
+        .quick-create-form.is-visible {
+            display: block;
+        }
+
+        .quick-feedback {
+            display: none;
+            margin-top: .75rem;
+        }
+
+        .quick-feedback.is-visible {
+            display: block;
+        }
     </style>
 @endpush
 
@@ -170,7 +206,8 @@
                             <div class="expense-step-title">Cliente <span class="step-indicator">Paso 1</span></div>
                             <div class="expense-step-help">Empieza seleccionando a quién pertenece este débito.</div>
                             <label>Cliente *</label>
-                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror" required>
+                            <select id="client_select" name="client_id"
+                                class="form-control @error('client_id') is-invalid @enderror" required>
                                 <option value="">Seleccionar cliente...</option>
                                 @foreach ($clients as $client)
                                     <option value="{{ $client->id }}" data-company="{{ $client->company_id ?? '' }}"
@@ -182,16 +219,53 @@
                             @error('client_id')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+                            <div class="quick-create-box">
+                                <button type="button" class="quick-create-toggle" id="toggle_quick_client">
+                                    <i class="fas fa-user-plus mr-1"></i>No encuentro el cliente, registrarlo aqui
+                                </button>
+                                <div class="quick-create-form" id="quick_client_form_wrap">
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <label>Nombre del cliente *</label>
+                                            <input type="text" class="form-control" id="quick_client_name">
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label>Telefono</label>
+                                            <input type="text" class="form-control" id="quick_client_phone">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <label>Email</label>
+                                            <input type="email" class="form-control" id="quick_client_email">
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label>WhatsApp</label>
+                                            <input type="text" class="form-control" id="quick_client_whatsapp">
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-2">
+                                        <label>Direccion</label>
+                                        <input type="text" class="form-control" id="quick_client_address">
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-warning" id="quick_client_submit">
+                                        <i class="fas fa-save mr-1"></i>Guardar cliente
+                                    </button>
+                                    <div class="alert mt-2 mb-0 quick-feedback" id="quick_client_feedback"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <div id="company_section" class="form-group form-group-hidden expense-step-card">
                             <div class="expense-step-title">Empresa <span class="step-indicator">Paso 2</span></div>
                             <div class="expense-step-help">Confirma la empresa asociada al cliente.</div>
                             <label>Empresa *</label>
-                            <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror">
+                            <select id="company_select" name="company_id"
+                                class="form-control @error('company_id') is-invalid @enderror">
                                 <option value="">Seleccionar empresa...</option>
                                 @foreach ($companies as $company)
-                                    <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                    <option value="{{ $company->id }}"
+                                        {{ old('company_id') == $company->id ? 'selected' : '' }}>
                                         {{ $company->name }}
                                     </option>
                                 @endforeach
@@ -202,25 +276,54 @@
                             <small class="form-text text-success" id="auto_filled_message" style="display: none;">
                                 <i class="fas fa-check-circle mr-1"></i>Empresa completada automáticamente según el cliente
                             </small>
+                            <div class="quick-create-box">
+                                <button type="button" class="quick-create-toggle" id="toggle_quick_company">
+                                    <i class="fas fa-building mr-1"></i>No encuentro la empresa, registrarla aqui
+                                </button>
+                                <div class="quick-create-form" id="quick_company_form_wrap">
+                                    <div class="form-row">
+                                        <div class="form-group col-md-5">
+                                            <label>Nombre de empresa *</label>
+                                            <input type="text" class="form-control" id="quick_company_name">
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label>Codigo *</label>
+                                            <input type="text" class="form-control" id="quick_company_code">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label>Color *</label>
+                                            <input type="color" class="form-control" id="quick_company_color"
+                                                value="#0d6efd">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-warning" id="quick_company_submit">
+                                        <i class="fas fa-save mr-1"></i>Guardar empresa
+                                    </button>
+                                    <div class="alert mt-2 mb-0 quick-feedback" id="quick_company_feedback"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <div id="concept_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Concepto / Descripción <span class="step-indicator">Paso 3</span></div>
+                            <div class="expense-step-title">Concepto / Descripción <span class="step-indicator">Paso
+                                    3</span></div>
                             <div class="expense-step-help">Describe el motivo del débito.</div>
                             <label>Concepto / Descripción *</label>
-                            <input type="text" id="concept_input" name="concept" class="form-control @error('concept') is-invalid @enderror"
-                                value="{{ old('concept') }}" placeholder="Ej: Préstamo en efectivo, mercadería..." required>
+                            <input type="text" id="concept_input" name="concept"
+                                class="form-control @error('concept') is-invalid @enderror" value="{{ old('concept') }}"
+                                placeholder="Ej: Préstamo en efectivo, mercadería..." required>
                             @error('concept')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div id="amount_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Monto Total ($) <span class="step-indicator">Paso 4</span></div>
+                            <div class="expense-step-title">Monto Total ($) <span class="step-indicator">Paso 4</span>
+                            </div>
                             <div class="expense-step-help">Ingresa el valor del débito para continuar.</div>
                             <label>Monto Total ($) *</label>
-                            <input type="number" id="total_amount_input" name="total_amount" step="0.01" min="0.01"
-                                class="form-control @error('total_amount') is-invalid @enderror"
+                            <input type="number" id="total_amount_input" name="total_amount" step="0.01"
+                                min="0.01" class="form-control @error('total_amount') is-invalid @enderror"
                                 value="{{ old('total_amount') }}" required>
                             @error('total_amount')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -228,7 +331,8 @@
                         </div>
 
                         <div id="granted_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Fecha de Otorgamiento <span class="step-indicator">Paso 5</span></div>
+                            <div class="expense-step-title">Fecha de Otorgamiento <span class="step-indicator">Paso
+                                    5</span></div>
                             <div class="expense-step-help">Define cuándo se registró este débito.</div>
                             <label>Fecha de Otorgamiento *</label>
                             <input type="date" id="granted_date_input" name="granted_date" class="form-control"
@@ -236,7 +340,8 @@
                         </div>
 
                         <div id="due_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Fecha Límite de Pago <span class="step-indicator">Paso 6</span></div>
+                            <div class="expense-step-title">Fecha Límite de Pago <span class="step-indicator">Paso
+                                    6</span></div>
                             <div class="expense-step-help">Establece la fecha máxima para el pago del débito.</div>
                             <label>Fecha Límite de Pago *</label>
                             <input type="date" id="due_date_input" name="due_date"
@@ -249,13 +354,15 @@
 
                         <div id="notes_section" class="form-group form-group-hidden expense-step-card">
                             <div class="expense-step-title">Notas <span class="step-indicator">Final</span></div>
-                            <div class="expense-step-help">Agrega una nota final si necesitas más contexto antes de guardar.</div>
+                            <div class="expense-step-help">Agrega una nota final si necesitas más contexto antes de
+                                guardar.</div>
                             <label>Notas</label>
                             <textarea name="notes" class="form-control" rows="2">{{ old('notes') }}</textarea>
                         </div>
                     </div>
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Registrar Débito</button>
+                        <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Registrar
+                            Débito</button>
                         <a href="{{ route('expenses.index') }}" class="btn btn-secondary ml-2">Cancelar</a>
                     </div>
                 </form>
@@ -297,10 +404,106 @@
             const duePillValue = document.getElementById('due_pill_value');
 
             const editButtons = document.querySelectorAll('[data-edit-step]');
+            const toggleQuickClient = document.getElementById('toggle_quick_client');
+            const quickClientFormWrap = document.getElementById('quick_client_form_wrap');
+            const quickClientSubmit = document.getElementById('quick_client_submit');
+            const quickClientFeedback = document.getElementById('quick_client_feedback');
+            const toggleQuickCompany = document.getElementById('toggle_quick_company');
+            const quickCompanyFormWrap = document.getElementById('quick_company_form_wrap');
+            const quickCompanySubmit = document.getElementById('quick_company_submit');
+            const quickCompanyFeedback = document.getElementById('quick_company_feedback');
 
-            const clientToCompany = @json(
-                $clients->mapWithKeys(fn($client) => [$client->id => $client->company_id])->toArray()
-            );
+            const clientToCompany = @json($clients->mapWithKeys(fn($client) => [$client->id => $client->company_id])->toArray());
+
+            function toggleQuickForm(element) {
+                element.classList.toggle('is-visible');
+            }
+
+            function setFeedback(element, type, message) {
+                element.className = `alert alert-${type} mt-2 mb-0 quick-feedback is-visible`;
+                element.textContent = message;
+            }
+
+            async function postJson(url, payload) {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content'),
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    const errors = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message ||
+                        'No se pudo completar la solicitud.');
+                    throw new Error(errors);
+                }
+
+                return data;
+            }
+
+            toggleQuickClient.addEventListener('click', function() {
+                toggleQuickForm(quickClientFormWrap);
+            });
+
+            toggleQuickCompany.addEventListener('click', function() {
+                toggleQuickForm(quickCompanyFormWrap);
+            });
+
+            quickClientSubmit.addEventListener('click', async function() {
+                try {
+                    this.disabled = true;
+                    const data = await postJson('{{ route('expenses.quick-client') }}', {
+                        name: document.getElementById('quick_client_name').value,
+                        phone: document.getElementById('quick_client_phone').value,
+                        email: document.getElementById('quick_client_email').value,
+                        whatsapp: document.getElementById('quick_client_whatsapp').value,
+                        address: document.getElementById('quick_client_address').value,
+                    });
+
+                    const option = new Option(
+                        `${data.client.name}${data.client.phone ? ' (' + data.client.phone + ')' : ''}`,
+                        data.client.id,
+                        true,
+                        true
+                    );
+                    clientSelect.add(option);
+                    clientToCompany[String(data.client.id)] = '';
+                    quickClientFormWrap.classList.remove('is-visible');
+                    setFeedback(quickClientFeedback, 'success', data.message);
+                    clientSelect.dispatchEvent(new Event('change'));
+                } catch (error) {
+                    setFeedback(quickClientFeedback, 'danger', error.message);
+                } finally {
+                    this.disabled = false;
+                }
+            });
+
+            quickCompanySubmit.addEventListener('click', async function() {
+                try {
+                    this.disabled = true;
+                    const data = await postJson('{{ route('expenses.quick-company') }}', {
+                        name: document.getElementById('quick_company_name').value,
+                        code: document.getElementById('quick_company_code').value,
+                        color: document.getElementById('quick_company_color').value,
+                    });
+
+                    const option = new Option(data.company.name, data.company.id, true, true);
+                    companySelect.add(option);
+                    quickCompanyFormWrap.classList.remove('is-visible');
+                    setFeedback(quickCompanyFeedback, 'success', data.message);
+                    updateVisibility();
+                } catch (error) {
+                    setFeedback(quickCompanyFeedback, 'danger', error.message);
+                } finally {
+                    this.disabled = false;
+                }
+            });
 
             function showSection(element) {
                 element.classList.remove('form-group-hidden');
@@ -341,7 +544,8 @@
                 setPill(clientPill, clientPillValue, hasClient ? selectedText(clientSelect) : '');
                 setPill(companyPill, companyPillValue, hasCompany ? selectedText(companySelect) : '');
                 setPill(conceptPill, conceptPillValue, hasConcept ? conceptInput.value.trim() : '');
-                setPill(amountPill, amountPillValue, hasAmount ? `$${Number(totalAmountInput.value).toFixed(2)}` : '');
+                setPill(amountPill, amountPillValue, hasAmount ? `$${Number(totalAmountInput.value).toFixed(2)}` :
+                    '');
                 setPill(grantedPill, grantedPillValue, hasGranted ? formatDate(grantedDateInput.value) : '');
                 setPill(duePill, duePillValue, hasDue ? formatDate(dueDateInput.value) : '');
 

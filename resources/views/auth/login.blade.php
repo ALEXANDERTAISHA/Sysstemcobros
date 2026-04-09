@@ -75,6 +75,13 @@
                     </div>
                 @endif
 
+                @if (session('success'))
+                    <div class="alert alert-success py-2">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        {{ session('success') }}
+                    </div>
+                @endif
+
                 <form action="{{ route('login') }}" method="POST">
                     @csrf
                     <div class="input-group mb-3">
@@ -85,9 +92,11 @@
                         </div>
                     </div>
                     <div class="input-group mb-3">
-                        <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
+                        <input type="password" id="login_password" name="password" class="form-control" placeholder="Contraseña" required>
                         <div class="input-group-append">
-                            <div class="input-group-text"><span class="fas fa-lock"></span></div>
+                            <button type="button" class="btn btn-outline-secondary" id="toggle_login_password" title="Mostrar/Ocultar contraseña">
+                                <span class="fas fa-eye"></span>
+                            </button>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -95,6 +104,9 @@
                             <div class="icheck-primary">
                                 <input type="checkbox" id="remember" name="remember">
                                 <label for="remember">Recordarme</label>
+                            </div>
+                            <div class="mt-2">
+                                <a href="{{ route('password.request') }}">¿Olvidaste tu contraseña?</a>
                             </div>
                         </div>
                         <div class="col-4">
@@ -111,6 +123,22 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('toggle_login_password');
+            const input = document.getElementById('login_password');
+
+            if (!toggle || !input) {
+                return;
+            }
+
+            toggle.addEventListener('click', function() {
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                toggle.innerHTML = isPassword ? '<span class="fas fa-eye-slash"></span>' : '<span class="fas fa-eye"></span>';
+            });
+        });
+    </script>
 </body>
 
 </html>

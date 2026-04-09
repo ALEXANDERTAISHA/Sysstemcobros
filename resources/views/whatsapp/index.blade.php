@@ -19,9 +19,11 @@
                                 <strong>Configuración API:</strong> Para envío automático, configura
                                 <code>META_WHATSAPP_TOKEN</code> y <code>META_WHATSAPP_PHONE_NUMBER_ID</code>
                                 (recomendado) o <code>CALLMEBOT_API_KEY</code> en el archivo <code>.env</code>.
-                                <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/" target="_blank" class="alert-link">Meta Cloud API</a>
+                                <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/" target="_blank"
+                                    class="alert-link">Meta Cloud API</a>
                                 o
-                                <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank" class="alert-link">CallMeBot</a>.
+                                <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank"
+                                    class="alert-link">CallMeBot</a>.
                                 Sin API, se generará un enlace de WhatsApp Web.
                             </div>
                         @else

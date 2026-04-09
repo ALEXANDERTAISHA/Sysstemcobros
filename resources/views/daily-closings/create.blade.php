@@ -84,18 +84,13 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Nombre del Remitente *</label>
-                                    <select name="sender_name"
-                                        class="form-control @error('sender_name') is-invalid @enderror" required>
-                                        <option value="">Seleccionar remitente...</option>
-                                        @foreach ($users as $user)
-                                            <option value="{{ $user->name }}"
-                                                {{ old('sender_name', auth()->user()->name ?? '') === $user->name ? 'selected' : '' }}>
-                                                {{ $user->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <input type="text" class="form-control"
+                                        value="{{ auth()->user()->branch?->name ?? (auth()->user()->name ?? 'Usuario actual') }}"
+                                        readonly>
+                                    <input type="hidden" name="sender_name"
+                                        value="{{ old('sender_name', auth()->user()->branch?->name ?? (auth()->user()->name ?? '')) }}">
                                     <small class="form-text text-muted">
-                                        Recomendado: {{ auth()->user()->name ?? 'Usuario actual' }}
+                                        Este campo se registra automaticamente con la sucursal de la cuenta abierta.
                                     </small>
                                     @error('sender_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -223,11 +218,16 @@
                             </div>
                             <div class="col-md-2 mb-1">
                                 <select name="transfer_status" class="form-control form-control-sm">
-                                    <option value="all" {{ $transferStatus === 'all' ? 'selected' : '' }}>Todos</option>
-                                    <option value="pending" {{ $transferStatus === 'pending' ? 'selected' : '' }}>Pendientes</option>
-                                    <option value="sent" {{ $transferStatus === 'sent' ? 'selected' : '' }}>Enviados</option>
-                                    <option value="resent" {{ $transferStatus === 'resent' ? 'selected' : '' }}>Reenviados</option>
-                                    <option value="cancelled" {{ $transferStatus === 'cancelled' ? 'selected' : '' }}>Cancelados</option>
+                                    <option value="all" {{ $transferStatus === 'all' ? 'selected' : '' }}>Todos
+                                    </option>
+                                    <option value="pending" {{ $transferStatus === 'pending' ? 'selected' : '' }}>
+                                        Pendientes</option>
+                                    <option value="sent" {{ $transferStatus === 'sent' ? 'selected' : '' }}>Enviados
+                                    </option>
+                                    <option value="resent" {{ $transferStatus === 'resent' ? 'selected' : '' }}>Reenviados
+                                    </option>
+                                    <option value="cancelled" {{ $transferStatus === 'cancelled' ? 'selected' : '' }}>
+                                        Cancelados</option>
                                 </select>
                             </div>
                             <div class="col-md-1 mb-1">
@@ -244,7 +244,7 @@
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Empresa</th>
-                                    <th>Remitente</th>
+                                    <th>Sucursal (Remitente)</th>
                                     <th>Destinatario</th>
                                     <th class="text-right">Monto</th>
                                     <th class="text-center">Estado</th>
@@ -256,16 +256,25 @@
                                     <tr>
                                         <td>{{ $transfer->transfer_date?->format('d/m/Y') ?? '-' }}</td>
                                         <td><small>{{ $transfer->company?->name ?? '-' }}</small></td>
-                                        <td><small>{{ $transfer->sender_name }}</small></td>
+                                        <td>
+                                            <small>
+                                                {{ $transfer->branch?->name ?? $transfer->sender_name }}
+                                                @if (auth()->user()->isAdmin() && $transfer->branch?->name)
+                                                    <span class="text-muted">({{ $transfer->sender_name }})</span>
+                                                @endif
+                                            </small>
+                                        </td>
                                         <td><small>{{ $transfer->receiver_name }}</small></td>
-                                        <td class="text-right font-weight-bold">${{ number_format($transfer->amount, 2) }}</td>
+                                        <td class="text-right font-weight-bold">${{ number_format($transfer->amount, 2) }}
+                                        </td>
                                         <td class="text-center">
-                                            <span class="badge badge-{{ $transfer->status_color }}">{{ $transfer->status_label }}</span>
+                                            <span
+                                                class="badge badge-{{ $transfer->status_color }}">{{ $transfer->status_label }}</span>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group btn-group-xs">
-                                                <a href="{{ route('transfers.edit', $transfer) }}" class="btn btn-warning btn-xs"
-                                                    title="Editar">
+                                                <a href="{{ route('transfers.edit', $transfer) }}"
+                                                    class="btn btn-warning btn-xs" title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <form method="POST" action="{{ route('transfers.destroy', $transfer) }}"
@@ -284,7 +293,8 @@
                                         <td colspan="7" class="text-center text-muted py-3">
                                             Sin giros con los filtros aplicados.
                                             @if (($transferTotalCount ?? 0) > 0)
-                                                <a href="{{ route('daily-closings.create', ['date' => $date]) }}" class="btn btn-link btn-sm">
+                                                <a href="{{ route('daily-closings.create', ['date' => $date]) }}"
+                                                    class="btn btn-link btn-sm">
                                                     Limpiar filtros
                                                 </a>
                                             @endif
@@ -334,7 +344,8 @@
                     <div class="closing-section income">
                         <div class="d-flex justify-content-between">
                             <span>TOTAL INGRESOS</span>
-                            <strong class="text-success" id="prev_incomes">${{ number_format($totalIncomes, 2) }}</strong>
+                            <strong class="text-success"
+                                id="prev_incomes">${{ number_format($totalIncomes, 2) }}</strong>
                         </div>
                     </div>
                     <div class="closing-section expense">
@@ -463,7 +474,8 @@
                                                 value="{{ number_format($cashBoxInitialTotal, 2, '.', '') }}" readonly>
                                         </div>
                                         <small class="form-text text-success"><i
-                                                class="fas fa-check-circle mr-1"></i>Dinero inicial acumulado registrado</small>
+                                                class="fas fa-check-circle mr-1"></i>Dinero inicial acumulado
+                                            registrado</small>
                                     @else
                                         <div class="alert alert-warning" role="alert">
                                             <i class="fas fa-exclamation-triangle mr-1"></i> <strong>No registrado</strong>
@@ -532,7 +544,8 @@
 
                         <div class="form-group">
                             <label>Nombre completo *</label>
-                            <input type="text" class="form-control" id="inline_client_name_closing" name="name" required>
+                            <input type="text" class="form-control" id="inline_client_name_closing" name="name"
+                                required>
                         </div>
 
                         <div class="form-group">
@@ -543,8 +556,8 @@
 
                         <div class="form-group mb-0">
                             <label>WhatsApp</label>
-                            <input type="text" class="form-control" id="inline_client_whatsapp_closing" name="whatsapp"
-                                placeholder="+593999999999">
+                            <input type="text" class="form-control" id="inline_client_whatsapp_closing"
+                                name="whatsapp" placeholder="+593999999999">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -649,7 +662,8 @@
                 syncReceiverValue();
             }
 
-            if (!inlineClientForm || !inlineClientAlert || !inlineClientSaveBtn || !inlineClientName || !newClientModal ||
+            if (!inlineClientForm || !inlineClientAlert || !inlineClientSaveBtn || !inlineClientName || !
+                newClientModal ||
                 !receiverSelect) {
                 return;
             }

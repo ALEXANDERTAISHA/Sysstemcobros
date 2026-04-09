@@ -12,10 +12,16 @@ use App\Http\Controllers\DailyClosingController;
 use App\Http\Controllers\CashBoxInitialController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\BranchController as AdminBranchController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 
 // Auth
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
+Route::get('/forgot-password', [LoginController::class, 'showForgotPasswordForm'])->name('password.request');
+Route::post('/forgot-password', [LoginController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset-password/{token}', [LoginController::class, 'showResetPasswordForm'])->name('password.reset');
+Route::post('/reset-password', [LoginController::class, 'resetPassword'])->name('password.update');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('/', fn() => redirect()->route('login'));
@@ -24,19 +30,37 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Empresas
-    Route::resource('companies', CompanyController::class)->except(['show']);
+    Route::middleware('role:super_admin,admin')->group(function () {
+        // Empresas
+        Route::resource('companies', CompanyController::class)->except(['show']);
 
-    // Clientes
-    Route::resource('clients', ClientController::class);
+        // Clientes
+        Route::resource('clients', ClientController::class);
+    });
 
-    // Dinero inicial caja chica
-    Route::get('cash-box-initial', [CashBoxInitialController::class, 'index'])->name('cash-box-initial.index');
-    Route::post('cash-box-initial', [CashBoxInitialController::class, 'store'])->name('cash-box-initial.store');
-    Route::put('cash-box-initial/{cashBoxInitial}', [CashBoxInitialController::class, 'update'])->name('cash-box-initial.update');
-    Route::delete('cash-box-initial/{cashBoxInitial}', [CashBoxInitialController::class, 'destroy'])->name('cash-box-initial.destroy');
+    Route::middleware('role:super_admin')->group(function () {
+        // Administración de usuarios y sucursales
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::get('branches', [AdminBranchController::class, 'index'])->name('branches.index');
+            Route::post('branches', [AdminBranchController::class, 'store'])->name('branches.store');
+            Route::put('branches/{branch}', [AdminBranchController::class, 'update'])->name('branches.update');
+            Route::delete('branches/{branch}', [AdminBranchController::class, 'destroy'])->name('branches.destroy');
 
-    Route::middleware('cash.box.initialized')->group(function () {
+            Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+            Route::post('users', [AdminUserController::class, 'store'])->name('users.store');
+            Route::put('users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+            Route::delete('users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+        });
+    });
+
+    Route::middleware('role:super_admin,admin,operator')->group(function () {
+        // Dinero inicial caja chica
+        Route::get('cash-box-initial', [CashBoxInitialController::class, 'index'])->name('cash-box-initial.index');
+        Route::post('cash-box-initial', [CashBoxInitialController::class, 'store'])->name('cash-box-initial.store');
+        Route::put('cash-box-initial/{cashBoxInitial}', [CashBoxInitialController::class, 'update'])->name('cash-box-initial.update');
+        Route::delete('cash-box-initial/{cashBoxInitial}', [CashBoxInitialController::class, 'destroy'])->name('cash-box-initial.destroy');
+
+        Route::middleware('cash.box.initialized')->group(function () {
         // Giros / Transferencias
         Route::resource('transfers', TransferController::class)->except(['show']);
         Route::patch('transfers/{transfer}/mark-sent', [TransferController::class, 'markSent'])->name('transfers.mark-sent');
@@ -46,6 +70,8 @@ Route::middleware('auth')->group(function () {
         // Gastos / Debitos
         Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
         Route::get('expenses/create', [ExpenseController::class, 'create'])->name('expenses.create');
+        Route::post('expenses/quick-client', [ExpenseController::class, 'quickStoreClient'])->name('expenses.quick-client');
+        Route::post('expenses/quick-company', [ExpenseController::class, 'quickStoreCompany'])->name('expenses.quick-company');
         Route::post('expenses', [ExpenseController::class, 'store'])->name('expenses.store');
         Route::get('expenses/{credit}', [ExpenseController::class, 'show'])->name('expenses.show');
         Route::get('expenses/{credit}/edit', [ExpenseController::class, 'edit'])->name('expenses.edit');
@@ -78,7 +104,10 @@ Route::middleware('auth')->group(function () {
         Route::post('daily-closings', [DailyClosingController::class, 'store'])->name('daily-closings.store');
         Route::get('daily-closings/{dailyClosing}', [DailyClosingController::class, 'show'])->name('daily-closings.show');
         Route::delete('daily-closings/{dailyClosing}', [DailyClosingController::class, 'destroy'])->name('daily-closings.destroy');
+        });
+    });
 
+    Route::middleware('role:super_admin,admin,operator,viewer')->group(function () {
         // Reportes
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
