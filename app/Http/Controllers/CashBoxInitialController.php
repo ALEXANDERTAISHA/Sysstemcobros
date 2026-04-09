@@ -55,23 +55,9 @@ class CashBoxInitialController extends Controller
         }
 
         $assignedData = BranchContext::assign($data);
-        
-        // Buscar registro existente para hoy + sucursal
-        $existing = CashBoxInitial::where('date', $assignedData['date'])
-            ->where('branch_id', $assignedData['branch_id'])
-            ->latest('id')
-            ->first();
 
-        if ($existing) {
-            // Actualizar el más reciente
-            $existing->update([
-                'initial_amount' => $assignedData['initial_amount'],
-                'notes' => $assignedData['notes'] ?? null,
-            ]);
-        } else {
-            // Crear nuevo si no existe
-            CashBoxInitial::create($assignedData);
-        }
+        // Siempre crear nuevo registro (se acumulan durante el día)
+        CashBoxInitial::create($assignedData);
 
         return redirect()->route('cash-box-initial.index')
             ->with('success', 'Dinero inicial registrado correctamente.');
