@@ -186,7 +186,6 @@
                                     <th>Fecha</th>
                                     <th>Empresa</th>
                                     <th>Sucursal (Remitente)</th>
-                                    <th>Destinatario</th>
                                     <th class="text-right">Monto</th>
                                     <th class="text-center">Estado</th>
                                     <th class="text-center">Acc.</th>
@@ -205,7 +204,6 @@
                                                 @endif
                                             </small>
                                         </td>
-                                        <td><small>{{ $transfer->receiver_name }}</small></td>
                                         <td class="text-right font-weight-bold">${{ number_format($transfer->amount, 2) }}</td>
                                         <td class="text-center">
                                             <span class="badge badge-{{ $transfer->status_color }}">{{ $transfer->status_label }}</span>
@@ -229,7 +227,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-3">
+                                        <td colspan="6" class="text-center text-muted py-3">
                                             Sin giros con los filtros aplicados.
                                             @if (($transferTotalCount ?? 0) > 0)
                                                 <a href="{{ route('daily-closings.create', ['date' => $date]) }}" class="btn btn-link btn-sm">
