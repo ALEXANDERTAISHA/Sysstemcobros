@@ -54,7 +54,16 @@ class CashBoxInitialController extends Controller
             return back()->withErrors(['date' => 'Solo puedes registrar dinero inicial para hoy (' . today()->format('d/m/Y') . ').']);
         }
 
-        CashBoxInitial::create(BranchContext::assign($data));
+        $assignedData = BranchContext::assign($data);
+        
+        // Usar updateOrCreate para evitar duplicados
+        CashBoxInitial::updateOrCreate(
+            [
+                'date' => $assignedData['date'],
+                'branch_id' => $assignedData['branch_id'],
+            ],
+            $assignedData
+        );
 
         return redirect()->route('cash-box-initial.index')
             ->with('success', 'Dinero inicial registrado correctamente.');
