@@ -85,10 +85,9 @@
                                 <div class="form-group">
                                     <label>Nombre del Remitente *</label>
                                     <input type="text" class="form-control"
-                                        value="{{ auth()->user()->branch?->name ?? (auth()->user()->name ?? 'Usuario actual') }}"
-                                        readonly>
+                                        value="{{ auth()->user()->branch?->name ?? auth()->user()->name ?? 'Usuario actual' }}" readonly>
                                     <input type="hidden" name="sender_name"
-                                        value="{{ old('sender_name', auth()->user()->branch?->name ?? (auth()->user()->name ?? '')) }}">
+                                        value="{{ old('sender_name', auth()->user()->branch?->name ?? auth()->user()->name ?? '') }}">
                                     <small class="form-text text-muted">
                                         Este campo se registra automaticamente con la sucursal de la cuenta abierta.
                                     </small>
@@ -98,46 +97,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="d-flex justify-content-between align-items-center">
-                                        <span>Nombre del Destinatario *</span>
-                                        <button type="button" class="btn btn-xs btn-outline-success" data-toggle="modal"
-                                            data-target="#newClientModalClosing">
-                                            <i class="fas fa-user-plus mr-1"></i> Nuevo cliente
-                                        </button>
-                                    </label>
-                                    <select id="closing_receiver_name_select"
-                                        class="form-control @error('receiver_name') is-invalid @enderror" required>
-                                        <option value="">Seleccionar destinatario...</option>
-                                        @foreach ($clients as $client)
-                                            <option value="{{ $client->name }}"
-                                                {{ old('receiver_name') === $client->name ? 'selected' : '' }}>
-                                                {{ $client->name }}{{ $client->phone ? ' - ' . $client->phone : '' }}
-                                            </option>
-                                        @endforeach
-                                        <option value="__manual__"
-                                            {{ old('receiver_name') && !$clients->pluck('name')->contains(old('receiver_name')) ? 'selected' : '' }}>
-                                            Otro (escribir manualmente)
-                                        </option>
-                                    </select>
-                                    <input type="hidden" id="closing_receiver_name" name="receiver_name"
-                                        value="{{ old('receiver_name') }}" required>
-                                    @error('receiver_name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-12">
-                                <div class="form-group" id="closing_receiver_name_manual_wrapper" style="display:none;">
-                                    <label>Destinatario manual *</label>
-                                    <input type="text" id="closing_receiver_name_manual" class="form-control"
-                                        placeholder="Escribe el nombre del destinatario">
-                                    <small class="form-text text-muted">Usa esta opción solo si el destinatario no está en
-                                        la lista.</small>
-                                </div>
-                            </div>
+                            <input type="hidden" name="receiver_name" value="{{ old('receiver_name', 'N/A') }}">
 
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -151,20 +111,6 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Código de Transacción</label>
-                                    <input type="text" name="transaction_code" class="form-control"
-                                        value="{{ old('transaction_code') }}" placeholder="Número de referencia">
-                                </div>
-                            </div>
-
-                            <div class="col-md-12">
-                                <div class="form-group mb-0">
-                                    <label>Notas</label>
-                                    <input type="text" name="notes" class="form-control" value="{{ old('notes') }}">
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -218,16 +164,11 @@
                             </div>
                             <div class="col-md-2 mb-1">
                                 <select name="transfer_status" class="form-control form-control-sm">
-                                    <option value="all" {{ $transferStatus === 'all' ? 'selected' : '' }}>Todos
-                                    </option>
-                                    <option value="pending" {{ $transferStatus === 'pending' ? 'selected' : '' }}>
-                                        Pendientes</option>
-                                    <option value="sent" {{ $transferStatus === 'sent' ? 'selected' : '' }}>Enviados
-                                    </option>
-                                    <option value="resent" {{ $transferStatus === 'resent' ? 'selected' : '' }}>Reenviados
-                                    </option>
-                                    <option value="cancelled" {{ $transferStatus === 'cancelled' ? 'selected' : '' }}>
-                                        Cancelados</option>
+                                    <option value="all" {{ $transferStatus === 'all' ? 'selected' : '' }}>Todos</option>
+                                    <option value="pending" {{ $transferStatus === 'pending' ? 'selected' : '' }}>Pendientes</option>
+                                    <option value="sent" {{ $transferStatus === 'sent' ? 'selected' : '' }}>Enviados</option>
+                                    <option value="resent" {{ $transferStatus === 'resent' ? 'selected' : '' }}>Reenviados</option>
+                                    <option value="cancelled" {{ $transferStatus === 'cancelled' ? 'selected' : '' }}>Cancelados</option>
                                 </select>
                             </div>
                             <div class="col-md-1 mb-1">
@@ -259,22 +200,20 @@
                                         <td>
                                             <small>
                                                 {{ $transfer->branch?->name ?? $transfer->sender_name }}
-                                                @if (auth()->user()->isAdmin() && $transfer->branch?->name)
+                                                @if(auth()->user()->isAdmin() && $transfer->branch?->name)
                                                     <span class="text-muted">({{ $transfer->sender_name }})</span>
                                                 @endif
                                             </small>
                                         </td>
                                         <td><small>{{ $transfer->receiver_name }}</small></td>
-                                        <td class="text-right font-weight-bold">${{ number_format($transfer->amount, 2) }}
-                                        </td>
+                                        <td class="text-right font-weight-bold">${{ number_format($transfer->amount, 2) }}</td>
                                         <td class="text-center">
-                                            <span
-                                                class="badge badge-{{ $transfer->status_color }}">{{ $transfer->status_label }}</span>
+                                            <span class="badge badge-{{ $transfer->status_color }}">{{ $transfer->status_label }}</span>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group btn-group-xs">
-                                                <a href="{{ route('transfers.edit', $transfer) }}"
-                                                    class="btn btn-warning btn-xs" title="Editar">
+                                                <a href="{{ route('transfers.edit', $transfer) }}" class="btn btn-warning btn-xs"
+                                                    title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <form method="POST" action="{{ route('transfers.destroy', $transfer) }}"
@@ -293,8 +232,7 @@
                                         <td colspan="7" class="text-center text-muted py-3">
                                             Sin giros con los filtros aplicados.
                                             @if (($transferTotalCount ?? 0) > 0)
-                                                <a href="{{ route('daily-closings.create', ['date' => $date]) }}"
-                                                    class="btn btn-link btn-sm">
+                                                <a href="{{ route('daily-closings.create', ['date' => $date]) }}" class="btn btn-link btn-sm">
                                                     Limpiar filtros
                                                 </a>
                                             @endif
@@ -344,8 +282,7 @@
                     <div class="closing-section income">
                         <div class="d-flex justify-content-between">
                             <span>TOTAL INGRESOS</span>
-                            <strong class="text-success"
-                                id="prev_incomes">${{ number_format($totalIncomes, 2) }}</strong>
+                            <strong class="text-success" id="prev_incomes">${{ number_format($totalIncomes, 2) }}</strong>
                         </div>
                     </div>
                     <div class="closing-section expense">
@@ -474,8 +411,7 @@
                                                 value="{{ number_format($cashBoxInitialTotal, 2, '.', '') }}" readonly>
                                         </div>
                                         <small class="form-text text-success"><i
-                                                class="fas fa-check-circle mr-1"></i>Dinero inicial acumulado
-                                            registrado</small>
+                                                class="fas fa-check-circle mr-1"></i>Dinero inicial acumulado registrado</small>
                                     @else
                                         <div class="alert alert-warning" role="alert">
                                             <i class="fas fa-exclamation-triangle mr-1"></i> <strong>No registrado</strong>
@@ -526,50 +462,6 @@
         </div>
     </div>
 
-    <div class="modal fade" id="newClientModalClosing" tabindex="-1" aria-labelledby="newClientModalClosingLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-success">
-                    <h5 class="modal-title" id="newClientModalClosingLabel">
-                        <i class="fas fa-user-plus mr-1"></i> Nuevo cliente
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <form id="inline_new_client_form_closing">
-                    <div class="modal-body">
-                        <div id="inline_client_alert_closing" class="alert alert-danger d-none py-2 mb-3"></div>
-
-                        <div class="form-group">
-                            <label>Nombre completo *</label>
-                            <input type="text" class="form-control" id="inline_client_name_closing" name="name"
-                                required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Teléfono</label>
-                            <input type="text" class="form-control" id="inline_client_phone_closing" name="phone"
-                                placeholder="0999999999">
-                        </div>
-
-                        <div class="form-group mb-0">
-                            <label>WhatsApp</label>
-                            <input type="text" class="form-control" id="inline_client_whatsapp_closing"
-                                name="whatsapp" placeholder="+593999999999">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success" id="inline_client_save_btn_closing">
-                            <i class="fas fa-save mr-1"></i> Guardar cliente
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @push('scripts')
@@ -598,165 +490,6 @@
             }
             recalculate();
 
-            const receiverSelect = document.getElementById('closing_receiver_name_select');
-            const receiverInput = document.getElementById('closing_receiver_name');
-            const manualWrapper = document.getElementById('closing_receiver_name_manual_wrapper');
-            const manualInput = document.getElementById('closing_receiver_name_manual');
-            const transferForm = receiverSelect ? receiverSelect.closest('form') : null;
-
-            const inlineClientForm = document.getElementById('inline_new_client_form_closing');
-            const inlineClientAlert = document.getElementById('inline_client_alert_closing');
-            const inlineClientSaveBtn = document.getElementById('inline_client_save_btn_closing');
-            const inlineClientName = document.getElementById('inline_client_name_closing');
-            const inlineClientPhone = document.getElementById('inline_client_phone_closing');
-            const inlineClientWhatsapp = document.getElementById('inline_client_whatsapp_closing');
-            const newClientModal = document.getElementById('newClientModalClosing');
-
-            function syncReceiverValue() {
-                if (!receiverSelect || !receiverInput || !manualWrapper || !manualInput) {
-                    return;
-                }
-
-                if (receiverSelect.value === '__manual__') {
-                    manualWrapper.style.display = 'block';
-                    receiverInput.value = manualInput.value.trim();
-                    return;
-                }
-
-                manualWrapper.style.display = 'none';
-                manualInput.value = '';
-                receiverInput.value = receiverSelect.value;
-            }
-
-            if (receiverSelect && receiverInput && manualWrapper && manualInput && transferForm) {
-                receiverSelect.addEventListener('change', function() {
-                    syncReceiverValue();
-                    if (receiverSelect.value === '__manual__') {
-                        manualInput.focus();
-                    }
-                });
-
-                manualInput.addEventListener('input', function() {
-                    if (receiverSelect.value !== '__manual__') {
-                        return;
-                    }
-                    receiverInput.value = manualInput.value.trim();
-                });
-
-                transferForm.addEventListener('submit', function(event) {
-                    syncReceiverValue();
-                    if (!receiverInput.value.trim()) {
-                        event.preventDefault();
-                        if (receiverSelect.value === '__manual__') {
-                            manualInput.focus();
-                        } else {
-                            receiverSelect.focus();
-                        }
-                    }
-                });
-
-                if (receiverSelect.value === '__manual__') {
-                    manualInput.value = receiverInput.value;
-                }
-
-                syncReceiverValue();
-            }
-
-            if (!inlineClientForm || !inlineClientAlert || !inlineClientSaveBtn || !inlineClientName || !
-                newClientModal ||
-                !receiverSelect) {
-                return;
-            }
-
-            function setInlineAlert(message) {
-                inlineClientAlert.textContent = message;
-                inlineClientAlert.classList.remove('d-none');
-            }
-
-            function clearInlineAlert() {
-                inlineClientAlert.textContent = '';
-                inlineClientAlert.classList.add('d-none');
-            }
-
-            function appendClientOption(client) {
-                const option = document.createElement('option');
-                option.value = client.name;
-                option.textContent = client.phone ? (client.name + ' - ' + client.phone) : client.name;
-
-                const manualOption = receiverSelect.querySelector('option[value="__manual__"]');
-                if (manualOption) {
-                    receiverSelect.insertBefore(option, manualOption);
-                } else {
-                    receiverSelect.appendChild(option);
-                }
-            }
-
-            $(newClientModal).on('hidden.bs.modal', function() {
-                inlineClientForm.reset();
-                clearInlineAlert();
-                inlineClientSaveBtn.disabled = false;
-                inlineClientSaveBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Guardar cliente';
-            });
-
-            inlineClientForm.addEventListener('submit', async function(event) {
-                event.preventDefault();
-                clearInlineAlert();
-
-                const payload = {
-                    name: inlineClientName.value.trim(),
-                    phone: inlineClientPhone ? inlineClientPhone.value.trim() : '',
-                    whatsapp: inlineClientWhatsapp ? inlineClientWhatsapp.value.trim() : '',
-                    is_active: 1,
-                };
-
-                if (!payload.name) {
-                    setInlineAlert('El nombre del cliente es obligatorio.');
-                    inlineClientName.focus();
-                    return;
-                }
-
-                try {
-                    inlineClientSaveBtn.disabled = true;
-                    inlineClientSaveBtn.innerHTML =
-                        '<i class="fas fa-spinner fa-spin mr-1"></i> Guardando...';
-
-                    const response = await fetch('{{ route('clients.store') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                .getAttribute('content'),
-                        },
-                        body: JSON.stringify(payload),
-                    });
-
-                    const result = await response.json();
-
-                    if (!response.ok) {
-                        if (result.errors) {
-                            const firstError = Object.values(result.errors)[0];
-                            setInlineAlert(Array.isArray(firstError) ? firstError[0] :
-                                'No se pudo registrar el cliente.');
-                        } else {
-                            setInlineAlert(result.message || 'No se pudo registrar el cliente.');
-                        }
-                        return;
-                    }
-
-                    appendClientOption(result.client);
-                    receiverSelect.value = result.client.name;
-                    syncReceiverValue();
-
-                    $(newClientModal).modal('hide');
-                } catch (error) {
-                    setInlineAlert('Error de conexión. Intenta nuevamente.');
-                } finally {
-                    inlineClientSaveBtn.disabled = false;
-                    inlineClientSaveBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Guardar cliente';
-                }
-            });
         });
     </script>
 @endpush

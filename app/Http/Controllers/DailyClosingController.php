@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Client;
 use App\Models\CashBoxInitial;
 use App\Models\Company;
 use App\Models\DailyClosing;
 use App\Models\Branch;
 use App\Models\Transfer;
-use App\Models\User;
 use App\Support\BranchContext;
 use App\Services\FinancialSummaryService;
 use Illuminate\Http\Request;
@@ -53,8 +51,6 @@ class DailyClosingController extends Controller
         $existing = BranchContext::scope(DailyClosing::whereDate('closing_date', $date))->first();
         $cashBoxInitialTotal = (float) BranchContext::scope(CashBoxInitial::whereDate('date', $date))->sum('initial_amount');
         $companies = Company::where('is_active', true)->orderBy('name')->get();
-        $clients = Client::orderBy('name')->get(['id', 'name', 'phone']);
-        $users = User::orderBy('name')->get(['id', 'name']);
 
         $transferQuery = Transfer::with('company', 'branch')
             ->when($transferListDate, fn($q) => $q->whereDate('transfer_date', $transferListDate))
@@ -82,8 +78,6 @@ class DailyClosingController extends Controller
             'existing',
             'cashBoxInitialTotal',
             'companies',
-            'clients',
-            'users',
             'transferSearch',
             'transferStatus',
             'transferCompany',
