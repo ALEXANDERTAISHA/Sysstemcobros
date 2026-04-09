@@ -121,13 +121,14 @@
                             <tbody>
                                 @forelse($users as $user)
                                     <tr>
-                                        <form method="POST" action="{{ route('admin.users.update', $user) }}">
+                                        <form method="POST" action="{{ route('admin.users.update', $user) }}" id="user-update-form-{{ $user->id }}">
                                             @csrf
                                             @method('PUT')
-                                            <td><input class="form-control form-control-sm" name="name" value="{{ $user->name }}" required></td>
-                                            <td><input class="form-control form-control-sm" name="email" type="email" value="{{ $user->email }}" required></td>
+                                        </form>
+                                            <td><input class="form-control form-control-sm" name="name" value="{{ $user->name }}" form="user-update-form-{{ $user->id }}" required></td>
+                                            <td><input class="form-control form-control-sm" name="email" type="email" value="{{ $user->email }}" form="user-update-form-{{ $user->id }}" required></td>
                                             <td>
-                                                <select name="role" class="form-control form-control-sm" required>
+                                                <select name="role" class="form-control form-control-sm" form="user-update-form-{{ $user->id }}" required>
                                                     <option value="operator" {{ $user->role === 'operator' ? 'selected' : '' }}>Operador</option>
                                                     <option value="viewer" {{ $user->role === 'viewer' ? 'selected' : '' }}>Consulta</option>
                                                     <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Administrador</option>
@@ -135,7 +136,7 @@
                                                 </select>
                                             </td>
                                             <td>
-                                                <select name="branch_id" class="form-control form-control-sm">
+                                                <select name="branch_id" class="form-control form-control-sm" form="user-update-form-{{ $user->id }}">
                                                     <option value="">Sin asignar</option>
                                                     @foreach($branches as $branch)
                                                         <option value="{{ $branch->id }}" {{ (string) $user->branch_id === (string) $branch->id ? 'selected' : '' }}>
@@ -145,7 +146,7 @@
                                                 </select>
                                             </td>
                                             <td>
-                                                <select name="is_active" class="form-control form-control-sm">
+                                                <select name="is_active" class="form-control form-control-sm" form="user-update-form-{{ $user->id }}">
                                                     <option value="1" {{ $user->is_active ? 'selected' : '' }}>Activo</option>
                                                     <option value="0" {{ !$user->is_active ? 'selected' : '' }}>Inactivo</option>
                                                 </select>
@@ -156,7 +157,8 @@
                                                         name="password"
                                                         id="password_update_{{ $user->id }}"
                                                         placeholder="Nueva clave"
-                                                        class="form-control form-control-sm">
+                                                        class="form-control form-control-sm"
+                                                        form="user-update-form-{{ $user->id }}">
                                                     <div class="input-group-append">
                                                         <button type="button"
                                                             class="btn btn-outline-secondary js-toggle-password"
@@ -166,7 +168,7 @@
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <button class="btn btn-xs btn-warning"><i class="fas fa-save"></i> Actualizar</button>
+                                                <button class="btn btn-xs btn-warning" form="user-update-form-{{ $user->id }}"><i class="fas fa-save"></i> Actualizar</button>
                                                 <button type="button"
                                                     class="btn btn-xs btn-danger mt-1 js-delete-user"
                                                     data-delete-url="{{ route('admin.users.destroy', $user) }}"
@@ -174,7 +176,6 @@
                                                     <i class="fas fa-trash"></i> Eliminar
                                                 </button>
                                             </td>
-                                        </form>
                                     </tr>
                                 @empty
                                     <tr>
