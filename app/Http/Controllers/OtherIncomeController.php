@@ -25,7 +25,7 @@ class OtherIncomeController extends Controller
         $date = $request->get('date', today()->toDateString());
         $selectedClientId = $request->filled('client_id') ? (int) $request->get('client_id') : null;
 
-        $incomesQuery = OtherIncome::with('client', 'credit')
+        $incomesQuery = OtherIncome::with('client', 'credit.company')
             ->whereDate('income_date', $date)
             ->orderByDesc('income_date')
             ->orderByDesc('id');
@@ -38,7 +38,7 @@ class OtherIncomeController extends Controller
         $total = $incomes->sum('amount');
         $clients = Client::where('is_active', true)->orderBy('name')->get();
 
-        $pendingDebtsQuery = Credit::with('client')
+        $pendingDebtsQuery = Credit::with('client', 'company')
             ->whereIn('status', ['active', 'partial'])
             ->whereDate('granted_date', '<', today()->toDateString())
             ->whereRaw('total_amount > paid_amount')

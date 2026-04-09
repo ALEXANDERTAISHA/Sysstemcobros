@@ -84,7 +84,9 @@
                     <table class="table table-hover table-sm mb-0">
                         <thead class="thead-dark">
                             <tr>
+                                <th>Fecha</th>
                                 <th>Cliente</th>
+                                <th>Empresa</th>
                                 <th>Concepto</th>
                                 <th>Vence</th>
                                 <th class="text-center">Días</th>
@@ -100,9 +102,11 @@
                                     $diffDays = $debt->due_date ? (int) now()->startOfDay()->diffInDays($debt->due_date->startOfDay(), false) : null;
                                 @endphp
                                 <tr class="{{ $isOverdue ? 'table-danger' : '' }}">
+                                    <td>{{ $debt->granted_date?->format('d/m/Y') ?? '-' }}</td>
                                     <td>
                                         <a href="{{ route('clients.show', $debt->client) }}">{{ $debt->client->name }}</a>
                                     </td>
+                                    <td>{{ $debt->company?->name ?? '-' }}</td>
                                     <td>{{ $debt->concept }}</td>
                                     <td>{{ $debt->due_date?->format('d/m/Y') ?? 'Sin fecha' }}</td>
                                     <td class="text-center">
@@ -131,7 +135,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
+                                    <td colspan="9" class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -155,6 +159,7 @@
                             <tr>
                                 <th>Fecha</th>
                                 <th>Cliente Fiado</th>
+                                <th>Empresa</th>
                                 <th>Descripción</th>
                                 <th class="text-right">Monto</th>
                                 <th class="text-right">Pagado</th>
@@ -171,6 +176,7 @@
                                 <tr>
                                     <td>{{ $income->income_date->format('d/m/Y') }}</td>
                                     <td>{{ $income->client?->name ?? '-' }}</td>
+                                    <td>{{ $income->credit?->company?->name ?? '-' }}</td>
                                     <td>{{ $income->description }}</td>
                                     <td class="text-right text-info font-weight-bold">
                                         ${{ number_format($income->amount, 2) }}</td>
@@ -203,14 +209,14 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">Sin ingresos para esta fecha</td>
+                                    <td colspan="9" class="text-center text-muted py-4">Sin ingresos para esta fecha</td>
                                 </tr>
                             @endforelse
                         </tbody>
                         @if ($incomes->count() > 0)
                             <tfoot>
                                 <tr class="table-info">
-                                    <td colspan="7"><strong>TOTAL OTROS INGRESOS</strong></td>
+                                    <td colspan="8"><strong>TOTAL OTROS INGRESOS</strong></td>
                                     <td class="text-right"><strong>${{ number_format($total, 2) }}</strong></td>
                                 </tr>
                             </tfoot>

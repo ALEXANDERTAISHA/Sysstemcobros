@@ -502,7 +502,7 @@
 
         <!-- Footer -->
         <footer class="main-footer">
-            <strong>&copy; {{ date('Y') }} SystemCobros.</strong> Todos los derechos reservados.
+            <strong>&copy; {{ date('Y') }} TaishaTechonolgy.</strong> Todos los derechos reservados.
             <div class="float-right d-none d-sm-inline-block">
                 <b>Versión</b> 1.0.0
             </div>
