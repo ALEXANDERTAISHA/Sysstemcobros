@@ -41,13 +41,12 @@
                 <div class="col-md-5 mb-2 mb-md-0">
                     <input type="date" name="date" class="form-control" value="{{ $date }}">
                 </div>
-                @if (auth()->user()->isAdmin())
+                @if(auth()->user()->isAdmin())
                     <div class="col-md-5 mb-2 mb-md-0">
                         <select name="branch_id" class="form-control">
                             <option value="">Todas las sucursales</option>
-                            @foreach ($branches as $branch)
-                                <option value="{{ $branch->id }}"
-                                    {{ (string) $branchId === (string) $branch->id ? 'selected' : '' }}>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}" {{ (string) $branchId === (string) $branch->id ? 'selected' : '' }}>
                                     {{ $branch->name }}
                                 </option>
                             @endforeach
@@ -70,6 +69,18 @@
     <!-- Stats Cards -->
     <div class="row justify-content-start">
 
+        <div class="col-lg-4 col-md-6">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3>${{ number_format($existingValue, 2) }}</h3>
+                    <p>Dinero inicial de caja chica</p>
+                </div>
+                <div class="icon"><i class="fas fa-cash-register"></i></div>
+                <a href="{{ route('cash-box-initial.index', ['date' => $date]) }}" class="small-box-footer">
+                    Ver caja chica <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
         <div class="col-lg-4 col-md-6">
             <div class="small-box bg-danger">
                 <div class="inner">
