@@ -43,29 +43,16 @@
             </form>
         </div>
         <div class="col-md-8 text-right">
-            <a href="{{ route('daily-closings.create', ['date' => $date]) }}" class="btn btn-success">
+            <a href="{{ route('daily-closings.create', ['date' => $date]) }}" class="btn btn-info">
                 <i class="fas fa-cash-register mr-1"></i> Hacer Cierre de Caja
             </a>
-            <a href="{{ route('transfers.create') }}" class="btn btn-primary ml-2">
-                <i class="fas fa-plus mr-1"></i> Nuevo Giro
-            </a>
+
         </div>
     </div>
 
     <!-- Stats Cards -->
-    <div class="row justify-content-center">
-        <div class="col-lg-4 col-md-6">
-            <div class="small-box bg-success">
-                <div class="inner">
-                    <h3>${{ number_format($totalIncomes, 2) }}</h3>
-                    <p>Total Ingresos (Giros/Transferencias)</p>
-                </div>
-                <div class="icon"><i class="fas fa-arrow-up"></i></div>
-                <a href="{{ route('transfers.index', ['date' => $date]) }}" class="small-box-footer">
-                    Ver giros <i class="fas fa-arrow-circle-right"></i>
-                </a>
-            </div>
-        </div>
+    <div class="row justify-content-start">
+
         <div class="col-lg-4 col-md-6">
             <div class="small-box bg-danger">
                 <div class="inner">
@@ -79,7 +66,7 @@
             </div>
         </div>
         <div class="col-lg-4 col-md-6">
-            <div class="small-box bg-info">
+            <div class="small-box bg-success">
                 <div class="inner">
                     <h3>${{ number_format($totalOtherIncomes, 2) }}</h3>
                     <p>Otros Ingresos (cobrando Fiados)</p>
@@ -93,62 +80,8 @@
     </div>
 
     <div class="row">
-        <!-- Transferencias por empresa -->
+        <!-- Debitos del dia -->
         <div class="col-lg-7">
-            <div class="card card-outline card-primary">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-paper-plane mr-1"></i> Transferencias por Empresa
-                    </h3>
-                    <div class="card-tools">
-                        <span class="badge badge-success">INGRESOS: ${{ number_format($totalIncomes, 2) }}</span>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>EMPRESA</th>
-                                <th class="text-center">CANT.</th>
-                                <th class="text-right">MONTO</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($companies as $i => $company)
-                                @php
-                                    $row = $transfersByCompany->firstWhere('company_id', $company->id);
-                                @endphp
-                                <tr>
-                                    <td>
-                                        <span class="badge mr-1" style="background-color:{{ $company->color }};">
-                                            &nbsp;</span>
-                                        {{ $company->name }}
-                                    </td>
-                                    <td class="text-center">
-                                        {{ $row && $row->transfers_count ? $row->transfers_count : '-' }}</td>
-                                    <td class="text-right font-weight-bold">
-                                        {{ $row && $row->transfers_total_amount ? '$' . number_format($row->transfers_total_amount, 2) : '-' }}
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted py-3">Sin empresas registradas</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                        <tfoot>
-                            <tr class="table-success">
-                                <td><strong>TOTAL INGRESOS</strong></td>
-                                <td class="text-center"><strong>{{ $transfersByCompany->sum('transfers_count') }}</strong>
-                                </td>
-                                <td class="text-right"><strong>${{ number_format($totalIncomes, 2) }}</strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Debitos del dia -->
             <div class="card card-outline card-danger">
                 <div class="card-header">
                     <h3 class="card-title">
@@ -194,13 +127,13 @@
         <!-- Cierre de Caja + Otros Ingresos -->
         <div class="col-lg-5">
             <!-- Otros Ingresos -->
-            <div class="card card-outline card-info">
+            <div class="card card-outline card-success">
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-plus-circle mr-1"></i> Otros Ingresos
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('other-incomes.index', ['date' => $date]) }}" class="btn btn-xs btn-info">
+                        <a href="{{ route('other-incomes.index', ['date' => $date]) }}" class="btn btn-xs btn-success">
                             <i class="fas fa-plus"></i> Agregar
                         </a>
                     </div>
@@ -216,7 +149,7 @@
                                             <br><small class="text-muted">{{ $income->client->name }}</small>
                                         @endif
                                     </td>
-                                    <td class="text-right text-info font-weight-bold">
+                                    <td class="text-right text-success font-weight-bold">
                                         ${{ number_format($income->amount, 2) }}</td>
                                 </tr>
                             @empty
@@ -227,7 +160,7 @@
                         </tbody>
                         @if ($otherIncomes->count() > 0)
                             <tfoot>
-                                <tr class="table-info">
+                                <tr class="table-success">
                                     <td><strong>TOTAL</strong></td>
                                     <td class="text-right"><strong>${{ number_format($totalOtherIncomes, 2) }}</strong>
                                     </td>
@@ -260,7 +193,7 @@
                     </div>
                     <div class="closing-row d-flex justify-content-between">
                         <span>(+) OTROS INGRESOS</span>
-                        <strong class="text-info">+ ${{ number_format($totalOtherIncomes, 2) }}</strong>
+                        <strong class="text-success">+ ${{ number_format($totalOtherIncomes, 2) }}</strong>
                     </div>
                     <div class="closing-row d-flex justify-content-between bg-light rounded px-2">
                         <span class="font-weight-bold">SUMA TOTAL</span>
@@ -286,7 +219,7 @@
                     @if (!$closing)
                         <div class="mt-3 text-center">
                             <a href="{{ route('daily-closings.create', ['date' => $date]) }}"
-                                class="btn btn-warning btn-block">
+                                class="btn btn-info btn-block">
                                 <i class="fas fa-save mr-1"></i> Guardar Cierre del Día
                             </a>
                         </div>

@@ -366,22 +366,6 @@
                                 </li>
 
                                 <li class="nav-item">
-                                    <a href="{{ route('transfers.index') }}"
-                                        class="nav-link {{ request()->routeIs('transfers.*') ? 'active' : '' }} {{ $operationLockedClass }}"
-                                        title="{{ $operationLockedTitle }}"
-                                        aria-disabled="{{ $hasTodayInitialCash ? 'false' : 'true' }}">
-                                        <i class="fas fa-paper-plane nav-icon"></i>
-                                        <p>
-                                            Giros / Transferencias
-                                            @php $pending = \App\Models\Transfer::where('status','pending')->count() @endphp
-                                            @if ($pending > 0)
-                                                <span class="right badge badge-warning">{{ $pending }}</span>
-                                            @endif
-                                        </p>
-                                    </a>
-                                </li>
-
-                                <li class="nav-item">
                                     <a href="{{ route('expenses.index') }}"
                                         class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }} {{ $operationLockedClass }}"
                                         title="{{ $operationLockedTitle }}"

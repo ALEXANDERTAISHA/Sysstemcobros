@@ -10,10 +10,11 @@ class CashBoxInitialController extends Controller
     public function index()
     {
         $today = today()->toDateString();
-        $initial = CashBoxInitial::whereDate('date', $today)->first();
-        $history = CashBoxInitial::orderByDesc('date')->paginate(20);
+        $initial = CashBoxInitial::whereDate('date', $today)->latest('id')->first();
+        $todayTotal = (float) CashBoxInitial::whereDate('date', $today)->sum('initial_amount');
+        $history = CashBoxInitial::orderByDesc('date')->orderByDesc('id')->paginate(20);
 
-        return view('cash-box-initial.index', compact('initial', 'today', 'history'));
+        return view('cash-box-initial.index', compact('initial', 'today', 'todayTotal', 'history'));
     }
 
     public function store(Request $request)
@@ -29,10 +30,7 @@ class CashBoxInitialController extends Controller
             return back()->withErrors(['date' => 'Solo puedes registrar dinero inicial para hoy (' . today()->format('d/m/Y') . ').']);
         }
 
-        CashBoxInitial::updateOrCreate(
-            ['date' => $data['date']],
-            $data
-        );
+        CashBoxInitial::create($data);
 
         return redirect()->route('cash-box-initial.index')
             ->with('success', 'Dinero inicial registrado correctamente.');

@@ -62,6 +62,13 @@ class TransferController extends Controller
             $data['sent_at'] = now();
         }
         Transfer::create($data);
+
+        if ($request->boolean('from_daily_closing')) {
+            return redirect()
+                ->route('daily-closings.create', ['date' => $data['transfer_date']])
+                ->with('success', 'Giro registrado correctamente.');
+        }
+
         return redirect()->route('transfers.index')->with('success', 'Giro registrado correctamente.');
     }
 

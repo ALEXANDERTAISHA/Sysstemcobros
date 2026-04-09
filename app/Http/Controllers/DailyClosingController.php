@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\CashBoxInitial;
+use App\Models\Company;
 use App\Models\DailyClosing;
+use App\Models\Transfer;
+use App\Models\User;
 use App\Services\FinancialSummaryService;
 use Illuminate\Http\Request;
 
@@ -21,14 +25,49 @@ class DailyClosingController extends Controller
     {
         $date = $request->get('date', today()->toDateString());
         $summary = $this->financialSummary->summarizeRange($date, $date);
+        $transferSearch = $request->get('transfer_search');
+        $transferStatus = $request->get('transfer_status', 'all');
+        $transferCompany = $request->get('transfer_company_id');
+        $transferListDate = $request->get('transfer_list_date');
 
         $existing = DailyClosing::whereDate('closing_date', $date)->first();
-        $cashBoxInitial = CashBoxInitial::whereDate('date', $date)->first();
+        $cashBoxInitialTotal = (float) CashBoxInitial::whereDate('date', $date)->sum('initial_amount');
+        $companies = Company::where('is_active', true)->orderBy('name')->get();
+        $clients = Client::orderBy('name')->get(['id', 'name', 'phone']);
+        $users = User::orderBy('name')->get(['id', 'name']);
+
+        $transferQuery = Transfer::with('company')
+            ->when($transferListDate, fn($q) => $q->whereDate('transfer_date', $transferListDate))
+            ->when($transferSearch, fn($q) => $q->where(function ($subQuery) use ($transferSearch) {
+                $subQuery->where('sender_name', 'like', "%{$transferSearch}%")
+                    ->orWhere('receiver_name', 'like', "%{$transferSearch}%")
+                    ->orWhere('transaction_code', 'like', "%{$transferSearch}%");
+            }))
+            ->when($transferStatus !== 'all', fn($q) => $q->where('status', $transferStatus))
+            ->when($transferCompany, fn($q) => $q->where('company_id', $transferCompany));
+
+        $transferList = (clone $transferQuery)
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        $transferPendingCount = (clone $transferQuery)->where('status', 'pending')->count();
+        $transferTotalCount = Transfer::count();
 
         return view('daily-closings.create', compact(
             'date',
             'existing',
-            'cashBoxInitial'
+            'cashBoxInitialTotal',
+            'companies',
+            'clients',
+            'users',
+            'transferSearch',
+            'transferStatus',
+            'transferCompany',
+            'transferListDate',
+            'transferList',
+            'transferPendingCount',
+            'transferTotalCount'
         ) + [
             'totalIncomes' => $summary['total_incomes'],
             'totalExpenses' => $summary['total_expenses'],

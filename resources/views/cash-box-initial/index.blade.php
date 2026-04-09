@@ -34,15 +34,26 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">$</span>
                                 </div>
-                                <input type="number" name="initial_amount" step="0.01" min="0"
+                                <input type="number" id="initial_amount" name="initial_amount" step="0.01" min="0"
                                     class="form-control @error('initial_amount') is-invalid @enderror"
-                                    value="{{ old('initial_amount', today()->toDateString() === $today && $initial ? $initial->initial_amount : 0) }}"
+                                    value="{{ old('initial_amount', 0) }}"
                                     required>
                             </div>
                             <small class="form-text text-muted">Efectivo que hay en caja al inicio del día</small>
                             @error('initial_amount')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Existente (Caja) *</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">$</span>
+                                </div>
+                                <input type="text" id="existing_value_preview" class="form-control"
+                                    value="{{ number_format($todayTotal ?? 0, 2, '.', '') }}" readonly>
+                            </div>
+                            <small class="form-text text-muted">Se actualiza automaticamente con el dinero inicial ingresado.</small>
                         </div>
                         <div class="form-group">
                             <label>Notas</label>
@@ -60,11 +71,11 @@
                 </form>
             </div>
 
-            @if ($initial && today()->toDateString() === $today)
+            @if (($todayTotal ?? 0) > 0 && today()->toDateString() === $today)
                 <div class="alert alert-info mt-3">
                     <strong><i class="fas fa-check-circle mr-1"></i> Dinero Inicial Registrado Hoy</strong>
                     <p class="mb-0 mt-2">Monto: <strong
-                            class="text-success">${{ number_format($initial->initial_amount, 2) }}</strong></p>
+                            class="text-success">${{ number_format($todayTotal, 2) }}</strong></p>
                     @if ($initial->notes)
                         <p class="mb-0">Notas: <small class="text-muted">{{ $initial->notes }}</small></p>
                     @endif
@@ -183,11 +194,28 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const initialAmountInput = document.getElementById('initial_amount');
+            const existingPreview = document.getElementById('existing_value_preview');
+            const baseExistingTotal = {{ (float) ($todayTotal ?? 0) }};
             const editForm = document.getElementById('editCashBoxForm');
             const editDate = document.getElementById('edit_cash_box_date');
             const editAmount = document.getElementById('edit_cash_box_amount');
             const editNotes = document.getElementById('edit_cash_box_notes');
             const buttons = document.querySelectorAll('.edit-cash-box-btn');
+
+            function syncExistingPreview() {
+                if (!initialAmountInput || !existingPreview) {
+                    return;
+                }
+
+                const amount = parseFloat(initialAmountInput.value) || 0;
+                existingPreview.value = (baseExistingTotal + amount).toFixed(2);
+            }
+
+            if (initialAmountInput) {
+                initialAmountInput.addEventListener('input', syncExistingPreview);
+                syncExistingPreview();
+            }
 
             buttons.forEach(function(button) {
                 button.addEventListener('click', function() {

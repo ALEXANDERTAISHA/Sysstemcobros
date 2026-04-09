@@ -32,7 +32,7 @@ class DashboardController extends Controller
         $sumTotal = $summary['sum_total'];
 
         $closing = DailyClosing::whereDate('closing_date', $date)->first();
-        $existingValue = (float) (CashBoxInitial::whereDate('date', $date)->value('initial_amount') ?? 0);
+        $existingValue = (float) CashBoxInitial::whereDate('date', $date)->sum('initial_amount');
         $difference    = $sumTotal - $existingValue;
 
         $pendingTransfers = Transfer::where('status', 'pending')->count();

@@ -15,6 +15,6 @@ class CashBoxInitial extends Model
 
     public static function getTodayInitial(): ?string
     {
-        return static::whereDate('date', today())->value('initial_amount');
+        return (string) static::whereDate('date', today())->sum('initial_amount');
     }
 }
