@@ -225,7 +225,7 @@
                                 <input type="text" id="client_filter_input" class="form-control client-filter-input"
                                     placeholder="Buscar cliente por nombre o teléfono...">
                             </div>
-                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror" required size="{{ old('client_id', request('client_id')) ? 1 : min(($clients->count() + 1), 8) }}">
+                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror" required size="1">
                                 <option value="">Seleccionar cliente...</option>
                                 @foreach ($clients as $client)
                                     <option value="{{ $client->id }}" data-company="{{ $client->company_id ?? '' }}"
@@ -278,11 +278,11 @@
                             <div class="expense-step-title">Empresa <span class="step-indicator">Paso 2</span></div>
                             <div class="expense-step-help">Confirma la empresa asociada al cliente.</div>
                             <label>Empresa *</label>
-                            <div class="client-filter-wrap" id="company_filter_wrap" style="display:none;">
+                            <div class="client-filter-wrap" id="company_filter_wrap">
                                 <input type="text" id="company_filter_input" class="form-control client-filter-input"
                                     placeholder="Buscar empresa...">
                             </div>
-                            <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror" size="{{ old('company_id') ? 1 : min(($companies->count() + 1), 8) }}">
+                            <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror" size="1">
                                 <option value="">Seleccionar empresa...</option>
                                 @foreach ($companies as $company)
                                     <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
@@ -542,9 +542,6 @@
                 const visibleOptions = Math.min(Math.max(visibleCount, 2), 8);
                 clientSelect.setAttribute('size', String(visibleOptions));
                 clientSelect.classList.add('select-expanded');
-                if (clientFilterWrap) {
-                    clientFilterWrap.style.display = 'block';
-                }
             }
 
             function collapseClientSelect() {
@@ -554,9 +551,6 @@
 
                 clientSelect.setAttribute('size', '1');
                 clientSelect.classList.remove('select-expanded');
-                if (clientFilterWrap) {
-                    clientFilterWrap.style.display = 'none';
-                }
             }
 
             function expandCompanySelect() {
@@ -569,9 +563,6 @@
                 const visibleOptions = Math.min(Math.max(visibleCount, 2), 8);
                 companySelect.setAttribute('size', String(visibleOptions));
                 companySelect.classList.add('select-expanded');
-                if (companyFilterWrap) {
-                    companyFilterWrap.style.display = 'block';
-                }
             }
 
             function collapseCompanySelect() {
@@ -581,9 +572,6 @@
 
                 companySelect.setAttribute('size', '1');
                 companySelect.classList.remove('select-expanded');
-                if (companyFilterWrap) {
-                    companyFilterWrap.style.display = 'none';
-                }
             }
 
             function filterClientOptions() {
@@ -602,7 +590,11 @@
                     option.hidden = term !== '' && !option.text.toLowerCase().includes(term);
                 });
 
-                expandClientSelect();
+                if (term === '') {
+                    collapseClientSelect();
+                } else {
+                    expandClientSelect();
+                }
             }
 
             function filterCompanyOptions() {
@@ -621,7 +613,11 @@
                     option.hidden = term !== '' && !option.text.toLowerCase().includes(term);
                 });
 
-                expandCompanySelect();
+                if (term === '') {
+                    collapseCompanySelect();
+                } else {
+                    expandCompanySelect();
+                }
             }
 
             function resetCompanyFilter() {
@@ -674,7 +670,7 @@
                     hideSection(grantedSection);
                     hideSection(amountSection);
                     autoFilledMsg.style.display = 'none';
-                    expandClientSelect();
+                    collapseClientSelect();
                     return;
                 }
 
@@ -685,7 +681,7 @@
                     showSection(companySection);
                     hideSection(grantedSection);
                     hideSection(amountSection);
-                    expandCompanySelect();
+                    collapseCompanySelect();
                     return;
                 }
 
@@ -738,7 +734,6 @@
                 if (clientId && !companySelect.value && !openedCompanySelectOnce) {
                     openedCompanySelectOnce = true;
                     setTimeout(function() {
-                        expandCompanySelect();
                         if (companyFilterInput) {
                             companyFilterInput.focus();
                         } else {
@@ -787,7 +782,7 @@
                         Array.from(clientSelect.options).forEach(function(option) {
                             option.hidden = false;
                         });
-                        expandClientSelect();
+                        collapseClientSelect();
                         if (clientFilterInput) {
                             clientFilterInput.focus();
                         } else {
@@ -801,7 +796,7 @@
                         hideSection(grantedSection);
                         hideSection(amountSection);
                         resetCompanyFilter();
-                        expandCompanySelect();
+                        collapseCompanySelect();
                         if (companyFilterInput) {
                             companyFilterInput.focus();
                         } else {
@@ -837,14 +832,6 @@
 
             syncDueDateFromGranted();
             updateVisibility();
-
-            if (!clientSelect.value && !openedClientSelectOnce) {
-                openedClientSelectOnce = true;
-                setTimeout(function() {
-                    expandClientSelect();
-                    clientSelect.focus();
-                }, 180);
-            }
         });
     </script>
 @endpush
