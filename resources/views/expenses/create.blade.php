@@ -206,8 +206,7 @@
                             <div class="expense-step-title">Cliente <span class="step-indicator">Paso 1</span></div>
                             <div class="expense-step-help">Empieza seleccionando a quién pertenece este débito.</div>
                             <label>Cliente *</label>
-                            <select id="client_select" name="client_id"
-                                class="form-control @error('client_id') is-invalid @enderror" required>
+                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror" required>
                                 <option value="">Seleccionar cliente...</option>
                                 @foreach ($clients as $client)
                                     <option value="{{ $client->id }}" data-company="{{ $client->company_id ?? '' }}"
@@ -260,12 +259,10 @@
                             <div class="expense-step-title">Empresa <span class="step-indicator">Paso 2</span></div>
                             <div class="expense-step-help">Confirma la empresa asociada al cliente.</div>
                             <label>Empresa *</label>
-                            <select id="company_select" name="company_id"
-                                class="form-control @error('company_id') is-invalid @enderror">
+                            <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror">
                                 <option value="">Seleccionar empresa...</option>
                                 @foreach ($companies as $company)
-                                    <option value="{{ $company->id }}"
-                                        {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                    <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
                                         {{ $company->name }}
                                     </option>
                                 @endforeach
@@ -292,8 +289,7 @@
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label>Color *</label>
-                                            <input type="color" class="form-control" id="quick_company_color"
-                                                value="#0d6efd">
+                                            <input type="color" class="form-control" id="quick_company_color" value="#0d6efd">
                                         </div>
                                     </div>
                                     <button type="button" class="btn btn-sm btn-warning" id="quick_company_submit">
@@ -305,25 +301,22 @@
                         </div>
 
                         <div id="concept_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Concepto / Descripción <span class="step-indicator">Paso
-                                    3</span></div>
+                            <div class="expense-step-title">Concepto / Descripción <span class="step-indicator">Paso 3</span></div>
                             <div class="expense-step-help">Describe el motivo del débito.</div>
                             <label>Concepto / Descripción *</label>
-                            <input type="text" id="concept_input" name="concept"
-                                class="form-control @error('concept') is-invalid @enderror" value="{{ old('concept') }}"
-                                placeholder="Ej: Préstamo en efectivo, mercadería..." required>
+                            <input type="text" id="concept_input" name="concept" class="form-control @error('concept') is-invalid @enderror"
+                                value="{{ old('concept') }}" placeholder="Ej: Préstamo en efectivo, mercadería..." required>
                             @error('concept')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div id="amount_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Monto Total ($) <span class="step-indicator">Paso 4</span>
-                            </div>
+                            <div class="expense-step-title">Monto Total ($) <span class="step-indicator">Paso 4</span></div>
                             <div class="expense-step-help">Ingresa el valor del débito para continuar.</div>
                             <label>Monto Total ($) *</label>
-                            <input type="number" id="total_amount_input" name="total_amount" step="0.01"
-                                min="0.01" class="form-control @error('total_amount') is-invalid @enderror"
+                            <input type="number" id="total_amount_input" name="total_amount" step="0.01" min="0.01"
+                                class="form-control @error('total_amount') is-invalid @enderror"
                                 value="{{ old('total_amount') }}" required>
                             @error('total_amount')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -331,8 +324,7 @@
                         </div>
 
                         <div id="granted_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Fecha de Otorgamiento <span class="step-indicator">Paso
-                                    5</span></div>
+                            <div class="expense-step-title">Fecha de Otorgamiento <span class="step-indicator">Paso 5</span></div>
                             <div class="expense-step-help">Define cuándo se registró este débito.</div>
                             <label>Fecha de Otorgamiento *</label>
                             <input type="date" id="granted_date_input" name="granted_date" class="form-control"
@@ -340,8 +332,7 @@
                         </div>
 
                         <div id="due_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Fecha Límite de Pago <span class="step-indicator">Paso
-                                    6</span></div>
+                            <div class="expense-step-title">Fecha Límite de Pago <span class="step-indicator">Paso 6</span></div>
                             <div class="expense-step-help">Establece la fecha máxima para el pago del débito.</div>
                             <label>Fecha Límite de Pago *</label>
                             <input type="date" id="due_date_input" name="due_date"
@@ -354,15 +345,13 @@
 
                         <div id="notes_section" class="form-group form-group-hidden expense-step-card">
                             <div class="expense-step-title">Notas <span class="step-indicator">Final</span></div>
-                            <div class="expense-step-help">Agrega una nota final si necesitas más contexto antes de
-                                guardar.</div>
+                            <div class="expense-step-help">Agrega una nota final si necesitas más contexto antes de guardar.</div>
                             <label>Notas</label>
                             <textarea name="notes" class="form-control" rows="2">{{ old('notes') }}</textarea>
                         </div>
                     </div>
                     <div class="card-footer">
-                        <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Registrar
-                            Débito</button>
+                        <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Registrar Débito</button>
                         <a href="{{ route('expenses.index') }}" class="btn btn-secondary ml-2">Cancelar</a>
                     </div>
                 </form>
@@ -412,8 +401,12 @@
             const quickCompanyFormWrap = document.getElementById('quick_company_form_wrap');
             const quickCompanySubmit = document.getElementById('quick_company_submit');
             const quickCompanyFeedback = document.getElementById('quick_company_feedback');
+            let openedClientSelectOnce = false;
+            let openedCompanySelectOnce = false;
 
-            const clientToCompany = @json($clients->mapWithKeys(fn($client) => [$client->id => $client->company_id])->toArray());
+            const clientToCompany = @json(
+                $clients->mapWithKeys(fn($client) => [$client->id => $client->company_id])->toArray()
+            );
 
             function toggleQuickForm(element) {
                 element.classList.toggle('is-visible');
@@ -430,8 +423,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                            'content'),
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     },
                     body: JSON.stringify(payload),
                 });
@@ -439,8 +431,7 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    const errors = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message ||
-                        'No se pudo completar la solicitud.');
+                    const errors = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message || 'No se pudo completar la solicitud.');
                     throw new Error(errors);
                 }
 
@@ -533,6 +524,19 @@
                 return year && month && day ? `${day}/${month}/${year}` : value;
             }
 
+            function openNativeSelect(selectElement) {
+                if (!selectElement) {
+                    return;
+                }
+
+                selectElement.focus();
+                selectElement.click();
+                selectElement.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: 'ArrowDown',
+                    bubbles: true,
+                }));
+            }
+
             function updateVisibility() {
                 const hasClient = clientSelect.value !== '';
                 const hasCompany = companySelect.value !== '';
@@ -544,8 +548,7 @@
                 setPill(clientPill, clientPillValue, hasClient ? selectedText(clientSelect) : '');
                 setPill(companyPill, companyPillValue, hasCompany ? selectedText(companySelect) : '');
                 setPill(conceptPill, conceptPillValue, hasConcept ? conceptInput.value.trim() : '');
-                setPill(amountPill, amountPillValue, hasAmount ? `$${Number(totalAmountInput.value).toFixed(2)}` :
-                    '');
+                setPill(amountPill, amountPillValue, hasAmount ? `$${Number(totalAmountInput.value).toFixed(2)}` : '');
                 setPill(grantedPill, grantedPillValue, hasGranted ? formatDate(grantedDateInput.value) : '');
                 setPill(duePill, duePillValue, hasDue ? formatDate(dueDateInput.value) : '');
 
@@ -627,6 +630,13 @@
                 }
 
                 updateVisibility();
+
+                if (clientId && !companySelect.value && !openedCompanySelectOnce) {
+                    openedCompanySelectOnce = true;
+                    setTimeout(function() {
+                        openNativeSelect(companySelect);
+                    }, 120);
+                }
             });
 
             companySelect.addEventListener('change', updateVisibility);
@@ -722,6 +732,13 @@
             });
 
             updateVisibility();
+
+            if (!clientSelect.value && !openedClientSelectOnce) {
+                openedClientSelectOnce = true;
+                setTimeout(function() {
+                    openNativeSelect(clientSelect);
+                }, 180);
+            }
         });
     </script>
 @endpush
