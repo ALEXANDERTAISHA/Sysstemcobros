@@ -132,6 +132,30 @@
         .quick-feedback.is-visible {
             display: block;
         }
+
+        .select-expanded {
+            height: auto;
+            border: 1px solid #e6c86b;
+            border-radius: 10px;
+            background: #fffef9;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+            padding: .25rem;
+        }
+
+        .client-filter-wrap {
+            margin-bottom: .6rem;
+        }
+
+        .client-filter-input {
+            border-radius: 10px;
+            border: 1px solid #ecd38a;
+            background: #fffdf5;
+        }
+
+        .client-filter-input:focus {
+            border-color: #d6a800;
+            box-shadow: 0 0 0 .15rem rgba(214, 168, 0, .15);
+        }
     </style>
 @endpush
 
@@ -161,15 +185,6 @@
                                     <span class="expense-flow-pill-value" id="company_pill_value"></span>
                                 </div>
                                 <button type="button" class="expense-flow-edit" data-edit-step="company">
-                                    <i class="fas fa-pen mr-1"></i>Editar
-                                </button>
-                            </div>
-                            <div class="expense-flow-pill" id="concept_pill">
-                                <div>
-                                    <span class="expense-flow-pill-label">Concepto</span>
-                                    <span class="expense-flow-pill-value" id="concept_pill_value"></span>
-                                </div>
-                                <button type="button" class="expense-flow-edit" data-edit-step="concept">
                                     <i class="fas fa-pen mr-1"></i>Editar
                                 </button>
                             </div>
@@ -206,7 +221,11 @@
                             <div class="expense-step-title">Cliente <span class="step-indicator">Paso 1</span></div>
                             <div class="expense-step-help">Empieza seleccionando a quién pertenece este débito.</div>
                             <label>Cliente *</label>
-                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror" required>
+                            <div class="client-filter-wrap" id="client_filter_wrap">
+                                <input type="text" id="client_filter_input" class="form-control client-filter-input"
+                                    placeholder="Buscar cliente por nombre o teléfono...">
+                            </div>
+                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror" required size="{{ old('client_id', request('client_id')) ? 1 : min(($clients->count() + 1), 8) }}">
                                 <option value="">Seleccionar cliente...</option>
                                 @foreach ($clients as $client)
                                     <option value="{{ $client->id }}" data-company="{{ $client->company_id ?? '' }}"
@@ -300,19 +319,10 @@
                             </div>
                         </div>
 
-                        <div id="concept_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Concepto / Descripción <span class="step-indicator">Paso 3</span></div>
-                            <div class="expense-step-help">Describe el motivo del débito.</div>
-                            <label>Concepto / Descripción *</label>
-                            <input type="text" id="concept_input" name="concept" class="form-control @error('concept') is-invalid @enderror"
-                                value="{{ old('concept') }}" placeholder="Ej: Préstamo en efectivo, mercadería..." required>
-                            @error('concept')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <input type="hidden" name="concept" value="{{ old('concept', 'Débito registrado') }}">
 
                         <div id="amount_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Monto Total ($) <span class="step-indicator">Paso 4</span></div>
+                            <div class="expense-step-title">Monto Total ($) <span class="step-indicator">Paso 3</span></div>
                             <div class="expense-step-help">Ingresa el valor del débito para continuar.</div>
                             <label>Monto Total ($) *</label>
                             <input type="number" id="total_amount_input" name="total_amount" step="0.01" min="0.01"
@@ -324,7 +334,7 @@
                         </div>
 
                         <div id="granted_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Fecha de Otorgamiento <span class="step-indicator">Paso 5</span></div>
+                            <div class="expense-step-title">Fecha de Otorgamiento <span class="step-indicator">Paso 4</span></div>
                             <div class="expense-step-help">Define cuándo se registró este débito.</div>
                             <label>Fecha de Otorgamiento *</label>
                             <input type="date" id="granted_date_input" name="granted_date" class="form-control"
@@ -332,7 +342,7 @@
                         </div>
 
                         <div id="due_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Fecha Límite de Pago <span class="step-indicator">Paso 6</span></div>
+                            <div class="expense-step-title">Fecha Límite de Pago <span class="step-indicator">Paso 5</span></div>
                             <div class="expense-step-help">Establece la fecha máxima para el pago del débito.</div>
                             <label>Fecha Límite de Pago *</label>
                             <input type="date" id="due_date_input" name="due_date"
@@ -343,12 +353,7 @@
                             @enderror
                         </div>
 
-                        <div id="notes_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Notas <span class="step-indicator">Final</span></div>
-                            <div class="expense-step-help">Agrega una nota final si necesitas más contexto antes de guardar.</div>
-                            <label>Notas</label>
-                            <textarea name="notes" class="form-control" rows="2">{{ old('notes') }}</textarea>
-                        </div>
+                        <input type="hidden" name="notes" value="{{ old('notes') }}">
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Registrar Débito</button>
@@ -365,29 +370,26 @@
         document.addEventListener('DOMContentLoaded', function() {
             const clientSection = document.getElementById('client_section');
             const clientSelect = document.getElementById('client_select');
+            const clientFilterWrap = document.getElementById('client_filter_wrap');
+            const clientFilterInput = document.getElementById('client_filter_input');
             const companySection = document.getElementById('company_section');
             const companySelect = document.getElementById('company_select');
-            const conceptSection = document.getElementById('concept_section');
-            const conceptInput = document.getElementById('concept_input');
             const amountSection = document.getElementById('amount_section');
             const totalAmountInput = document.getElementById('total_amount_input');
             const grantedSection = document.getElementById('granted_section');
             const grantedDateInput = document.getElementById('granted_date_input');
             const dueSection = document.getElementById('due_section');
             const dueDateInput = document.getElementById('due_date_input');
-            const notesSection = document.getElementById('notes_section');
             const autoFilledMsg = document.getElementById('auto_filled_message');
 
             const clientPill = document.getElementById('client_pill');
             const companyPill = document.getElementById('company_pill');
-            const conceptPill = document.getElementById('concept_pill');
             const amountPill = document.getElementById('amount_pill');
             const grantedPill = document.getElementById('granted_pill');
             const duePill = document.getElementById('due_pill');
 
             const clientPillValue = document.getElementById('client_pill_value');
             const companyPillValue = document.getElementById('company_pill_value');
-            const conceptPillValue = document.getElementById('concept_pill_value');
             const amountPillValue = document.getElementById('amount_pill_value');
             const grantedPillValue = document.getElementById('granted_pill_value');
             const duePillValue = document.getElementById('due_pill_value');
@@ -537,17 +539,61 @@
                 }));
             }
 
+            function expandClientSelect() {
+                if (!clientSelect || clientSelect.value) {
+                    return;
+                }
+
+                const visibleCount = Array.from(clientSelect.options)
+                    .filter((option, index) => index === 0 || !option.hidden).length;
+                const visibleOptions = Math.min(Math.max(visibleCount, 2), 8);
+                clientSelect.setAttribute('size', String(visibleOptions));
+                clientSelect.classList.add('select-expanded');
+                if (clientFilterWrap) {
+                    clientFilterWrap.style.display = 'block';
+                }
+            }
+
+            function collapseClientSelect() {
+                if (!clientSelect) {
+                    return;
+                }
+
+                clientSelect.setAttribute('size', '1');
+                clientSelect.classList.remove('select-expanded');
+                if (clientFilterWrap) {
+                    clientFilterWrap.style.display = 'none';
+                }
+            }
+
+            function filterClientOptions() {
+                if (!clientFilterInput || !clientSelect) {
+                    return;
+                }
+
+                const term = clientFilterInput.value.trim().toLowerCase();
+
+                Array.from(clientSelect.options).forEach(function(option, index) {
+                    if (index === 0) {
+                        option.hidden = false;
+                        return;
+                    }
+
+                    option.hidden = term !== '' && !option.text.toLowerCase().includes(term);
+                });
+
+                expandClientSelect();
+            }
+
             function updateVisibility() {
                 const hasClient = clientSelect.value !== '';
                 const hasCompany = companySelect.value !== '';
-                const hasConcept = conceptInput.value.trim() !== '';
                 const hasAmount = (parseFloat(totalAmountInput.value) || 0) > 0;
                 const hasGranted = grantedDateInput.value !== '';
                 const hasDue = dueDateInput.value !== '';
 
                 setPill(clientPill, clientPillValue, hasClient ? selectedText(clientSelect) : '');
                 setPill(companyPill, companyPillValue, hasCompany ? selectedText(companySelect) : '');
-                setPill(conceptPill, conceptPillValue, hasConcept ? conceptInput.value.trim() : '');
                 setPill(amountPill, amountPillValue, hasAmount ? `$${Number(totalAmountInput.value).toFixed(2)}` : '');
                 setPill(grantedPill, grantedPillValue, hasGranted ? formatDate(grantedDateInput.value) : '');
                 setPill(duePill, duePillValue, hasDue ? formatDate(dueDateInput.value) : '');
@@ -555,45 +601,31 @@
                 if (!hasClient) {
                     showSection(clientSection);
                     hideSection(companySection);
-                    hideSection(conceptSection);
                     hideSection(amountSection);
                     hideSection(grantedSection);
                     hideSection(dueSection);
-                    hideSection(notesSection);
                     autoFilledMsg.style.display = 'none';
+                    expandClientSelect();
                     return;
                 }
 
                 hideSection(clientSection);
+                collapseClientSelect();
 
                 if (!hasCompany) {
                     showSection(companySection);
-                    hideSection(conceptSection);
                     hideSection(amountSection);
                     hideSection(grantedSection);
                     hideSection(dueSection);
-                    hideSection(notesSection);
                     return;
                 }
 
                 hideSection(companySection);
 
-                if (!hasConcept) {
-                    showSection(conceptSection);
-                    hideSection(amountSection);
-                    hideSection(grantedSection);
-                    hideSection(dueSection);
-                    hideSection(notesSection);
-                    return;
-                }
-
-                hideSection(conceptSection);
-
                 if (!hasAmount) {
                     showSection(amountSection);
                     hideSection(grantedSection);
                     hideSection(dueSection);
-                    hideSection(notesSection);
                     return;
                 }
 
@@ -602,7 +634,6 @@
                 if (!hasGranted) {
                     showSection(grantedSection);
                     hideSection(dueSection);
-                    hideSection(notesSection);
                     return;
                 }
 
@@ -610,12 +641,10 @@
 
                 if (!hasDue) {
                     showSection(dueSection);
-                    hideSection(notesSection);
                     return;
                 }
 
                 hideSection(dueSection);
-                showSection(notesSection);
             }
 
             clientSelect.addEventListener('change', function() {
@@ -629,6 +658,18 @@
                     autoFilledMsg.style.display = 'none';
                 }
 
+                if (clientId) {
+                    collapseClientSelect();
+                } else {
+                    if (clientFilterInput) {
+                        clientFilterInput.value = '';
+                    }
+                    Array.from(clientSelect.options).forEach(function(option) {
+                        option.hidden = false;
+                    });
+                    expandClientSelect();
+                }
+
                 updateVisibility();
 
                 if (clientId && !companySelect.value && !openedCompanySelectOnce) {
@@ -640,13 +681,10 @@
             });
 
             companySelect.addEventListener('change', updateVisibility);
-            conceptInput.addEventListener('blur', updateVisibility);
-            conceptInput.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    updateVisibility();
-                }
-            });
+
+            if (clientFilterInput) {
+                clientFilterInput.addEventListener('input', filterClientOptions);
+            }
 
             totalAmountInput.addEventListener('blur', updateVisibility);
             totalAmountInput.addEventListener('keydown', function(event) {
@@ -666,66 +704,56 @@
                     if (step === 'client') {
                         showSection(clientSection);
                         hideSection(companySection);
-                        hideSection(conceptSection);
                         hideSection(amountSection);
                         hideSection(grantedSection);
                         hideSection(dueSection);
-                        hideSection(notesSection);
-                        clientSelect.focus();
+                        if (clientFilterInput) {
+                            clientFilterInput.value = '';
+                        }
+                        Array.from(clientSelect.options).forEach(function(option) {
+                            option.hidden = false;
+                        });
+                        expandClientSelect();
+                        if (clientFilterInput) {
+                            clientFilterInput.focus();
+                        } else {
+                            clientSelect.focus();
+                        }
                     }
 
                     if (step === 'company') {
                         hideSection(clientSection);
                         showSection(companySection);
-                        hideSection(conceptSection);
                         hideSection(amountSection);
                         hideSection(grantedSection);
                         hideSection(dueSection);
-                        hideSection(notesSection);
                         companySelect.focus();
-                    }
-
-                    if (step === 'concept') {
-                        hideSection(clientSection);
-                        hideSection(companySection);
-                        showSection(conceptSection);
-                        hideSection(amountSection);
-                        hideSection(grantedSection);
-                        hideSection(dueSection);
-                        hideSection(notesSection);
-                        conceptInput.focus();
                     }
 
                     if (step === 'amount') {
                         hideSection(clientSection);
                         hideSection(companySection);
-                        hideSection(conceptSection);
                         showSection(amountSection);
                         hideSection(grantedSection);
                         hideSection(dueSection);
-                        hideSection(notesSection);
                         totalAmountInput.focus();
                     }
 
                     if (step === 'granted') {
                         hideSection(clientSection);
                         hideSection(companySection);
-                        hideSection(conceptSection);
                         hideSection(amountSection);
                         showSection(grantedSection);
                         hideSection(dueSection);
-                        hideSection(notesSection);
                         grantedDateInput.focus();
                     }
 
                     if (step === 'due') {
                         hideSection(clientSection);
                         hideSection(companySection);
-                        hideSection(conceptSection);
                         hideSection(amountSection);
                         hideSection(grantedSection);
                         showSection(dueSection);
-                        hideSection(notesSection);
                         dueDateInput.focus();
                     }
                 });
@@ -736,7 +764,8 @@
             if (!clientSelect.value && !openedClientSelectOnce) {
                 openedClientSelectOnce = true;
                 setTimeout(function() {
-                    openNativeSelect(clientSelect);
+                    expandClientSelect();
+                    clientSelect.focus();
                 }, 180);
             }
         });
