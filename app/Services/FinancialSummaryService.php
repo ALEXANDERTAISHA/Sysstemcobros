@@ -45,11 +45,20 @@ class FinancialSummaryService
         return $this->scopeByBranch($query, $branchId);
     }
 
-    public function summarizeRange(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null): array
+    public function summarizeRange(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null, bool $excludeTodayIncomes = false): array
     {
         $transferQuery = $this->transferQuery($dateFrom, $dateTo, $companyId, $branchId);
         $debitQuery = $this->debitQuery($dateFrom, $dateTo, $branchId);
-        $otherIncomeQuery = $this->otherIncomeQuery($dateFrom, $dateTo, $branchId);
+        
+        // Si es para cierre de caja (same day), excluir cobros de créditos creados hoy
+        $otherIncomeQuery = $excludeTodayIncomes && $dateFrom === $dateTo
+            ? OtherIncome::query()
+                ->with('client')
+                ->whereDate('income_date', '>=', $dateFrom)
+                ->whereDate('income_date', '<=', $dateTo)
+                ->whereHas('credit', fn(Builder $q) => $q->whereDate('granted_date', '<', $dateFrom))
+                ->tap(fn($q) => $this->scopeByBranch($q, $branchId))
+            : $this->otherIncomeQuery($dateFrom, $dateTo, $branchId);
 
         $totalIncomes = (float) (clone $transferQuery)->sum('amount');
         $totalDebits = (float) (clone $debitQuery)->sum('total_amount');

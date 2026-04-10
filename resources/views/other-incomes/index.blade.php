@@ -24,7 +24,7 @@
                             @endforeach
                         </select>
                     </div>
-                    @if (auth()->user()->isAdmin())
+                    @if(auth()->user()->isAdmin())
                         <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
                             <label class="mb-1">Sucursal</label>
                             <select name="branch_id" class="form-control">
@@ -80,14 +80,12 @@
         <div class="col-12">
             <div class="card card-outline card-warning">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-hand-holding-usd mr-1"></i> Seguimiento de Débitos Pendientes
-                    </h3>
+                    <h3 class="card-title"><i class="fas fa-hand-holding-usd mr-1"></i> Seguimiento de Débitos Pendientes</h3>
                     <div class="card-tools d-flex align-items-center">
-                        <span class="badge badge-warning mr-2">Total por cobrar:
-                            ${{ number_format($pendingDebtTotal, 2) }}</span>
+                        <span class="badge badge-warning mr-2">Total por cobrar: ${{ number_format($pendingDebtTotal, 2) }}</span>
                         <form action="{{ route('other-incomes.send-overdue-reminders') }}" method="POST" class="mb-0">
                             @csrf
-                            @if (auth()->user()->isAdmin())
+                            @if(auth()->user()->isAdmin())
                                 <input type="hidden" name="branch_id" value="{{ $branchId }}">
                             @endif
                             <button type="submit" class="btn btn-sm btn-danger"
@@ -100,78 +98,71 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm mb-0">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>Fecha</th>
-                                    @if (auth()->user()->isAdmin())
-                                        <th>Sucursal</th>
+                    <table class="table table-hover table-sm mb-0">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Fecha</th>
+                                @if(auth()->user()->isAdmin())
+                                    <th>Sucursal</th>
+                                @endif
+                                <th>Cliente</th>
+                                <th>Empresa</th>
+                                <th>Concepto</th>
+                                <th>Vence</th>
+                                <th class="text-center">Días</th>
+                                <th class="text-right">Saldo</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($pendingDebts as $debt)
+                                @php
+                                    $isOverdue = $debt->due_date && $debt->due_date->isPast();
+                                    $diffDays = $debt->due_date ? (int) now()->startOfDay()->diffInDays($debt->due_date->startOfDay(), false) : null;
+                                @endphp
+                                <tr class="{{ $isOverdue ? 'table-danger' : '' }}">
+                                    <td>{{ $debt->granted_date?->format('d/m/Y') ?? '-' }}</td>
+                                    @if(auth()->user()->isAdmin())
+                                        <td>{{ $debt->branch?->name ?? 'Sin sucursal' }}</td>
                                     @endif
-                                    <th>Cliente</th>
-                                    <th>Empresa</th>
-                                    <th>Concepto</th>
-                                    <th>Vence</th>
-                                    <th class="text-center">Días</th>
-                                    <th class="text-right">Saldo</th>
-                                    <th class="text-center">Estado</th>
-                                    <th class="text-center">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($pendingDebts as $debt)
-                                    @php
-                                        $isOverdue = $debt->due_date && $debt->due_date->isPast();
-                                        $diffDays = $debt->due_date
-                                            ? (int) now()
-                                                ->startOfDay()
-                                                ->diffInDays($debt->due_date->startOfDay(), false)
-                                            : null;
-                                    @endphp
-                                    <tr class="{{ $isOverdue ? 'table-danger' : '' }}">
-                                        <td>{{ $debt->granted_date?->format('d/m/Y') ?? '-' }}</td>
-                                        @if (auth()->user()->isAdmin())
-                                            <td>{{ $debt->branch?->name ?? 'Sin sucursal' }}</td>
+                                    <td>
+                                        <a href="{{ route('clients.show', $debt->client) }}">{{ $debt->client->name }}</a>
+                                    </td>
+                                    <td>{{ $debt->company?->name ?? '-' }}</td>
+                                    <td>{{ $debt->concept }}</td>
+                                    <td>{{ $debt->due_date?->format('d/m/Y') ?? 'Sin fecha' }}</td>
+                                    <td class="text-center">
+                                        @if($diffDays === null)
+                                            <span class="text-muted">—</span>
+                                        @elseif($diffDays < 0)
+                                            <span class="badge badge-danger">{{ abs($diffDays) }}d vencido</span>
+                                        @elseif($diffDays === 0)
+                                            <span class="badge badge-warning">Hoy</span>
+                                        @else
+                                            <span class="badge badge-info">{{ $diffDays }}d</span>
                                         @endif
-                                        <td>
-                                            <a
-                                                href="{{ route('clients.show', $debt->client) }}">{{ $debt->client->name }}</a>
-                                        </td>
-                                        <td>{{ $debt->company?->name ?? '-' }}</td>
-                                        <td>{{ $debt->concept }}</td>
-                                        <td>{{ $debt->due_date?->format('d/m/Y') ?? 'Sin fecha' }}</td>
-                                        <td class="text-center">
-                                            @if ($diffDays === null)
-                                                <span class="text-muted">—</span>
-                                            @elseif($diffDays < 0)
-                                                <span class="badge badge-danger">{{ abs($diffDays) }}d vencido</span>
-                                            @elseif($diffDays === 0)
-                                                <span class="badge badge-warning">Hoy</span>
-                                            @else
-                                                <span class="badge badge-info">{{ $diffDays }}d</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-right font-weight-bold text-danger">
-                                            ${{ number_format($debt->balance, 2) }}</td>
-                                        <td class="text-center">
-                                            <span class="badge badge-{{ $isOverdue ? 'danger' : 'warning' }}">
-                                                {{ $isOverdue ? 'Vencido' : 'Pendiente' }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <button class="btn btn-xs btn-success"
-                                                onclick="openCollectModal({{ $debt->id }}, '{{ addslashes($debt->client->name) }}', '{{ addslashes($debt->concept) }}', {{ $debt->balance }})">
-                                                <i class="fas fa-dollar-sign mr-1"></i>Cobrar
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="{{ auth()->user()->isAdmin() ? '10' : '9' }}"
-                                            class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                    </td>
+                                    <td class="text-right font-weight-bold text-danger">${{ number_format($debt->balance, 2) }}</td>
+                                    <td class="text-center">
+                                        <span class="badge badge-{{ $isOverdue ? 'danger' : 'warning' }}">
+                                            {{ $isOverdue ? 'Vencido' : 'Pendiente' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-xs btn-success"
+                                            onclick="openCollectModal({{ $debt->id }}, '{{ addslashes($debt->client->name) }}', '{{ addslashes($debt->concept) }}', {{ $debt->balance }})">
+                                            <i class="fas fa-dollar-sign mr-1"></i>Cobrar
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="{{ auth()->user()->isAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                     </div>
                 </div>
             </div>
@@ -186,85 +177,87 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm mb-0">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>Fecha</th>
-                                    @if (auth()->user()->isAdmin())
-                                        <th>Sucursal</th>
-                                    @endif
-                                    <th>Cliente Fiado</th>
-                                    <th>Empresa</th>
-                                    <th>Descripción</th>
-                                    <th class="text-right">Monto</th>
-                                    <th class="text-right">Pagado</th>
-                                    <th class="text-right">Saldo</th>
-                                    <th class="text-center">Estado</th>
-                                    <th class="text-center">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($incomes as $i => $income)
-                                    @php
-                                        $incomeCredit = $income->credit;
-                                    @endphp
-                                    <tr>
-                                        <td>{{ $income->income_date->format('d/m/Y') }}</td>
-                                        @if (auth()->user()->isAdmin())
-                                            <td>{{ $income->branch?->name ?? 'Sin sucursal' }}</td>
+                    <table class="table table-hover table-sm mb-0">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Fecha</th>
+                                @if(auth()->user()->isAdmin())
+                                    <th>Sucursal</th>
+                                @endif
+                                <th>Cliente Fiado</th>
+                                <th>Empresa</th>
+                                <th>Descripción</th>
+                                <th class="text-right">Monto</th>
+                                <th class="text-right">Pagado</th>
+                                <th class="text-right">Saldo</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($incomes as $i => $income)
+                                @php
+                                    $incomeCredit = $income->credit;
+                                    $isToday = $income->income_date->isToday();
+                                    $creditIsToday = $incomeCredit && $incomeCredit->granted_date->isToday();
+                                @endphp
+                                <tr{{ $isToday && $creditIsToday ? ' class="table-warning"' : '' }}>
+                                    <td>
+                                        {{ $income->income_date->format('d/m/Y') }}
+                                        @if($isToday && $creditIsToday)
+                                            <span class="badge badge-warning ml-1">Hoy</span>
                                         @endif
-                                        <td>{{ $income->client?->name ?? '-' }}</td>
-                                        <td>{{ $income->credit?->company?->name ?? '-' }}</td>
-                                        <td>{{ $income->description }}</td>
-                                        <td class="text-right text-info font-weight-bold">
-                                            ${{ number_format($income->amount, 2) }}</td>
-                                        <td class="text-right">
-                                            {{ $incomeCredit ? '$' . number_format($incomeCredit->paid_amount, 2) : '-' }}
-                                        </td>
-                                        <td
-                                            class="text-right font-weight-bold {{ $incomeCredit && $incomeCredit->balance > 0 ? 'text-danger' : 'text-success' }}">
-                                            {{ $incomeCredit ? '$' . number_format($incomeCredit->balance, 2) : '-' }}
-                                        </td>
-                                        <td class="text-center">
-                                            @if ($incomeCredit)
-                                                <span
-                                                    class="badge badge-{{ $incomeCredit->status === 'paid' ? 'success' : ($incomeCredit->status === 'partial' ? 'info' : 'warning') }}">
-                                                    {{ $incomeCredit->status === 'paid' ? 'Pagado' : ($incomeCredit->status === 'partial' ? 'Parcial' : 'Activo') }}
-                                                </span>
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">
-                                            <button class="btn btn-xs btn-warning"
-                                                onclick="editIncome({{ $income->id }}, '{{ addslashes($income->description) }}', {{ $income->amount }}, {{ $income->client_id ?? 'null' }}, '{{ addslashes($income->notes ?? '') }}')">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <form method="POST" action="{{ route('other-incomes.destroy', $income) }}"
-                                                class="d-inline" onsubmit="return confirm('¿Eliminar?')">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-xs btn-danger"><i
-                                                        class="fas fa-trash"></i></button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="{{ auth()->user()->isAdmin() ? '10' : '9' }}"
-                                            class="text-center text-muted py-4">Sin ingresos para esta fecha</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                            @if ($incomes->count() > 0)
-                                <tfoot>
-                                    <tr class="table-info">
-                                        <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}"><strong>TOTAL OTROS
-                                                INGRESOS</strong></td>
-                                        <td class="text-right"><strong>${{ number_format($total, 2) }}</strong></td>
-                                    </tr>
-                                </tfoot>
-                            @endif
-                        </table>
+                                    </td>
+                                    @if(auth()->user()->isAdmin())
+                                        <td>{{ $income->branch?->name ?? 'Sin sucursal' }}</td>
+                                    @endif
+                                    <td>{{ $income->client?->name ?? '-' }}</td>
+                                    <td>{{ $income->credit?->company?->name ?? '-' }}</td>
+                                    <td>{{ $income->description }}</td>
+                                    <td class="text-right text-info font-weight-bold">
+                                        ${{ number_format($income->amount, 2) }}</td>
+                                    <td class="text-right">
+                                        {{ $incomeCredit ? '$' . number_format($incomeCredit->paid_amount, 2) : '-' }}
+                                    </td>
+                                    <td class="text-right font-weight-bold {{ $incomeCredit && $incomeCredit->balance > 0 ? 'text-danger' : 'text-success' }}">
+                                        {{ $incomeCredit ? '$' . number_format($incomeCredit->balance, 2) : '-' }}
+                                    </td>
+                                    <td class="text-center">
+                                        @if ($incomeCredit)
+                                            <span class="badge badge-{{ $incomeCredit->status === 'paid' ? 'success' : ($incomeCredit->status === 'partial' ? 'info' : 'warning') }}">
+                                                {{ $incomeCredit->status === 'paid' ? 'Pagado' : ($incomeCredit->status === 'partial' ? 'Parcial' : 'Activo') }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-xs btn-warning"
+                                            onclick="editIncome({{ $income->id }}, '{{ addslashes($income->description) }}', {{ $income->amount }}, {{ $income->client_id ?? 'null' }}, '{{ addslashes($income->notes ?? '') }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <form method="POST" action="{{ route('other-incomes.destroy', $income) }}"
+                                            class="d-inline" onsubmit="return confirm('¿Eliminar?')">
+                                            @csrf @method('DELETE')
+                                            <button class="btn btn-xs btn-danger"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="{{ auth()->user()->isAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin ingresos para esta fecha</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                        @if ($incomes->count() > 0)
+                            <tfoot>
+                                <tr class="table-info">
+                                    <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}"><strong>TOTAL OTROS INGRESOS</strong></td>
+                                    <td class="text-right"><strong>${{ number_format($total, 2) }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        @endif
+                    </table>
                     </div>
                 </div>
             </div>
@@ -333,8 +326,7 @@
                         </div>
                         <div class="form-group">
                             <label>Fecha de cobro *</label>
-                            <input type="date" name="payment_date" class="form-control" value="{{ $date }}"
-                                required>
+                            <input type="date" name="payment_date" class="form-control" value="{{ $date }}" required>
                         </div>
                         <div class="form-group">
                             <label>Monto cobrado ($) *</label>
@@ -349,8 +341,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-success"><i class="fas fa-save mr-1"></i> Registrar
-                            cobro</button>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save mr-1"></i> Registrar cobro</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     </div>
                 </form>

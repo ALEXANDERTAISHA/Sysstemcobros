@@ -42,7 +42,7 @@ class DailyClosingController extends Controller
     public function create(Request $request)
     {
         $date = $request->get('date', today()->toDateString());
-        $summary = $this->financialSummary->summarizeRange($date, $date);
+        $summary = $this->financialSummary->summarizeRange($date, $date, branchId: null, excludeTodayIncomes: true);
         $transferSearch = $request->get('transfer_search');
         $transferStatus = $request->get('transfer_status', 'all');
         $transferCompany = $request->get('transfer_company_id');
