@@ -107,7 +107,6 @@
                                 @endif
                                 <th>Cliente</th>
                                 <th>Empresa</th>
-                                <th>Concepto</th>
                                 <th>Vence</th>
                                 <th class="text-center">Días</th>
                                 <th class="text-right">Saldo</th>
@@ -130,7 +129,6 @@
                                         <a href="{{ route('clients.show', $debt->client) }}">{{ $debt->client->name }}</a>
                                     </td>
                                     <td>{{ $debt->company?->name ?? '-' }}</td>
-                                    <td>{{ $debt->concept }}</td>
                                     <td>{{ $debt->due_date?->format('d/m/Y') ?? 'Sin fecha' }}</td>
                                     <td class="text-center">
                                         @if($diffDays === null)
@@ -158,7 +156,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->user()->isAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
+                                    <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
                                 </tr>
                             @endforelse
                         </tbody>
