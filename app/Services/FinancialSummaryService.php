@@ -45,7 +45,14 @@ class FinancialSummaryService
         return $this->scopeByBranch($query, $branchId);
     }
 
-    public function summarizeRange(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null, bool $excludeTodayIncomes = false): array
+    public function summarizeRange(
+        string $dateFrom,
+        string $dateTo,
+        ?int $companyId = null,
+        ?int $branchId = null,
+        bool $excludeTodayIncomes = false,
+        bool $excludeSameDayCollectedDebits = false
+    ): array
     {
         $transferQuery = $this->transferQuery($dateFrom, $dateTo, $companyId, $branchId);
         $debitQuery = $this->debitQuery($dateFrom, $dateTo, $branchId);
@@ -61,7 +68,9 @@ class FinancialSummaryService
             : $this->otherIncomeQuery($dateFrom, $dateTo, $branchId);
 
         $totalIncomes = (float) (clone $transferQuery)->sum('amount');
-        $totalDebits = (float) (clone $debitQuery)->sum('total_amount');
+        $totalDebits = $excludeSameDayCollectedDebits && $dateFrom === $dateTo
+            ? $this->calculateSameDayDebitExposure($dateFrom, $branchId)
+            : (float) (clone $debitQuery)->sum('total_amount');
         $totalOtherIncomes = (float) (clone $otherIncomeQuery)->sum('amount');
         $transfersCount = (int) (clone $transferQuery)->count();
         $activeCreditQuery = Credit::query()
@@ -82,6 +91,23 @@ class FinancialSummaryService
             'sum_total' => $sumTotal,
             'active_credit_balance' => $activeCreditBalance,
         ];
+    }
+
+    private function calculateSameDayDebitExposure(string $date, ?int $branchId = null): float
+    {
+        $credits = $this->scopeByBranch(
+            Credit::query()
+                ->whereDate('granted_date', $date)
+                ->with([
+                    'payments' => fn(Builder $query) => $query->whereDate('payment_date', $date),
+                ]),
+            $branchId
+        )->get(['id', 'total_amount']);
+
+        return (float) $credits->sum(function (Credit $credit): float {
+            $sameDayCollected = (float) $credit->payments->sum('amount');
+            return max((float) $credit->total_amount - $sameDayCollected, 0);
+        });
     }
 
     public function transferBreakdownByCompany(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null): Collection

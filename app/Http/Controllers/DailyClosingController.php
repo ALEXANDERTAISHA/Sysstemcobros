@@ -42,7 +42,12 @@ class DailyClosingController extends Controller
     public function create(Request $request)
     {
         $date = $request->get('date', today()->toDateString());
-        $summary = $this->financialSummary->summarizeRange($date, $date, branchId: null, excludeTodayIncomes: true);
+        $summary = $this->financialSummary->summarizeRange(
+            $date,
+            $date,
+            excludeTodayIncomes: true,
+            excludeSameDayCollectedDebits: true
+        );
         $transferSearch = $request->get('transfer_search');
         $transferStatus = $request->get('transfer_status', 'all');
         $transferCompany = $request->get('transfer_company_id');
@@ -102,7 +107,12 @@ class DailyClosingController extends Controller
             'notes'               => 'nullable|string',
         ]);
 
-        $summary = $this->financialSummary->summarizeRange($data['closing_date'], $data['closing_date']);
+        $summary = $this->financialSummary->summarizeRange(
+            $data['closing_date'],
+            $data['closing_date'],
+            excludeTodayIncomes: true,
+            excludeSameDayCollectedDebits: true
+        );
         $difference = $summary['sum_total'] - (float) $data['existing_value'];
         $finalTotal = $difference;
 
