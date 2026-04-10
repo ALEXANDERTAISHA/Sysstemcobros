@@ -99,7 +99,7 @@ class FinancialSummaryService
             Credit::query()
                 ->whereDate('granted_date', $date)
                 ->with([
-                    'payments' => fn(Builder $query) => $query->whereDate('payment_date', $date),
+                    'payments' => fn($query) => $query->whereDate('payment_date', $date),
                 ]),
             $branchId
         )->get(['id', 'total_amount']);
