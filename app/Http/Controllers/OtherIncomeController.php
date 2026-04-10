@@ -19,7 +19,9 @@ class OtherIncomeController extends Controller
     public function __construct(
         private EmailDeliveryService $emailDelivery,
         private WhatsAppService $whatsApp
-    ) {}
+    )
+    {
+    }
     public function index(Request $request)
     {
         $date = $request->get('date', today()->toDateString());
@@ -47,7 +49,7 @@ class OtherIncomeController extends Controller
 
         $pendingDebtsQuery = Credit::with('client', 'company', 'branch')
             ->whereIn('status', ['active', 'partial'])
-            ->whereDate('granted_date', '<', today()->toDateString())
+            ->whereDate('granted_date', '<=', today()->toDateString())
             ->whereRaw('total_amount > paid_amount')
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
             ->orderBy('due_date')
