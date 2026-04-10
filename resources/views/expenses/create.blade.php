@@ -278,11 +278,7 @@
                             <div class="expense-step-title">Empresa <span class="step-indicator">Paso 2</span></div>
                             <div class="expense-step-help">Confirma la empresa asociada al cliente.</div>
                             <label>Empresa *</label>
-                            <div class="client-filter-wrap" id="company_filter_wrap">
-                                <input type="text" id="company_filter_input" class="form-control client-filter-input"
-                                    placeholder="Buscar empresa...">
-                            </div>
-                            <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror" size="1">
+                            <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror" size="{{ min(($companies->count() + 1), 8) }}">
                                 <option value="">Seleccionar empresa...</option>
                                 @foreach ($companies as $company)
                                     <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
@@ -379,8 +375,6 @@
             const clientFilterInput = document.getElementById('client_filter_input');
             const companySection = document.getElementById('company_section');
             const companySelect = document.getElementById('company_select');
-            const companyFilterWrap = document.getElementById('company_filter_wrap');
-            const companyFilterInput = document.getElementById('company_filter_input');
             const amountSection = document.getElementById('amount_section');
             const totalAmountInput = document.getElementById('total_amount_input');
             const grantedSection = document.getElementById('granted_section');
@@ -558,8 +552,7 @@
                     return;
                 }
 
-                const visibleCount = Array.from(companySelect.options)
-                    .filter((option, index) => index === 0 || !option.hidden).length;
+                const visibleCount = companySelect.options.length;
                 const visibleOptions = Math.min(Math.max(visibleCount, 2), 8);
                 companySelect.setAttribute('size', String(visibleOptions));
                 companySelect.classList.add('select-expanded');
@@ -595,39 +588,6 @@
                 } else {
                     expandClientSelect();
                 }
-            }
-
-            function filterCompanyOptions() {
-                if (!companyFilterInput || !companySelect) {
-                    return;
-                }
-
-                const term = companyFilterInput.value.trim().toLowerCase();
-
-                Array.from(companySelect.options).forEach(function(option, index) {
-                    if (index === 0) {
-                        option.hidden = false;
-                        return;
-                    }
-
-                    option.hidden = term !== '' && !option.text.toLowerCase().includes(term);
-                });
-
-                if (term === '') {
-                    collapseCompanySelect();
-                } else {
-                    expandCompanySelect();
-                }
-            }
-
-            function resetCompanyFilter() {
-                if (companyFilterInput) {
-                    companyFilterInput.value = '';
-                }
-
-                Array.from(companySelect.options).forEach(function(option) {
-                    option.hidden = false;
-                });
             }
 
             function addDays(baseDate, days) {
@@ -681,7 +641,7 @@
                     showSection(companySection);
                     hideSection(grantedSection);
                     hideSection(amountSection);
-                    collapseCompanySelect();
+                    expandCompanySelect();
                     return;
                 }
 
@@ -714,7 +674,6 @@
                 } else {
                     companySelect.value = '';
                     autoFilledMsg.style.display = 'none';
-                    resetCompanyFilter();
                 }
 
                 if (clientId) {
@@ -734,11 +693,7 @@
                 if (clientId && !companySelect.value && !openedCompanySelectOnce) {
                     openedCompanySelectOnce = true;
                     setTimeout(function() {
-                        if (companyFilterInput) {
-                            companyFilterInput.focus();
-                        } else {
-                            companySelect.focus();
-                        }
+                        companySelect.focus();
                     }, 120);
                 }
             });
@@ -747,10 +702,6 @@
 
             if (clientFilterInput) {
                 clientFilterInput.addEventListener('input', filterClientOptions);
-            }
-
-            if (companyFilterInput) {
-                companyFilterInput.addEventListener('input', filterCompanyOptions);
             }
 
             totalAmountInput.addEventListener('blur', updateVisibility);
@@ -795,13 +746,8 @@
                         showSection(companySection);
                         hideSection(grantedSection);
                         hideSection(amountSection);
-                        resetCompanyFilter();
-                        collapseCompanySelect();
-                        if (companyFilterInput) {
-                            companyFilterInput.focus();
-                        } else {
-                            companySelect.focus();
-                        }
+                        expandCompanySelect();
+                        companySelect.focus();
                     }
 
                     if (step === 'amount') {
