@@ -34,12 +34,6 @@ class OtherIncomeController extends Controller
             ->orderByDesc('income_date')
             ->orderByDesc('id');
 
-        if (!is_null($selectedClientId)) {
-            $incomesQuery->where('client_id', $selectedClientId);
-        } elseif ($clientSearch !== '' && mb_strlen($clientSearch) >= 2) {
-            $incomesQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
-        }
-
         if (BranchContext::isPrivileged() && $branchId) {
             $incomesQuery->where('branch_id', $branchId);
         } else {

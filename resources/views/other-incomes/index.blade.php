@@ -414,15 +414,13 @@
                 const queryLower = query.toLowerCase();
 
                 if (query.length === 0) {
-                    // Reset: mostrar todo instantáneamente
+                    // Reset: mostrar todos los débitos pendientes
                     pendingRows.forEach(row => row.style.display = '');
-                    incomeRows.forEach(row => row.style.display = '');
                     if (pendingNoResults) pendingNoResults.style.display = 'none';
-                    if (incomesNoResults) incomesNoResults.style.display = 'none';
                     return;
                 }
 
-                // Filtrado local súper rápido (incluso con 1 letra)
+                // Filtrado local en tabla de DÉBITOS PENDIENTES solamente
                 let visiblePending = 0;
                 pendingRows.forEach(function(row) {
                     const matched = row.textContent.toLowerCase().includes(queryLower);
@@ -431,16 +429,6 @@
                 });
                 if (pendingNoResults) {
                     pendingNoResults.style.display = pendingRows.length > 0 && visiblePending === 0 ? '' : 'none';
-                }
-
-                let visibleIncomes = 0;
-                incomeRows.forEach(function(row) {
-                    const matched = row.textContent.toLowerCase().includes(queryLower);
-                    row.style.display = matched ? '' : 'none';
-                    if (matched) visibleIncomes++;
-                });
-                if (incomesNoResults) {
-                    incomesNoResults.style.display = incomeRows.length > 0 && visibleIncomes === 0 ? '' : 'none';
                 }
             }
 
