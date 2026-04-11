@@ -17,6 +17,7 @@
                         <input type="text" name="client_search" id="client_search_input" class="form-control"
                             placeholder="Escribe para buscar cliente..."
                             value="{{ $clientSearch ?? '' }}" autocomplete="off">
+                        <small class="form-text text-muted">Busca desde 2 letras. Presiona Enter para buscar al instante.</small>
                     </div>
                     @if(auth()->user()->isAdmin())
                         <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
@@ -384,12 +385,49 @@
             }
 
             let debounceTimer;
+            let lastSubmittedSignature = [
+                clientSearchInput.value.trim(),
+                dateInput ? dateInput.value : '',
+                branchInput ? branchInput.value : ''
+            ].join('|');
+
+            function getCurrentSignature() {
+                return [
+                    clientSearchInput.value.trim(),
+                    dateInput ? dateInput.value : '',
+                    branchInput ? branchInput.value : ''
+                ].join('|');
+            }
+
+            function submitIfChanged() {
+                const signature = getCurrentSignature();
+                if (signature === lastSubmittedSignature) {
+                    return;
+                }
+                lastSubmittedSignature = signature;
+                filterForm.submit();
+            }
 
             clientSearchInput.addEventListener('input', function() {
                 window.clearTimeout(debounceTimer);
                 debounceTimer = window.setTimeout(function() {
-                    filterForm.submit();
-                }, 350);
+                    const search = clientSearchInput.value.trim();
+                    syncCollectForm();
+
+                    // Evita golpear el servidor por cada tecla cuando aun no hay termino util.
+                    if (search.length === 0 || search.length >= 2) {
+                        submitIfChanged();
+                    }
+                }, 450);
+            });
+
+            clientSearchInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    window.clearTimeout(debounceTimer);
+                    syncCollectForm();
+                    submitIfChanged();
+                }
             });
 
             function syncCollectForm() {
@@ -408,13 +446,13 @@
             if (dateInput) {
                 dateInput.addEventListener('change', function() {
                     syncCollectForm();
-                    filterForm.submit();
+                    submitIfChanged();
                 });
             }
             if (branchInput) {
                 branchInput.addEventListener('change', function() {
                     syncCollectForm();
-                    filterForm.submit();
+                    submitIfChanged();
                 });
             }
 
