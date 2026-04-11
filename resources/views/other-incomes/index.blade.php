@@ -38,20 +38,35 @@
                         </div>
                     @endif
                     <div class="col-auto">
-                        <form method="POST" action="{{ route('other-incomes.collect-client-debts') }}" id="collect_client_debts_form">
-                            @csrf
-                            <input type="hidden" name="date" id="collect_date" value="{{ $date }}">
-                            <input type="hidden" name="client_search" id="collect_client_search" value="{{ $clientSearch ?? '' }}">
-                            @if(auth()->user()->isAdmin())
-                                <input type="hidden" name="branch_id" id="collect_branch_id" value="{{ $branchId }}">
-                            @endif
-                            <button type="submit" class="btn btn-success"
-                                onclick="return confirm('¿Cobrar TODO lo pendiente/vencido del cliente buscado y pasarlo a Ingresos del día?')">
-                                <i class="fas fa-coins mr-1"></i> Cobrar Total Cliente
-                            </button>
-                        </form>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search mr-1"></i> Buscar
+                        </button>
                     </div>
+                    <div class="col-auto">
+                        <button type="submit" form="collect_client_debts_form" class="btn btn-success"
+                            onclick="return confirm('¿Cobrar TODO lo pendiente y vencido del cliente buscado y pasarlo a Ingresos del día?')"
+                            {{ empty($clientSearch) || (($clientDebtBreakdown['total'] ?? 0) <= 0) ? 'disabled' : '' }}>
+                            <i class="fas fa-coins mr-1"></i> Cobrar Total Cliente
+                        </button>
+                    </div>
+
+                    @if(!empty($clientSearch))
+                        <div class="col-12 mt-2">
+                            <span class="badge badge-danger mr-2">Vencidos: ${{ number_format($clientDebtBreakdown['overdue'] ?? 0, 2) }}</span>
+                            <span class="badge badge-warning mr-2">Pendientes: ${{ number_format($clientDebtBreakdown['pending'] ?? 0, 2) }}</span>
+                            <span class="badge badge-success">Total a cobrar: ${{ number_format($clientDebtBreakdown['total'] ?? 0, 2) }}</span>
+                        </div>
+                    @endif
                 </div>
+            </form>
+
+            <form method="POST" action="{{ route('other-incomes.collect-client-debts') }}" id="collect_client_debts_form" class="d-none">
+                @csrf
+                <input type="hidden" name="date" id="collect_date" value="{{ $date }}">
+                <input type="hidden" name="client_search" id="collect_client_search" value="{{ $clientSearch ?? '' }}">
+                @if(auth()->user()->isAdmin())
+                    <input type="hidden" name="branch_id" id="collect_branch_id" value="{{ $branchId }}">
+                @endif
             </form>
         </div>
     </div>

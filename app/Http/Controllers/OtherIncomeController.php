@@ -79,6 +79,17 @@ class OtherIncomeController extends Controller
             'pending' => (float) $pendingDebtTotal,
         ];
 
+        $today = now()->startOfDay();
+        $clientDebtBreakdown = [
+            'overdue' => (float) $pendingDebts
+                ->filter(fn($credit) => $credit->due_date && $credit->due_date->copy()->startOfDay()->lt($today))
+                ->sum(fn($credit) => $credit->balance),
+            'pending' => (float) $pendingDebts
+                ->filter(fn($credit) => !$credit->due_date || $credit->due_date->copy()->startOfDay()->gte($today))
+                ->sum(fn($credit) => $credit->balance),
+        ];
+        $clientDebtBreakdown['total'] = $clientDebtBreakdown['overdue'] + $clientDebtBreakdown['pending'];
+
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
 
         return view('other-incomes.index', compact(
@@ -92,7 +103,8 @@ class OtherIncomeController extends Controller
             'clientSearch',
             'pendingDebts',
             'pendingDebtTotal',
-            'debtTotals'
+            'debtTotals',
+            'clientDebtBreakdown'
         ));
     }
 
