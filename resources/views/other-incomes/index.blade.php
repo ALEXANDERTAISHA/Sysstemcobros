@@ -135,13 +135,13 @@
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="pending_debts_tbody">
                             @forelse($pendingDebts as $debt)
                                 @php
                                     $isOverdue = $debt->due_date && $debt->due_date->isPast();
                                     $diffDays = $debt->due_date ? (int) now()->startOfDay()->diffInDays($debt->due_date->startOfDay(), false) : null;
                                 @endphp
-                                <tr class="{{ $isOverdue ? 'table-danger' : '' }}">
+                                <tr class="filterable-pending-row{{ $isOverdue ? ' table-danger' : '' }}">
                                     <td>{{ $debt->granted_date?->format('d/m/Y') ?? '-' }}</td>
                                     @if(auth()->user()->isAdmin())
                                         <td>{{ $debt->branch?->name ?? 'Sin sucursal' }}</td>
@@ -180,6 +180,9 @@
                                     <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
                                 </tr>
                             @endforelse
+                            <tr id="pending_debts_no_results" style="display: none;">
+                                <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin resultados en débitos pendientes.</td>
+                            </tr>
                         </tbody>
                     </table>
                     </div>
@@ -213,14 +216,14 @@
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="incomes_tbody">
                             @forelse($incomes as $i => $income)
                                 @php
                                     $incomeCredit = $income->credit;
                                     $isToday = $income->income_date->isToday();
                                     $creditIsToday = $incomeCredit && $incomeCredit->granted_date->isToday();
                                 @endphp
-                                <tr{{ $isToday && $creditIsToday ? ' class="table-warning"' : '' }}>
+                                <tr class="filterable-income-row{{ $isToday && $creditIsToday ? ' table-warning' : '' }}">
                                     <td>
                                         {{ $income->income_date->format('d/m/Y') }}
                                         @if($isToday && $creditIsToday)
@@ -267,6 +270,9 @@
                                     <td colspan="{{ auth()->user()->isAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin ingresos para esta fecha</td>
                                 </tr>
                             @endforelse
+                            <tr id="incomes_no_results" style="display: none;">
+                                <td colspan="{{ auth()->user()->isAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin resultados en ingresos del día.</td>
+                            </tr>
                         </tbody>
                         @if ($incomes->count() > 0)
                             <tfoot>
@@ -379,6 +385,10 @@
             const collectDate = document.getElementById('collect_date');
             const collectClientSearch = document.getElementById('collect_client_search');
             const collectBranchId = document.getElementById('collect_branch_id');
+            const pendingRows = Array.from(document.querySelectorAll('.filterable-pending-row'));
+            const incomeRows = Array.from(document.querySelectorAll('.filterable-income-row'));
+            const pendingNoResults = document.getElementById('pending_debts_no_results');
+            const incomesNoResults = document.getElementById('incomes_no_results');
 
             if (!filterForm || !clientSearchInput) {
                 return;
@@ -399,6 +409,34 @@
                 ].join('|');
             }
 
+            function applyInstantTableFilter() {
+                const query = clientSearchInput.value.trim().toLowerCase();
+
+                let visiblePending = 0;
+                pendingRows.forEach(function(row) {
+                    const matched = query === '' || row.textContent.toLowerCase().includes(query);
+                    row.style.display = matched ? '' : 'none';
+                    if (matched) {
+                        visiblePending++;
+                    }
+                });
+                if (pendingNoResults) {
+                    pendingNoResults.style.display = pendingRows.length > 0 && visiblePending === 0 ? '' : 'none';
+                }
+
+                let visibleIncomes = 0;
+                incomeRows.forEach(function(row) {
+                    const matched = query === '' || row.textContent.toLowerCase().includes(query);
+                    row.style.display = matched ? '' : 'none';
+                    if (matched) {
+                        visibleIncomes++;
+                    }
+                });
+                if (incomesNoResults) {
+                    incomesNoResults.style.display = incomeRows.length > 0 && visibleIncomes === 0 ? '' : 'none';
+                }
+            }
+
             function submitIfChanged() {
                 const signature = getCurrentSignature();
                 if (signature === lastSubmittedSignature) {
@@ -409,16 +447,16 @@
             }
 
             clientSearchInput.addEventListener('input', function() {
+                applyInstantTableFilter();
+                syncCollectForm();
+
                 window.clearTimeout(debounceTimer);
                 debounceTimer = window.setTimeout(function() {
                     const search = clientSearchInput.value.trim();
-                    syncCollectForm();
-
-                    // Evita golpear el servidor por cada tecla cuando aun no hay termino util.
                     if (search.length === 0 || search.length >= 2) {
                         submitIfChanged();
                     }
-                }, 450);
+                }, 700);
             });
 
             clientSearchInput.addEventListener('keydown', function(event) {
@@ -457,6 +495,7 @@
             }
 
             syncCollectForm();
+            applyInstantTableFilter();
         });
     </script>
 @endpush
