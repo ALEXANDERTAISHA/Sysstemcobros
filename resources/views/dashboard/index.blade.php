@@ -88,8 +88,8 @@
                     <p>Total Gastos/Débitos</p>
                 </div>
                 <div class="icon"><i class="fas fa-arrow-down"></i></div>
-                <a href="{{ route('expenses.index', ['status' => 'active']) }}" class="small-box-footer">
-                    Ver débitos <i class="fas fa-arrow-circle-right"></i>
+                <a href="{{ route('expenses.index') }}" class="small-box-footer">
+                    Agregar débito <i class="fas fa-arrow-circle-right"></i>
                 </a>
             </div>
         </div>
