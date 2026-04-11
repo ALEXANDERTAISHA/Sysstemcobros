@@ -50,7 +50,6 @@ class DailyClosingController extends Controller
         );
         $transferSearch = trim((string) $request->get('transfer_search', ''));
         $transferStatus = $request->get('transfer_status', 'all');
-        $transferCompany = $request->get('transfer_company_id');
         $transferListDate = $request->get('transfer_list_date', today()->toDateString());
 
         $existing = BranchContext::scope(DailyClosing::whereDate('closing_date', $date))->first();
@@ -66,8 +65,7 @@ class DailyClosingController extends Controller
                     ->orWhereHas('company', fn($companyQuery) => $companyQuery->where('name', 'like', "%{$transferSearch}%"))
                     ->orWhereHas('branch', fn($branchQuery) => $branchQuery->where('name', 'like', "%{$transferSearch}%"));
             }))
-            ->when($transferStatus !== 'all', fn($q) => $q->where('status', $transferStatus))
-            ->when($transferCompany, fn($q) => $q->where('company_id', $transferCompany));
+            ->when($transferStatus !== 'all', fn($q) => $q->where('status', $transferStatus));
 
         $transferQuery = BranchContext::scope($transferQuery);
 
@@ -86,7 +84,6 @@ class DailyClosingController extends Controller
             'companies',
             'transferSearch',
             'transferStatus',
-            'transferCompany',
             'transferListDate',
             'transferList',
             'transferPendingCount',

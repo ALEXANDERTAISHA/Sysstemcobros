@@ -150,18 +150,7 @@
                                 <input type="date" name="transfer_list_date" id="transferListDate" class="form-control form-control-sm"
                                     value="{{ $transferListDate }}" title="Filtrar por fecha de transferencia">
                             </div>
-                            <div class="col-md-2 mb-1">
-                                <select name="transfer_company_id" id="transferCompany" class="form-control form-control-sm">
-                                    <option value="">Empresa</option>
-                                    @foreach ($companies as $c)
-                                        <option value="{{ $c->id }}"
-                                            {{ (string) $transferCompany === (string) $c->id ? 'selected' : '' }}>
-                                            {{ $c->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2 mb-1">
+                            <div class="col-md-4 mb-1">
                                 <select name="transfer_status" id="transferStatus" class="form-control form-control-sm">
                                     <option value="all" {{ $transferStatus === 'all' ? 'selected' : '' }}>Todos</option>
                                     <option value="pending" {{ $transferStatus === 'pending' ? 'selected' : '' }}>Pendientes</option>
@@ -472,7 +461,6 @@
             const transferFilterForm = document.getElementById('transferFilterForm');
             const transferSearch = document.getElementById('transferSearch');
             const transferListDate = document.getElementById('transferListDate');
-            const transferCompany = document.getElementById('transferCompany');
             const transferStatus = document.getElementById('transferStatus');
             const transferTableBody = document.getElementById('transferTableBody');
             const transferClientNoResults = document.getElementById('transferClientNoResults');
@@ -543,7 +531,7 @@
                     });
                 }
 
-                [transferListDate, transferCompany, transferStatus].forEach(function(field) {
+                [transferListDate, transferStatus].forEach(function(field) {
                     if (field) {
                         field.addEventListener('change', submitTransferFilters);
                     }
