@@ -63,6 +63,7 @@ class DailyClosingController extends Controller
                 $subQuery->where('sender_name', 'like', "%{$transferSearch}%")
                     ->orWhere('receiver_name', 'like', "%{$transferSearch}%")
                     ->orWhere('transaction_code', 'like', "%{$transferSearch}%")
+                    ->orWhereHas('company', fn($companyQuery) => $companyQuery->where('name', 'like', "%{$transferSearch}%"))
                     ->orWhereHas('branch', fn($branchQuery) => $branchQuery->where('name', 'like', "%{$transferSearch}%"));
             }))
             ->when($transferStatus !== 'all', fn($q) => $q->where('status', $transferStatus))

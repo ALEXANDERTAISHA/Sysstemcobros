@@ -144,7 +144,7 @@
                         <div class="form-row">
                             <div class="col-md-4 mb-1">
                                 <input type="text" name="transfer_search" id="transferSearch" class="form-control form-control-sm"
-                                    placeholder="Buscar remitente/destinatario" value="{{ $transferSearch }}" autocomplete="off">
+                                    placeholder="Buscar remitente/destinatario/empresa" value="{{ $transferSearch }}" autocomplete="off">
                             </div>
                             <div class="col-md-3 mb-1">
                                 <input type="date" name="transfer_list_date" id="transferListDate" class="form-control form-control-sm"
