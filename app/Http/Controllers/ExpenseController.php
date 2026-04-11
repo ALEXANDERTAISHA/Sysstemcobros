@@ -57,11 +57,15 @@ class ExpenseController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:150',
-            'phone' => 'nullable|string|max:30',
+            'phone' => ['nullable', 'regex:/^\d+$/', 'max:30'],
             'email' => 'nullable|email|max:150',
-            'whatsapp' => 'nullable|string|max:30',
+            'whatsapp' => ['nullable', 'regex:/^\d+$/', 'max:30'],
             'address' => 'nullable|string|max:250',
             'notes' => 'nullable|string',
+        ], [
+            'phone.regex' => 'El telefono solo debe contener numeros.',
+            'whatsapp.regex' => 'El WhatsApp solo debe contener numeros.',
+            'email.email' => 'Ingresa un correo electronico valido.',
         ]);
 
         $data['is_active'] = true;

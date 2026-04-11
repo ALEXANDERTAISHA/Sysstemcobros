@@ -22,14 +22,16 @@
                         </div>
                         <div class="form-group">
                             <label>Correo electrónico</label>
-                            <input type="email" name="email" class="form-control"
-                                value="{{ old('email', $client->email) }}" placeholder="cliente@correo.com">
+                            <input type="email" name="email" class="form-control" value="{{ old('email', $client->email) }}"
+                                placeholder="cliente@correo.com">
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Teléfono</label>
-                                    <input type="text" name="phone" class="form-control" value="{{ $client->phone }}">
+                                    <input type="tel" name="phone" class="form-control" value="{{ $client->phone }}"
+                                        inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel"
+                                        placeholder="Solo números">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -39,7 +41,8 @@
                                         value="{{ old('whatsapp', $client->whatsapp) }}">
                                     <input type="tel" id="whatsapp_input"
                                         class="form-control @error('whatsapp') is-invalid @enderror"
-                                        value="{{ old('whatsapp', $client->whatsapp) }}" placeholder="Numero de telefono">
+                                        value="{{ old('whatsapp', $client->whatsapp) }}" inputmode="numeric" autocomplete="tel"
+                                        placeholder="Numero de telefono">
                                     @error('whatsapp')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror

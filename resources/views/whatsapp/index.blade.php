@@ -19,11 +19,9 @@
                                 <strong>Configuración API:</strong> Para envío automático, configura
                                 <code>META_WHATSAPP_TOKEN</code> y <code>META_WHATSAPP_PHONE_NUMBER_ID</code>
                                 (recomendado) o <code>CALLMEBOT_API_KEY</code> en el archivo <code>.env</code>.
-                                <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/" target="_blank"
-                                    class="alert-link">Meta Cloud API</a>
+                                <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/" target="_blank" class="alert-link">Meta Cloud API</a>
                                 o
-                                <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank"
-                                    class="alert-link">CallMeBot</a>.
+                                <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank" class="alert-link">CallMeBot</a>.
                                 Sin API, se generará un enlace de WhatsApp Web.
                             </div>
                         @else
@@ -50,6 +48,7 @@
                             <label>Número WhatsApp *</label>
                             <input type="hidden" name="phone" id="phone_hidden" value="{{ old('phone') }}">
                             <input type="tel" id="phone_input" class="form-control @error('phone') is-invalid @enderror"
+                                inputmode="numeric" autocomplete="tel" pattern="[0-9]*" maxlength="15"
                                 placeholder="Número de teléfono" value="{{ old('phone') }}" required>
                             <small class="form-text text-muted">Selecciona país y escribe el número sin el código.</small>
                             @error('phone')

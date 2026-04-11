@@ -249,17 +249,17 @@
                                         </div>
                                         <div class="form-group col-md-6">
                                             <label>Telefono</label>
-                                            <input type="text" class="form-control" id="quick_client_phone">
+                                            <input type="tel" class="form-control" id="quick_client_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel" placeholder="Solo numeros">
                                         </div>
                                     </div>
                                     <div class="form-row">
                                         <div class="form-group col-md-6">
                                             <label>Email</label>
-                                            <input type="email" class="form-control" id="quick_client_email">
+                                            <input type="email" class="form-control" id="quick_client_email" autocomplete="email" placeholder="correo@ejemplo.com">
                                         </div>
                                         <div class="form-group col-md-6">
                                             <label>WhatsApp</label>
-                                            <input type="text" class="form-control" id="quick_client_whatsapp">
+                                            <input type="tel" class="form-control" id="quick_client_whatsapp" inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel" placeholder="Solo numeros">
                                         </div>
                                     </div>
                                     <div class="form-group mb-2">
@@ -399,6 +399,9 @@
             const quickClientFormWrap = document.getElementById('quick_client_form_wrap');
             const quickClientSubmit = document.getElementById('quick_client_submit');
             const quickClientFeedback = document.getElementById('quick_client_feedback');
+            const quickClientPhoneInput = document.getElementById('quick_client_phone');
+            const quickClientEmailInput = document.getElementById('quick_client_email');
+            const quickClientWhatsappInput = document.getElementById('quick_client_whatsapp');
             const toggleQuickCompany = document.getElementById('toggle_quick_company');
             const quickCompanyFormWrap = document.getElementById('quick_company_form_wrap');
             const quickCompanySubmit = document.getElementById('quick_company_submit');
@@ -417,6 +420,18 @@
             function setFeedback(element, type, message) {
                 element.className = `alert alert-${type} mt-2 mb-0 quick-feedback is-visible`;
                 element.textContent = message;
+            }
+
+            function onlyDigits(value) {
+                return (value || '').replace(/\D+/g, '');
+            }
+
+            function isValidEmail(value) {
+                if (!value) {
+                    return true;
+                }
+
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
             }
 
             async function postJson(url, payload) {
@@ -448,14 +463,34 @@
                 toggleQuickForm(quickCompanyFormWrap);
             });
 
+            if (quickClientPhoneInput) {
+                quickClientPhoneInput.addEventListener('input', function() {
+                    this.value = onlyDigits(this.value);
+                });
+            }
+
+            if (quickClientWhatsappInput) {
+                quickClientWhatsappInput.addEventListener('input', function() {
+                    this.value = onlyDigits(this.value);
+                });
+            }
+
             quickClientSubmit.addEventListener('click', async function() {
                 try {
                     this.disabled = true;
+                    const cleanPhone = onlyDigits(document.getElementById('quick_client_phone').value);
+                    const cleanWhatsapp = onlyDigits(document.getElementById('quick_client_whatsapp').value);
+                    const emailValue = (document.getElementById('quick_client_email').value || '').trim();
+
+                    if (!isValidEmail(emailValue)) {
+                        throw new Error('Ingresa un correo electronico valido.');
+                    }
+
                     const data = await postJson('{{ route('expenses.quick-client') }}', {
                         name: document.getElementById('quick_client_name').value,
-                        phone: document.getElementById('quick_client_phone').value,
-                        email: document.getElementById('quick_client_email').value,
-                        whatsapp: document.getElementById('quick_client_whatsapp').value,
+                        phone: cleanPhone,
+                        email: emailValue,
+                        whatsapp: cleanWhatsapp,
                         address: document.getElementById('quick_client_address').value,
                     });
 

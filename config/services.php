@@ -46,6 +46,12 @@ return [
         'api_version' => env('META_WHATSAPP_API_VERSION', 'v21.0'),
     ],
 
+    'twilio_whatsapp' => [
+        'account_sid' => env('TWILIO_ACCOUNT_SID', ''),
+        'auth_token' => env('TWILIO_AUTH_TOKEN', ''),
+        'from' => env('TWILIO_WHATSAPP_FROM', ''),
+    ],
+
     'brevo' => [
         'api_key' => env('BREVO_API_KEY', ''),
         'sender_email' => env('BREVO_SENDER_EMAIL', env('MAIL_FROM_ADDRESS')),

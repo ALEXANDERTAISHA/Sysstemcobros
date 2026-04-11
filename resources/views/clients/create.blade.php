@@ -36,8 +36,9 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Teléfono</label>
-                                    <input type="text" name="phone" class="form-control" value="{{ old('phone') }}"
-                                        placeholder="+1234567890">
+                                    <input type="tel" name="phone" class="form-control" value="{{ old('phone') }}"
+                                        inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel"
+                                        placeholder="Solo números">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -47,7 +48,8 @@
                                         value="{{ old('whatsapp') }}">
                                     <input type="tel" id="whatsapp_input"
                                         class="form-control @error('whatsapp') is-invalid @enderror"
-                                        value="{{ old('whatsapp') }}" placeholder="Número de teléfono">
+                                        value="{{ old('whatsapp') }}" inputmode="numeric" autocomplete="tel"
+                                        placeholder="Número de teléfono">
                                     @error('whatsapp')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror

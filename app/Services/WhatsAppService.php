@@ -48,7 +48,30 @@ class WhatsAppService
             ]);
         }
 
-        // 2) Fallback to CallMeBot if configured.
+        // 2) Try Twilio WhatsApp if configured.
+        $twilioSid = (string) config('services.twilio_whatsapp.account_sid', '');
+        $twilioToken = (string) config('services.twilio_whatsapp.auth_token', '');
+        $twilioFrom = (string) config('services.twilio_whatsapp.from', '');
+        if ($twilioSid !== '' && $twilioToken !== '' && $twilioFrom !== '') {
+            $twilioResult = $this->sendViaTwilio($normalizedPhone, $finalMessage, $twilioSid, $twilioToken, $twilioFrom);
+
+            if ($twilioResult['ok']) {
+                $notification->update([
+                    'status'  => 'sent',
+                    'sent_at' => now(),
+                    'error_message' => null,
+                ]);
+
+                return $notification;
+            }
+
+            Log::warning('Twilio WhatsApp send failed, trying CallMeBot fallback.', [
+                'phone' => $normalizedPhone,
+                'error' => $twilioResult['error'],
+            ]);
+        }
+
+        // 3) Fallback to CallMeBot if configured.
         $apiKey = config('services.callmebot.api_key');
         if (!empty($apiKey)) {
             try {
@@ -103,6 +126,37 @@ class WhatsAppService
                     'to' => $this->providerPhone($normalizedPhone),
                     'type' => 'text',
                     'text' => ['body' => $message],
+                ]);
+
+            if ($response->successful()) {
+                return ['ok' => true, 'error' => null];
+            }
+
+            return ['ok' => false, 'error' => $response->body()];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    private function sendViaTwilio(string $normalizedPhone, string $message, string $accountSid, string $authToken, string $from): array
+    {
+        $url = "https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Messages.json";
+
+        $fromValue = trim($from);
+        if (!str_starts_with(strtolower($fromValue), 'whatsapp:')) {
+            $fromValue = 'whatsapp:' . $fromValue;
+        }
+
+        $toValue = 'whatsapp:' . $normalizedPhone;
+
+        try {
+            $response = Http::withBasicAuth($accountSid, $authToken)
+                ->asForm()
+                ->timeout(20)
+                ->post($url, [
+                    'From' => $fromValue,
+                    'To' => $toValue,
+                    'Body' => $message,
                 ]);
 
             if ($response->successful()) {
