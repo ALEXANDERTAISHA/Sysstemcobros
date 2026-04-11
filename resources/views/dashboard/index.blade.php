@@ -82,30 +82,30 @@
             </div>
         </div>
         <div class="col-lg-4 col-md-6">
-            <a href="{{ route('expenses.create') }}" class="text-decoration-none">
             <div class="small-box bg-danger">
                 <div class="inner">
                     <h3>${{ number_format($totalExpenses, 2) }}</h3>
                     <p>Total Gastos/Débitos</p>
                 </div>
                 <div class="icon"><i class="fas fa-arrow-down"></i></div>
-                <span class="small-box-footer">
-                    Agregar débito <i class="fas fa-arrow-circle-right"></i>
-                </span>
+                <a href="{{ route('expenses.index', ['status' => 'active']) }}" class="small-box-footer">
+                    Ver débitos <i class="fas fa-arrow-circle-right"></i>
+                </a>
             </div>
-            </a>
         </div>
         <div class="col-lg-4 col-md-6">
+            <a href="{{ route('other-incomes.index', ['date' => $date]) }}" class="text-decoration-none">
             <div class="small-box bg-success">
                 <div class="inner">
                     <h3>${{ number_format($totalOtherIncomes, 2) }}</h3>
                     <p>Otros Ingresos (cobrando Fiados)</p>
                 </div>
                 <div class="icon"><i class="fas fa-hand-holding-usd"></i></div>
-                <a href="{{ route('other-incomes.index', ['date' => $date]) }}" class="small-box-footer">
+                <span class="small-box-footer">
                     Ver otros ingresos <i class="fas fa-arrow-circle-right"></i>
-                </a>
+                </span>
             </div>
+            </a>
         </div>
     </div>
 
