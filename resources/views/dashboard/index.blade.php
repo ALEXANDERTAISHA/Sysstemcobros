@@ -103,16 +103,18 @@
     <div class="row justify-content-start dashboard-stats">
 
         <div class="col-lg-4 col-md-6 stat-col">
-            <div class="small-box bg-info">
-                <div class="inner">
-                    <h3>${{ number_format($existingValue, 2) }}</h3>
-                    <p>Dinero inicial de caja chica</p>
+            <a href="{{ route('cash-box-initial.index', ['date' => $date]) }}" class="text-decoration-none d-flex w-100">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>${{ number_format($existingValue, 2) }}</h3>
+                        <p>Dinero inicial de caja chica</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-cash-register"></i></div>
+                    <span class="small-box-footer">
+                        Ver caja chica <i class="fas fa-arrow-circle-right"></i>
+                    </span>
                 </div>
-                <div class="icon"><i class="fas fa-cash-register"></i></div>
-                <a href="{{ route('cash-box-initial.index', ['date' => $date]) }}" class="small-box-footer">
-                    Ver caja chica <i class="fas fa-arrow-circle-right"></i>
-                </a>
-            </div>
+            </a>
         </div>
         <div class="col-lg-4 col-md-6 stat-col">
             <div class="small-box bg-danger">
