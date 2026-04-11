@@ -361,11 +361,8 @@ class OtherIncomeController extends Controller
             }
         });
 
-        return redirect()->route('other-incomes.index', [
-            'date' => $paymentDate,
-            'client_search' => $client->name,
-            'branch_id' => $branchId,
-        ])->with('success', 'Cobro total aplicado: ' . $creditsPaid . ' débito(s), monto $' . number_format($totalCollected, 2) . '.');
+        return redirect()->route('dashboard')
+            ->with('success', 'Cobro total aplicado: ' . $creditsPaid . ' débito(s), monto $' . number_format($totalCollected, 2) . '.');
     }
 
     public function sendOverdueReminders(Request $request)
