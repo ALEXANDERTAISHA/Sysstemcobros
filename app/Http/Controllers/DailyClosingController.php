@@ -48,7 +48,7 @@ class DailyClosingController extends Controller
             excludeTodayIncomes: true,
             excludeSameDayCollectedDebits: true
         );
-        $transferSearch = $request->get('transfer_search');
+        $transferSearch = trim((string) $request->get('transfer_search', ''));
         $transferStatus = $request->get('transfer_status', 'all');
         $transferCompany = $request->get('transfer_company_id');
         $transferListDate = today()->toDateString();
@@ -59,7 +59,7 @@ class DailyClosingController extends Controller
 
         $transferQuery = Transfer::with('company', 'branch')
             ->when($transferListDate, fn($q) => $q->whereDate('transfer_date', $transferListDate))
-            ->when($transferSearch, fn($q) => $q->where(function ($subQuery) use ($transferSearch) {
+            ->when(mb_strlen($transferSearch) >= 2, fn($q) => $q->where(function ($subQuery) use ($transferSearch) {
                 $subQuery->where('sender_name', 'like', "%{$transferSearch}%")
                     ->orWhere('receiver_name', 'like', "%{$transferSearch}%")
                     ->orWhere('transaction_code', 'like', "%{$transferSearch}%")

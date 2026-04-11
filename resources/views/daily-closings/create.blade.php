@@ -144,7 +144,7 @@
                         <div class="form-row">
                             <div class="col-md-4 mb-1">
                                 <input type="text" name="transfer_search" id="transferSearch" class="form-control form-control-sm"
-                                    placeholder="Buscar remitente/destinatario" value="{{ $transferSearch }}">
+                                    placeholder="Buscar remitente/destinatario" value="{{ $transferSearch }}" autocomplete="off">
                             </div>
                             <div class="col-md-3 mb-1">
                                 <input type="date" name="transfer_list_date" id="transferListDate" class="form-control form-control-sm"
@@ -190,7 +190,7 @@
                                     <th class="text-center">Acc.</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="transferTableBody">
                                 @forelse($transferList as $transfer)
                                     <tr>
                                         <td>{{ $transfer->transfer_date?->format('d/m/Y') ?? '-' }}</td>
@@ -236,6 +236,9 @@
                                         </td>
                                     </tr>
                                 @endforelse
+                                <tr id="transferClientNoResults" style="display: none;">
+                                    <td colspan="6" class="text-center text-muted py-3">Sin resultados en esta página.</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -471,6 +474,8 @@
             const transferListDate = document.getElementById('transferListDate');
             const transferCompany = document.getElementById('transferCompany');
             const transferStatus = document.getElementById('transferStatus');
+            const transferTableBody = document.getElementById('transferTableBody');
+            const transferClientNoResults = document.getElementById('transferClientNoResults');
             let transferFilterTimeout;
 
             function recalculate() {
@@ -501,7 +506,40 @@
                 if (transferSearch) {
                     transferSearch.addEventListener('input', function() {
                         clearTimeout(transferFilterTimeout);
-                        transferFilterTimeout = setTimeout(submitTransferFilters, 350);
+                        transferFilterTimeout = setTimeout(function() {
+                            if (!transferTableBody) {
+                                return;
+                            }
+
+                            const q = transferSearch.value.trim().toLowerCase();
+                            let visibleRows = 0;
+                            const rows = transferTableBody.querySelectorAll('tr');
+
+                            rows.forEach(function(row) {
+                                if (row.id === 'transferClientNoResults') {
+                                    return;
+                                }
+
+                                const rowText = row.textContent.toLowerCase();
+                                const isMatch = q === '' || rowText.includes(q);
+                                row.style.display = isMatch ? '' : 'none';
+                                if (isMatch) {
+                                    visibleRows++;
+                                }
+                            });
+
+                            if (transferClientNoResults) {
+                                transferClientNoResults.style.display = visibleRows === 0 ? '' : 'none';
+                            }
+                        }, 120);
+                    });
+
+                    // Enter aplica el filtro del servidor (toda la data), escribir filtra en esta página.
+                    transferSearch.addEventListener('keydown', function(event) {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            submitTransferFilters();
+                        }
                     });
                 }
 
@@ -510,6 +548,10 @@
                         field.addEventListener('change', submitTransferFilters);
                     }
                 });
+
+                if (transferSearch && transferSearch.value.trim() !== '') {
+                    transferSearch.dispatchEvent(new Event('input'));
+                }
             }
 
         });
