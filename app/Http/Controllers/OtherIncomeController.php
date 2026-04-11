@@ -26,6 +26,7 @@ class OtherIncomeController extends Controller
     {
         $date = $request->get('date', today()->toDateString());
         $selectedClientId = $request->filled('client_id') ? (int) $request->get('client_id') : null;
+        $clientSearch = trim((string) $request->get('client_search', ''));
         $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
 
         $incomesQuery = OtherIncome::with('client', 'credit.company', 'branch')
@@ -35,6 +36,8 @@ class OtherIncomeController extends Controller
 
         if (!is_null($selectedClientId)) {
             $incomesQuery->where('client_id', $selectedClientId);
+        } elseif ($clientSearch !== '') {
+            $incomesQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
         }
 
         if (BranchContext::isPrivileged() && $branchId) {
@@ -63,6 +66,8 @@ class OtherIncomeController extends Controller
 
         if (!is_null($selectedClientId)) {
             $pendingDebtsQuery->where('client_id', $selectedClientId);
+        } elseif ($clientSearch !== '') {
+            $pendingDebtsQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
         }
 
         $pendingDebts = $pendingDebtsQuery->get();
@@ -84,6 +89,7 @@ class OtherIncomeController extends Controller
             'branches',
             'branchId',
             'selectedClientId',
+            'clientSearch',
             'pendingDebts',
             'pendingDebtTotal',
             'debtTotals'

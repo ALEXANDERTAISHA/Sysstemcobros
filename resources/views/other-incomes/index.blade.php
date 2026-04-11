@@ -6,7 +6,7 @@
 @section('content')
     <div class="row mb-3">
         <div class="col-12">
-            <form method="GET" class="w-100">
+            <form method="GET" class="w-100" id="other_income_filters_form">
                 <div class="form-row align-items-end">
                     <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
                         <label class="mb-1">Fecha:</label>
@@ -14,15 +14,14 @@
                     </div>
                     <div class="col-md-4 col-sm-6 mb-2 mb-md-0">
                         <label class="mb-1">Cliente Fiado (opcional)</label>
-                        <select name="client_id" class="form-control">
-                            <option value="">— Todos los clientes —</option>
+                        <input type="text" name="client_search" id="client_search_input" class="form-control"
+                            list="clients_list" placeholder="Escribe para buscar cliente..."
+                            value="{{ $clientSearch ?? '' }}" autocomplete="off">
+                        <datalist id="clients_list">
                             @foreach ($clients as $client)
-                                <option value="{{ $client->id }}"
-                                    {{ (string) $selectedClientId === (string) $client->id ? 'selected' : '' }}>
-                                    {{ $client->name }}
-                                </option>
+                                <option value="{{ $client->name }}"></option>
                             @endforeach
-                        </select>
+                        </datalist>
                     </div>
                     @if(auth()->user()->isAdmin())
                         <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
@@ -347,6 +346,28 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.getElementById('other_income_filters_form');
+            const clientSearchInput = document.getElementById('client_search_input');
+
+            if (!filterForm || !clientSearchInput) {
+                return;
+            }
+
+            let debounceTimer;
+
+            clientSearchInput.addEventListener('input', function() {
+                window.clearTimeout(debounceTimer);
+                debounceTimer = window.setTimeout(function() {
+                    filterForm.submit();
+                }, 350);
+            });
+        });
+    </script>
+@endpush
 
 @push('scripts')
     <script>
