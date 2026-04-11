@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Nuevo Cierre')
-@section('page-title', 'Giros/Transferencias')
+@section('page-title', 'Transferencias')
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('daily-closings.index') }}">Cierres</a></li>
     <li class="breadcrumb-item active">Nuevo</li>
@@ -43,7 +43,7 @@
         <div class="col-lg-6">
             <div class="card card-primary card-outline">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-plus-circle mr-1"></i> Datos del Giro</h3>
+                    <h3 class="card-title"><i class="fas fa-plus-circle mr-1"></i> Datos de Transferencia</h3>
                 </div>
                 <form method="POST" action="{{ route('transfers.store') }}">
                     @csrf
@@ -71,7 +71,7 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Fecha del Giro *</label>
+                                    <label>Fecha de transferencia *</label>
                                     <input type="date" name="transfer_date"
                                         class="form-control @error('transfer_date') is-invalid @enderror"
                                         value="{{ old('transfer_date', $date) }}" required>
@@ -118,9 +118,8 @@
 
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save mr-1"></i> Guardar Giro
+                            <i class="fas fa-save mr-1"></i> Guardar Transferencia
                         </button>
-                        <a href="{{ route('transfers.index') }}" class="btn btn-secondary ml-2">Ver Giros</a>
                     </div>
                 </form>
             </div>
@@ -129,7 +128,7 @@
         <div class="col-lg-6">
             <div class="card card-outline card-primary h-100">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-paper-plane mr-1"></i> Lista de Giros</h3>
+                    <h3 class="card-title"><i class="fas fa-paper-plane mr-1"></i> Lista de Transferencia</h3>
                     <div class="card-tools">
                         <span class="badge badge-secondary mr-1">Total sistema: {{ $transferTotalCount }}</span>
                         @if ($transferPendingCount > 0)
@@ -149,7 +148,7 @@
                             </div>
                             <div class="col-md-3 mb-1">
                                 <input type="date" name="transfer_list_date" class="form-control form-control-sm"
-                                    value="{{ $transferListDate }}" title="Filtrar por fecha de giro">
+                                    value="{{ $transferListDate }}" title="Filtrar por fecha de transferencia">
                             </div>
                             <div class="col-md-2 mb-1">
                                 <select name="transfer_company_id" class="form-control form-control-sm">
@@ -215,7 +214,7 @@
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <form method="POST" action="{{ route('transfers.destroy', $transfer) }}"
-                                                    class="d-inline" onsubmit="return confirm('¿Eliminar este giro?')">
+                                                    class="d-inline" onsubmit="return confirm('¿Eliminar esta transferencia?')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button class="btn btn-danger btn-xs" title="Eliminar">
@@ -228,7 +227,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-center text-muted py-3">
-                                            Sin giros con los filtros aplicados.
+                                            Sin transferencias con los filtros aplicados.
                                             @if (($transferTotalCount ?? 0) > 0)
                                                 <a href="{{ route('daily-closings.create', ['date' => $date]) }}" class="btn btn-link btn-sm">
                                                     Limpiar filtros
@@ -350,7 +349,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="font-weight-bold">Total Ingresos (Giros)</label>
+                                    <label class="font-weight-bold">Total Ingresos (Transferencias)</label>
                                     <div class="input-group">
                                         <div class="input-group-prepend"><span class="input-group-text">$</span></div>
                                         <input type="text" class="form-control text-success font-weight-bold"
