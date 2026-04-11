@@ -130,7 +130,7 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-paper-plane mr-1"></i> Lista de Transferencia</h3>
                     <div class="card-tools">
-                        <span class="badge badge-secondary mr-1">Total sistema: {{ $transferTotalCount }}</span>
+                        <span class="badge badge-secondary mr-1">Total del dia: {{ $transferTotalCount }}</span>
                         @if ($transferPendingCount > 0)
                             <span class="badge badge-warning">
                                 <i class="fas fa-clock mr-1"></i>{{ $transferPendingCount }} pendiente(s)

@@ -75,7 +75,9 @@ class DailyClosingController extends Controller
             ->withQueryString();
 
         $transferPendingCount = (clone $transferQuery)->where('status', 'pending')->count();
-        $transferTotalCount = BranchContext::scope(Transfer::query())->count();
+        $transferTotalCount = BranchContext::scope(Transfer::query())
+            ->whereDate('transfer_date', $transferListDate)
+            ->count();
 
         return view('daily-closings.create', compact(
             'date',
