@@ -250,6 +250,112 @@ class OtherIncomeController extends Controller
             ->with('success', $successMessage);
     }
 
+    public function collectClientDebts(Request $request)
+    {
+        $data = $request->validate([
+            'date' => 'required|date',
+            'client_search' => 'required|string|max:150',
+            'branch_id' => 'nullable|integer',
+        ], [
+            'client_search.required' => 'Escribe el cliente que deseas cobrar.',
+        ]);
+
+        $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
+        $clientSearch = trim((string) $data['client_search']);
+
+        $matchedClients = Client::query()
+            ->where('name', 'like', "%{$clientSearch}%")
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        if ($matchedClients->isEmpty()) {
+            return redirect()->route('other-incomes.index', [
+                'date' => $data['date'],
+                'client_search' => $clientSearch,
+                'branch_id' => $branchId,
+            ])->with('error', 'No se encontró un cliente con ese nombre.');
+        }
+
+        $client = $matchedClients->first(function ($candidate) use ($clientSearch) {
+            return strcasecmp((string) $candidate->name, $clientSearch) === 0;
+        }) ?? ($matchedClients->count() === 1 ? $matchedClients->first() : null);
+
+        if (!$client) {
+            return redirect()->route('other-incomes.index', [
+                'date' => $data['date'],
+                'client_search' => $clientSearch,
+                'branch_id' => $branchId,
+            ])->with('error', 'Hay varios clientes similares. Escribe el nombre completo para cobrar.');
+        }
+
+        $creditsQuery = Credit::with('client')
+            ->where('client_id', $client->id)
+            ->whereIn('status', ['active', 'partial'])
+            ->whereRaw('total_amount > paid_amount')
+            ->orderBy('id');
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $creditsQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($creditsQuery);
+        }
+
+        $credits = $creditsQuery->get();
+
+        if ($credits->isEmpty()) {
+            return redirect()->route('other-incomes.index', [
+                'date' => $data['date'],
+                'client_search' => $client->name,
+                'branch_id' => $branchId,
+            ])->with('info', 'El cliente seleccionado no tiene deudas pendientes para cobrar.');
+        }
+
+        $paymentDate = $data['date'];
+        $totalCollected = 0.0;
+        $creditsPaid = 0;
+
+        DB::transaction(function () use ($credits, $paymentDate, &$totalCollected, &$creditsPaid) {
+            foreach ($credits as $credit) {
+                $amount = (float) $credit->balance;
+
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                CreditPayment::create([
+                    'credit_id' => $credit->id,
+                    'amount' => $amount,
+                    'payment_date' => $paymentDate,
+                    'notes' => 'Cobro total aplicado automáticamente desde seguimiento de deudas.',
+                ]);
+
+                $credit->update([
+                    'paid_amount' => (float) $credit->total_amount,
+                    'status' => 'paid',
+                ]);
+
+                OtherIncome::create([
+                    'income_date' => $paymentDate,
+                    'description' => 'Cobro total de débito: ' . $credit->concept,
+                    'amount' => $amount,
+                    'client_id' => $credit->client_id,
+                    'branch_id' => $credit->branch_id,
+                    'credit_id' => $credit->id,
+                    'notes' => 'Cobro total aplicado automáticamente desde seguimiento de deudas.',
+                ]);
+
+                $totalCollected += $amount;
+                $creditsPaid++;
+            }
+        });
+
+        return redirect()->route('other-incomes.index', [
+            'date' => $paymentDate,
+            'client_search' => $client->name,
+            'branch_id' => $branchId,
+        ])->with('success', 'Cobro total aplicado: ' . $creditsPaid . ' débito(s), monto $' . number_format($totalCollected, 2) . '.');
+    }
+
     public function sendOverdueReminders(Request $request)
     {
         $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();

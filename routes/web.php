@@ -94,6 +94,7 @@ Route::middleware('auth')->group(function () {
         Route::get('other-incomes', [OtherIncomeController::class, 'index'])->name('other-incomes.index');
         Route::post('other-incomes', [OtherIncomeController::class, 'store'])->name('other-incomes.store');
         Route::post('other-incomes/collect-debit', [OtherIncomeController::class, 'collectDebit'])->name('other-incomes.collect-debit');
+        Route::post('other-incomes/collect-client-debts', [OtherIncomeController::class, 'collectClientDebts'])->name('other-incomes.collect-client-debts');
         Route::post('other-incomes/send-overdue-reminders', [OtherIncomeController::class, 'sendOverdueReminders'])->name('other-incomes.send-overdue-reminders');
         Route::put('other-incomes/{otherIncome}', [OtherIncomeController::class, 'update'])->name('other-incomes.update');
         Route::delete('other-incomes/{otherIncome}', [OtherIncomeController::class, 'destroy'])->name('other-incomes.destroy');

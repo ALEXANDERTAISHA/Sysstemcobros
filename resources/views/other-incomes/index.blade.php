@@ -26,7 +26,7 @@
                     @if(auth()->user()->isAdmin())
                         <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
                             <label class="mb-1">Sucursal</label>
-                            <select name="branch_id" class="form-control">
+                            <select name="branch_id" class="form-control" id="branch_id_filter">
                                 <option value="">Todas las sucursales</option>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}"
@@ -38,7 +38,18 @@
                         </div>
                     @endif
                     <div class="col-auto">
-                        <button class="btn btn-primary"><i class="fas fa-search mr-1"></i> Buscar</button>
+                        <form method="POST" action="{{ route('other-incomes.collect-client-debts') }}" id="collect_client_debts_form">
+                            @csrf
+                            <input type="hidden" name="date" id="collect_date" value="{{ $date }}">
+                            <input type="hidden" name="client_search" id="collect_client_search" value="{{ $clientSearch ?? '' }}">
+                            @if(auth()->user()->isAdmin())
+                                <input type="hidden" name="branch_id" id="collect_branch_id" value="{{ $branchId }}">
+                            @endif
+                            <button type="submit" class="btn btn-success"
+                                onclick="return confirm('¿Cobrar TODO lo pendiente/vencido del cliente buscado y pasarlo a Ingresos del día?')">
+                                <i class="fas fa-coins mr-1"></i> Cobrar Total Cliente
+                            </button>
+                        </form>
                     </div>
                 </div>
             </form>
@@ -352,6 +363,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             const filterForm = document.getElementById('other_income_filters_form');
             const clientSearchInput = document.getElementById('client_search_input');
+            const dateInput = filterForm ? filterForm.querySelector('input[name="date"]') : null;
+            const branchInput = document.getElementById('branch_id_filter');
+            const collectDate = document.getElementById('collect_date');
+            const collectClientSearch = document.getElementById('collect_client_search');
+            const collectBranchId = document.getElementById('collect_branch_id');
 
             if (!filterForm || !clientSearchInput) {
                 return;
@@ -365,6 +381,34 @@
                     filterForm.submit();
                 }, 350);
             });
+
+            function syncCollectForm() {
+                if (collectDate && dateInput) {
+                    collectDate.value = dateInput.value;
+                }
+                if (collectClientSearch) {
+                    collectClientSearch.value = clientSearchInput.value.trim();
+                }
+                if (collectBranchId && branchInput) {
+                    collectBranchId.value = branchInput.value;
+                }
+            }
+
+            clientSearchInput.addEventListener('change', syncCollectForm);
+            if (dateInput) {
+                dateInput.addEventListener('change', function() {
+                    syncCollectForm();
+                    filterForm.submit();
+                });
+            }
+            if (branchInput) {
+                branchInput.addEventListener('change', function() {
+                    syncCollectForm();
+                    filterForm.submit();
+                });
+            }
+
+            syncCollectForm();
         });
     </script>
 @endpush
