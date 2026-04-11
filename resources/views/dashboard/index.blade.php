@@ -83,12 +83,14 @@
         </div>
         <div class="col-lg-4 col-md-6">
             <div class="small-box bg-danger">
-                <div class="inner">
-                    <h3>${{ number_format($totalExpenses, 2) }}</h3>
-                    <p>Total Gastos/Débitos</p>
-                </div>
-                <div class="icon"><i class="fas fa-arrow-down"></i></div>
-                <a href="{{ route('expenses.create') }}" class="small-box-footer">
+                <a href="{{ route('expenses.create') }}" class="text-white d-block" style="text-decoration: none;">
+                    <div class="inner">
+                        <h3>${{ number_format($totalExpenses, 2) }}</h3>
+                        <p>Total Gastos/Débitos</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-arrow-down"></i></div>
+                </a>
+                <a href="{{ route('expenses.index') }}" class="small-box-footer">
                     Agregar débito <i class="fas fa-arrow-circle-right"></i>
                 </a>
             </div>
