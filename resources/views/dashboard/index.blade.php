@@ -29,6 +29,39 @@
             border-radius: 6px;
             padding: 10px 15px;
         }
+
+        .dashboard-stats .stat-col {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-stats .small-box {
+            width: 100%;
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 170px;
+        }
+
+        .dashboard-stats .small-box .inner {
+            min-height: 106px;
+        }
+
+        .dashboard-stats .small-box .inner p {
+            min-height: 48px;
+            margin-bottom: 0;
+        }
+
+        .dashboard-stats .small-box .small-box-footer {
+            margin-top: auto;
+        }
+
+        .dashboard-stats .card-main-link {
+            color: #fff;
+            text-decoration: none;
+            display: block;
+            flex: 1 1 auto;
+        }
     </style>
 @endpush
 
@@ -67,9 +100,9 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="row justify-content-start">
+    <div class="row justify-content-start dashboard-stats">
 
-        <div class="col-lg-4 col-md-6">
+        <div class="col-lg-4 col-md-6 stat-col">
             <div class="small-box bg-info">
                 <div class="inner">
                     <h3>${{ number_format($existingValue, 2) }}</h3>
@@ -81,9 +114,9 @@
                 </a>
             </div>
         </div>
-        <div class="col-lg-4 col-md-6">
+        <div class="col-lg-4 col-md-6 stat-col">
             <div class="small-box bg-danger">
-                <a href="{{ route('expenses.create') }}" class="text-white d-block" style="text-decoration: none;">
+                <a href="{{ route('expenses.create') }}" class="card-main-link">
                     <div class="inner">
                         <h3>${{ number_format($totalExpenses, 2) }}</h3>
                         <p>Total Gastos/Débitos</p>
@@ -95,8 +128,8 @@
                 </a>
             </div>
         </div>
-        <div class="col-lg-4 col-md-6">
-            <a href="{{ route('other-incomes.index', ['date' => $date]) }}" class="text-decoration-none">
+        <div class="col-lg-4 col-md-6 stat-col">
+            <a href="{{ route('other-incomes.index', ['date' => $date]) }}" class="text-decoration-none d-flex w-100">
             <div class="small-box bg-success">
                 <div class="inner">
                     <h3>${{ number_format($totalOtherIncomes, 2) }}</h3>
