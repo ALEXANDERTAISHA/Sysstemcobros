@@ -17,7 +17,6 @@
                         <input type="text" name="client_search" id="client_search_input" class="form-control"
                             placeholder="Escribe para buscar cliente..."
                             value="{{ $clientSearch ?? '' }}" autocomplete="off">
-                        <small class="form-text text-muted">Busca desde 2 letras. Presiona Enter para buscar al instante.</small>
                     </div>
                     @if(auth()->user()->isAdmin())
                         <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
@@ -410,15 +409,24 @@
             }
 
             function applyInstantTableFilter() {
-                const query = clientSearchInput.value.trim().toLowerCase();
+                const query = clientSearchInput.value.trim();
+                const queryLower = query.toLowerCase();
 
+                if (query.length === 0) {
+                    // Reset: mostrar todo
+                    pendingRows.forEach(row => row.style.display = '');
+                    incomeRows.forEach(row => row.style.display = '');
+                    if (pendingNoResults) pendingNoResults.style.display = 'none';
+                    if (incomesNoResults) incomesNoResults.style.display = 'none';
+                    return;
+                }
+
+                // Filtrar solo si hay 1+ letra (instant local filtering)
                 let visiblePending = 0;
                 pendingRows.forEach(function(row) {
-                    const matched = query === '' || row.textContent.toLowerCase().includes(query);
+                    const matched = row.textContent.toLowerCase().includes(queryLower);
                     row.style.display = matched ? '' : 'none';
-                    if (matched) {
-                        visiblePending++;
-                    }
+                    if (matched) visiblePending++;
                 });
                 if (pendingNoResults) {
                     pendingNoResults.style.display = pendingRows.length > 0 && visiblePending === 0 ? '' : 'none';
@@ -426,11 +434,9 @@
 
                 let visibleIncomes = 0;
                 incomeRows.forEach(function(row) {
-                    const matched = query === '' || row.textContent.toLowerCase().includes(query);
+                    const matched = row.textContent.toLowerCase().includes(queryLower);
                     row.style.display = matched ? '' : 'none';
-                    if (matched) {
-                        visibleIncomes++;
-                    }
+                    if (matched) visibleIncomes++;
                 });
                 if (incomesNoResults) {
                     incomesNoResults.style.display = incomeRows.length > 0 && visibleIncomes === 0 ? '' : 'none';
@@ -450,13 +456,14 @@
                 applyInstantTableFilter();
                 syncCollectForm();
 
+                // Envío al servidor solo si hay 2+ letras o se borra todo (para precisión)
                 window.clearTimeout(debounceTimer);
                 debounceTimer = window.setTimeout(function() {
                     const search = clientSearchInput.value.trim();
                     if (search.length === 0 || search.length >= 2) {
                         submitIfChanged();
                     }
-                }, 700);
+                }, 300);
             });
 
             clientSearchInput.addEventListener('keydown', function(event) {
