@@ -144,7 +144,7 @@ class ExpenseController extends Controller
             $this->whatsApp->send($client->whatsapp, $message, $client->name, Credit::class, $credit->id);
         }
 
-        return redirect()->route('expenses.index')->with('success', 'Débito registrado correctamente.');
+        return redirect()->route('dashboard')->with('success', 'Débito registrado correctamente.');
     }
 
     public function show(Credit $credit)
