@@ -139,19 +139,19 @@
                     </div>
                 </div>
                 <div class="card-body p-2">
-                    <form method="GET" action="{{ route('daily-closings.create') }}" class="mb-2">
+                    <form method="GET" action="{{ route('daily-closings.create') }}" class="mb-2" id="transferFilterForm">
                         <input type="hidden" name="date" value="{{ $date }}">
                         <div class="form-row">
                             <div class="col-md-4 mb-1">
-                                <input type="text" name="transfer_search" class="form-control form-control-sm"
+                                <input type="text" name="transfer_search" id="transferSearch" class="form-control form-control-sm"
                                     placeholder="Buscar remitente/destinatario" value="{{ $transferSearch }}">
                             </div>
                             <div class="col-md-3 mb-1">
-                                <input type="date" name="transfer_list_date" class="form-control form-control-sm"
+                                <input type="date" name="transfer_list_date" id="transferListDate" class="form-control form-control-sm"
                                     value="{{ $transferListDate }}" title="Filtrar por fecha de transferencia">
                             </div>
                             <div class="col-md-2 mb-1">
-                                <select name="transfer_company_id" class="form-control form-control-sm">
+                                <select name="transfer_company_id" id="transferCompany" class="form-control form-control-sm">
                                     <option value="">Empresa</option>
                                     @foreach ($companies as $c)
                                         <option value="{{ $c->id }}"
@@ -162,7 +162,7 @@
                                 </select>
                             </div>
                             <div class="col-md-2 mb-1">
-                                <select name="transfer_status" class="form-control form-control-sm">
+                                <select name="transfer_status" id="transferStatus" class="form-control form-control-sm">
                                     <option value="all" {{ $transferStatus === 'all' ? 'selected' : '' }}>Todos</option>
                                     <option value="pending" {{ $transferStatus === 'pending' ? 'selected' : '' }}>Pendientes</option>
                                     <option value="sent" {{ $transferStatus === 'sent' ? 'selected' : '' }}>Enviados</option>
@@ -466,6 +466,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             const sumTotal = {{ $sumTotal }};
             const existingValueInput = document.getElementById('existing_value');
+            const transferFilterForm = document.getElementById('transferFilterForm');
+            const transferSearch = document.getElementById('transferSearch');
+            const transferListDate = document.getElementById('transferListDate');
+            const transferCompany = document.getElementById('transferCompany');
+            const transferStatus = document.getElementById('transferStatus');
+            let transferFilterTimeout;
 
             function recalculate() {
                 const existing = existingValueInput ? (parseFloat(existingValueInput.value) || 0) : 0;
@@ -486,6 +492,25 @@
                 existingValueInput.addEventListener('input', recalculate);
             }
             recalculate();
+
+            if (transferFilterForm) {
+                const submitTransferFilters = function() {
+                    transferFilterForm.submit();
+                };
+
+                if (transferSearch) {
+                    transferSearch.addEventListener('input', function() {
+                        clearTimeout(transferFilterTimeout);
+                        transferFilterTimeout = setTimeout(submitTransferFilters, 350);
+                    });
+                }
+
+                [transferListDate, transferCompany, transferStatus].forEach(function(field) {
+                    if (field) {
+                        field.addEventListener('change', submitTransferFilters);
+                    }
+                });
+            }
 
         });
     </script>

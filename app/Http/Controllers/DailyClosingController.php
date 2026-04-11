@@ -51,7 +51,7 @@ class DailyClosingController extends Controller
         $transferSearch = $request->get('transfer_search');
         $transferStatus = $request->get('transfer_status', 'all');
         $transferCompany = $request->get('transfer_company_id');
-        $transferListDate = $request->get('transfer_list_date');
+        $transferListDate = $request->get('transfer_list_date', today()->toDateString());
 
         $existing = BranchContext::scope(DailyClosing::whereDate('closing_date', $date))->first();
         $cashBoxInitialTotal = (float) BranchContext::scope(CashBoxInitial::whereDate('date', $date))->sum('initial_amount');
