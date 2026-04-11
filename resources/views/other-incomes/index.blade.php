@@ -394,7 +394,8 @@
             }
 
             let debounceTimer;
-            let lastSubmittedSignature = [
+            let serverDebounceTimer;
+            let lastServerSubmittedSignature = [
                 clientSearchInput.value.trim(),
                 dateInput ? dateInput.value : '',
                 branchInput ? branchInput.value : ''
@@ -413,7 +414,7 @@
                 const queryLower = query.toLowerCase();
 
                 if (query.length === 0) {
-                    // Reset: mostrar todo
+                    // Reset: mostrar todo instantáneamente
                     pendingRows.forEach(row => row.style.display = '');
                     incomeRows.forEach(row => row.style.display = '');
                     if (pendingNoResults) pendingNoResults.style.display = 'none';
@@ -421,7 +422,7 @@
                     return;
                 }
 
-                // Filtrar solo si hay 1+ letra (instant local filtering)
+                // Filtrado local súper rápido (incluso con 1 letra)
                 let visiblePending = 0;
                 pendingRows.forEach(function(row) {
                     const matched = row.textContent.toLowerCase().includes(queryLower);
@@ -443,35 +444,42 @@
                 }
             }
 
-            function submitIfChanged() {
+            function submitToServer() {
                 const signature = getCurrentSignature();
-                if (signature === lastSubmittedSignature) {
+                if (signature === lastServerSubmittedSignature) {
                     return;
                 }
-                lastSubmittedSignature = signature;
+                lastServerSubmittedSignature = signature;
                 filterForm.submit();
             }
 
             clientSearchInput.addEventListener('input', function() {
-                applyInstantTableFilter();
-                syncCollectForm();
-
-                // Envío al servidor solo si hay 2+ letras o se borra todo (para precisión)
+                // Filtrado local instantáneo (120ms = muy rápido, se siente natural)
                 window.clearTimeout(debounceTimer);
                 debounceTimer = window.setTimeout(function() {
+                    applyInstantTableFilter();
+                    syncCollectForm();
+                }, 120);
+
+                // Envío al servidor más lento (350ms) pero solo si hay 2+ letras o está vacío
+                window.clearTimeout(serverDebounceTimer);
+                serverDebounceTimer = window.setTimeout(function() {
                     const search = clientSearchInput.value.trim();
                     if (search.length === 0 || search.length >= 2) {
-                        submitIfChanged();
+                        submitToServer();
                     }
-                }, 300);
+                }, 350);
             });
 
+            // Enter: envío inmediato al servidor para búsqueda completa
             clientSearchInput.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     window.clearTimeout(debounceTimer);
+                    window.clearTimeout(serverDebounceTimer);
+                    applyInstantTableFilter();
                     syncCollectForm();
-                    submitIfChanged();
+                    submitToServer();
                 }
             });
 
@@ -488,16 +496,23 @@
             }
 
             clientSearchInput.addEventListener('change', syncCollectForm);
+            // Cambios en fecha o sucursal: envío inmediato (sin debounce)
             if (dateInput) {
                 dateInput.addEventListener('change', function() {
+                    window.clearTimeout(debounceTimer);
+                    window.clearTimeout(serverDebounceTimer);
+                    applyInstantTableFilter();
                     syncCollectForm();
-                    submitIfChanged();
+                    submitToServer();
                 });
             }
             if (branchInput) {
                 branchInput.addEventListener('change', function() {
+                    window.clearTimeout(debounceTimer);
+                    window.clearTimeout(serverDebounceTimer);
+                    applyInstantTableFilter();
                     syncCollectForm();
-                    submitIfChanged();
+                    submitToServer();
                 });
             }
 

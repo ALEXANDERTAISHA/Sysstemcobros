@@ -36,7 +36,7 @@ class OtherIncomeController extends Controller
 
         if (!is_null($selectedClientId)) {
             $incomesQuery->where('client_id', $selectedClientId);
-        } elseif (mb_strlen($clientSearch) >= 2) {
+        } elseif ($clientSearch !== '' && mb_strlen($clientSearch) >= 2) {
             $incomesQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
         }
 
@@ -66,7 +66,7 @@ class OtherIncomeController extends Controller
 
         if (!is_null($selectedClientId)) {
             $pendingDebtsQuery->where('client_id', $selectedClientId);
-        } elseif (mb_strlen($clientSearch) >= 2) {
+        } elseif ($clientSearch !== '' && mb_strlen($clientSearch) >= 2) {
             $pendingDebtsQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
         }
 
