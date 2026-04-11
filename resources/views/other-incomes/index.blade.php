@@ -15,13 +15,8 @@
                     <div class="col-md-4 col-sm-6 mb-2 mb-md-0">
                         <label class="mb-1">Cliente Fiado (opcional)</label>
                         <input type="text" name="client_search" id="client_search_input" class="form-control"
-                            list="clients_list" placeholder="Escribe para buscar cliente..."
+                            placeholder="Escribe para buscar cliente..."
                             value="{{ $clientSearch ?? '' }}" autocomplete="off">
-                        <datalist id="clients_list">
-                            @foreach ($clients as $client)
-                                <option value="{{ $client->name }}"></option>
-                            @endforeach
-                        </datalist>
                     </div>
                     @if(auth()->user()->isAdmin())
                         <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
