@@ -245,7 +245,7 @@
                                     <div class="form-row">
                                         <div class="form-group col-md-6">
                                             <label>Nombre del cliente *</label>
-                                            <input type="text" class="form-control" id="quick_client_name">
+                                            <input type="text" class="form-control" id="quick_client_name" autocapitalize="words">
                                         </div>
                                         <div class="form-group col-md-6">
                                             <label>Telefono</label>
@@ -462,6 +462,16 @@
             toggleQuickCompany.addEventListener('click', function() {
                 toggleQuickForm(quickCompanyFormWrap);
             });
+
+            const quickClientNameInput = document.getElementById('quick_client_name');
+
+            if (quickClientNameInput) {
+                quickClientNameInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/\b\w/g, function(letter) {
+                        return letter.toUpperCase();
+                    });
+                });
+            }
 
             if (quickClientPhoneInput) {
                 quickClientPhoneInput.addEventListener('input', function() {
