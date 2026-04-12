@@ -172,8 +172,8 @@
         const form = document.querySelector('form[action="{{ route('whatsapp.send') }}"]');
 
         const iti = window.intlTelInput(phoneInput, {
-            initialCountry: 'ec',
-            preferredCountries: ['ec', 'co', 'pe', 'mx', 'us', 'es'],
+            initialCountry: 'us',
+            preferredCountries: ['us', 'ec', 'co', 'pe', 'mx', 'es'],
             separateDialCode: true,
             nationalMode: true,
             autoPlaceholder: 'aggressive',

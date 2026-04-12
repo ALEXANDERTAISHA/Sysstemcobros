@@ -103,8 +103,8 @@
             }
 
             const iti = window.intlTelInput(whatsappInput, {
-                initialCountry: 'ec',
-                preferredCountries: ['ec', 'co', 'pe', 'mx', 'us', 'es'],
+                initialCountry: 'us',
+                preferredCountries: ['us', 'ec', 'co', 'pe', 'mx', 'es'],
                 separateDialCode: true,
                 nationalMode: true,
                 autoPlaceholder: 'aggressive',
