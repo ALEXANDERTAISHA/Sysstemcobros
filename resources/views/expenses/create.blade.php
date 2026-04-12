@@ -225,7 +225,7 @@
                                 <input type="text" id="client_filter_input" class="form-control client-filter-input"
                                     placeholder="Buscar cliente por nombre o teléfono...">
                             </div>
-                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror" required size="1">
+                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror d-none" required size="1" style="display: none;">
                                 <option value="">Seleccionar cliente...</option>
                                 @foreach ($clients as $client)
                                     <option value="{{ $client->id }}" data-company="{{ $client->company_id ?? '' }}"
@@ -629,9 +629,23 @@
                 });
 
                 if (term === '') {
-                    collapseClientSelect();
-                } else {
-                    expandClientSelect();
+                    clientSelect.value = '';
+                    updateVisibility();
+                }
+            }
+
+            function selectFirstMatchingClientOption() {
+                if (!clientSelect) {
+                    return;
+                }
+
+                const firstMatch = Array.from(clientSelect.options).find(function(option, index) {
+                    return index > 0 && !option.hidden;
+                });
+
+                if (firstMatch) {
+                    clientSelect.value = firstMatch.value;
+                    clientSelect.dispatchEvent(new Event('change'));
                 }
             }
 
@@ -747,6 +761,12 @@
 
             if (clientFilterInput) {
                 clientFilterInput.addEventListener('input', filterClientOptions);
+                clientFilterInput.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        selectFirstMatchingClientOption();
+                    }
+                });
             }
 
             totalAmountInput.addEventListener('blur', updateVisibility);
