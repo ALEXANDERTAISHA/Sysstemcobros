@@ -156,6 +156,10 @@
             border-color: #d6a800;
             box-shadow: 0 0 0 .15rem rgba(214, 168, 0, .15);
         }
+
+        #client_select option {
+            white-space: pre;
+        }
     </style>
 @endpush
 
@@ -230,7 +234,7 @@
                                 @foreach ($clients as $client)
                                     <option value="{{ $client->id }}" data-company="{{ $client->company_id ?? '' }}"
                                         {{ old('client_id', request('client_id')) == $client->id ? 'selected' : '' }}>
-                                        {{ $client->name }} {{ $client->phone ? "({$client->phone})" : '' }}
+                                        {{ $client->name }}&nbsp;&nbsp;{{ $client->phone ? "({$client->phone})" : '' }}
                                     </option>
                                 @endforeach
                             </select>
