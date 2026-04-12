@@ -225,7 +225,7 @@
                                 <input type="text" id="client_filter_input" class="form-control client-filter-input"
                                     placeholder="Buscar cliente por nombre o teléfono...">
                             </div>
-                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror d-none" required size="1" style="display: none;">
+                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror" required size="1">
                                 <option value="">Seleccionar cliente...</option>
                                 @foreach ($clients as $client)
                                     <option value="{{ $client->id }}" data-company="{{ $client->company_id ?? '' }}"
