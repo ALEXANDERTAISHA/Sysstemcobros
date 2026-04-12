@@ -631,6 +631,9 @@
                 if (term === '') {
                     clientSelect.value = '';
                     updateVisibility();
+                    collapseClientSelect();
+                } else {
+                    expandClientSelect();
                 }
             }
 
