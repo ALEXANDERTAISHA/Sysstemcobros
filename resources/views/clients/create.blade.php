@@ -49,12 +49,11 @@
                                     <input type="tel" id="whatsapp_input"
                                         class="form-control @error('whatsapp') is-invalid @enderror"
                                         value="{{ old('whatsapp') }}" inputmode="numeric" autocomplete="tel"
-                                        placeholder="Número de teléfono">
+                                        placeholder="WhatsApp USA: 5551234567">
                                     @error('whatsapp')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
-                                    <small class="form-text text-muted">Selecciona país y escribe el número sin el
-                                        código.</small>
+                                    <small class="form-text text-muted">WhatsApp de Estados Unidos, escribe el número sin el código +1.</small>
                                 </div>
                             </div>
                         </div>
@@ -110,8 +109,8 @@
             }
 
             const iti = window.intlTelInput(whatsappInput, {
-                initialCountry: 'ec',
-                preferredCountries: ['ec', 'co', 'pe', 'mx', 'us', 'es'],
+                initialCountry: 'us',
+                onlyCountries: ['us'],
                 separateDialCode: true,
                 nationalMode: true,
                 autoPlaceholder: 'aggressive',
