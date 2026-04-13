@@ -185,7 +185,7 @@
                             </div>
                             <div class="expense-flow-pill" id="company_pill">
                                 <div>
-                                    <span class="expense-flow-pill-label">Empresa</span>
+                                    <span class="expense-flow-pill-label">Empresa Gastos Débitos</span>
                                     <span class="expense-flow-pill-value" id="company_pill_value"></span>
                                 </div>
                                 <button type="button" class="expense-flow-edit" data-edit-step="company">
