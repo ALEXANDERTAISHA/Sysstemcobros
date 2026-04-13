@@ -27,7 +27,8 @@ class Company extends Model
             WHEN (LOWER(name) LIKE '%nacional%' AND LOWER(name) LIKE '%tarjeta%') THEN 8
             WHEN (LOWER(name) LIKE '%nacional%' AND LOWER(name) LIKE '%cheque%') THEN 9
             WHEN LOWER(name) LIKE '%tienda%' THEN 10
-            WHEN LOWER(name) LIKE '%paqueteria%' THEN 11
+            WHEN LOWER(name) LIKE '%recarga%' OR LOWER(name) LIKE '%recargas%' THEN 11
+            WHEN LOWER(name) LIKE '%paqueteria%' THEN 12
             ELSE 100
         END")
         ->orderBy('name');
