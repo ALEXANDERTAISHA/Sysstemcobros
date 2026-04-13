@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:super_admin,admin')->group(function () {
         // Empresas
+        Route::get('companies/gastos-debitos', [CompanyController::class, 'gastosDebitos'])->name('companies.gastos-debitos');
         Route::resource('companies', CompanyController::class)->except(['show']);
 
         // Clientes

@@ -11,7 +11,15 @@ class CompanyController extends Controller
     public function index()
     {
         $companies = Company::withCount('transfers')->orderByBusinessList()->get();
-        return view('companies.index', compact('companies'));
+        $pageTitle = 'Empresas / Compañías';
+        return view('companies.index', compact('companies', 'pageTitle'));
+    }
+
+    public function gastosDebitos()
+    {
+        $companies = Company::withCount('transfers')->orderByBusinessList()->get();
+        $pageTitle = 'Empresas Gastos Débitos';
+        return view('companies.index', compact('companies', 'pageTitle'));
     }
 
     public function create()

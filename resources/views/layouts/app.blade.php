@@ -479,6 +479,14 @@
                                         </a>
                                     </li>
 
+                                    <li class="nav-item">
+                                        <a href="{{ route('companies.gastos-debitos') }}"
+                                            class="nav-link {{ request()->routeIs('companies.gastos-debitos') ? 'active' : '' }}">
+                                            <i class="fas fa-building nav-icon"></i>
+                                            <p>Empresas Gastos Débitos</p>
+                                        </a>
+                                    </li>
+
                                     @if (auth()->user()->isSuperAdmin())
                                         <li class="nav-item">
                                             <a href="{{ route('admin.branches.index') }}"

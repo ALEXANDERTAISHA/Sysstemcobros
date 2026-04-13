@@ -1,14 +1,14 @@
 @extends('layouts.app')
-@section('title', 'Empresas')
-@section('page-title', 'Empresas / Compañías')
-@section('breadcrumb')<li class="breadcrumb-item active">Empresas</li>@endsection
+@section('title', $pageTitle ?? 'Empresas')
+@section('page-title', $pageTitle ?? 'Empresas / Compañías')
+@section('breadcrumb')<li class="breadcrumb-item active">{{ $pageTitle ?? 'Empresas' }}</li>@endsection
 
 @section('content')
     <div class="row">
         <div class="col-lg-8">
             <div class="card card-outline card-primary">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-building mr-1"></i> Lista de Empresas</h3>
+                    <h3 class="card-title"><i class="fas fa-building mr-1"></i> Lista de {{ $pageTitle ?? 'Empresas' }}</h3>
                     <div class="card-tools">
                         <a href="{{ route('companies.create') }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus mr-1"></i> Nueva Empresa
