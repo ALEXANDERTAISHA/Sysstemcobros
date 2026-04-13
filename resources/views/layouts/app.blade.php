@@ -480,8 +480,8 @@
                                     </li>
 
                                     <li class="nav-item">
-                                        <a href="{{ route('companies.gastos-debitos') }}"
-                                            class="nav-link {{ request()->routeIs('companies.gastos-debitos') ? 'active' : '' }}">
+                                        <a href="{{ route('companies.gastos-debitos.index') }}"
+                                            class="nav-link {{ request()->routeIs('companies.gastos-debitos.*') ? 'active' : '' }}">
                                             <i class="fas fa-building nav-icon"></i>
                                             <p>Empresas Gastos Débitos</p>
                                         </a>
