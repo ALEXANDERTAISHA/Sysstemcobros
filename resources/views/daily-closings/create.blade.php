@@ -39,8 +39,8 @@
             actualizarlo.</div>
     @endif
 
-    <div class="row mb-3">
-        <div class="col-lg-6">
+    <div class="row mb-3 align-items-start">
+        <div class="col-lg-6 order-lg-1">
             <div class="card card-primary card-outline">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-plus-circle mr-1"></i> Datos de Transferencia</h3>
@@ -93,7 +93,7 @@
             </div>
         </div>
 
-        <div class="col-lg-6">
+        <div class="col-lg-6 order-lg-2">
             <div class="card card-outline card-primary h-100">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-paper-plane mr-1"></i> Lista de Transferencia</h3>
