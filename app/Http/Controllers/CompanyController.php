@@ -10,7 +10,7 @@ class CompanyController extends Controller
 {
     public function index()
     {
-        $companies = Company::withCount('transfers')->orderBy('name')->get();
+        $companies = Company::withCount('transfers')->orderByBusinessList()->get();
         return view('companies.index', compact('companies'));
     }
 

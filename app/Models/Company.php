@@ -11,6 +11,28 @@ class Company extends Model
 
     protected $casts = ['is_active' => 'boolean'];
 
+    public function scopeOrderByBusinessList($query)
+    {
+        $query->orderByRaw("CASE
+            WHEN ((LOWER(name) LIKE '%via%america%' OR LOWER(name) LIKE '%vias%america%' OR LOWER(name) LIKE '%v.%america%')
+                AND (LOWER(name) LIKE '%transfer%' OR LOWER(name) LIKE '%envio%' OR LOWER(name) LIKE '%envíos%')) THEN 1
+            WHEN ((LOWER(name) LIKE '%via%america%' OR LOWER(name) LIKE '%vias%america%' OR LOWER(name) LIKE '%v.%america%')
+                AND LOWER(name) LIKE '%tarjeta%') THEN 2
+            WHEN ((LOWER(name) LIKE '%via%america%' OR LOWER(name) LIKE '%vias%america%' OR LOWER(name) LIKE '%v.%america%')
+                AND LOWER(name) LIKE '%cheque%') THEN 3
+            WHEN (LOWER(name) LIKE '%ria%' AND (LOWER(name) LIKE '%transfer%' OR LOWER(name) LIKE '%envio%' OR LOWER(name) LIKE '%envíos%')) THEN 4
+            WHEN (LOWER(name) LIKE '%ria%' AND LOWER(name) LIKE '%servicio%') THEN 5
+            WHEN (LOWER(name) LIKE '%wester union%' AND (LOWER(name) LIKE '%transfer%' OR LOWER(name) LIKE '%envio%' OR LOWER(name) LIKE '%envíos%')) THEN 6
+            WHEN (LOWER(name) LIKE '%nacional%' AND (LOWER(name) LIKE '%transfer%' OR LOWER(name) LIKE '%envio%' OR LOWER(name) LIKE '%envíos%')) THEN 7
+            WHEN (LOWER(name) LIKE '%nacional%' AND LOWER(name) LIKE '%tarjeta%') THEN 8
+            WHEN (LOWER(name) LIKE '%nacional%' AND LOWER(name) LIKE '%cheque%') THEN 9
+            WHEN LOWER(name) LIKE '%tienda%' THEN 10
+            WHEN LOWER(name) LIKE '%paqueteria%' THEN 11
+            ELSE 100
+        END")
+        ->orderBy('name');
+    }
+
     public function transfers(): HasMany
     {
         return $this->hasMany(Transfer::class);

@@ -29,7 +29,7 @@ class ReportController extends Controller
 
         $summary = $this->buildSummary($dateFrom, $dateTo, $companyId, $branchId);
         $printable = $this->buildPrintableSections($dateFrom, $dateTo, $companyId, $summary, $branchId);
-        $companies = Company::where('is_active', true)->orderBy('name')->get();
+        $companies = Company::where('is_active', true)->orderByBusinessList()->get();
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
 
         return view('reports.index', compact(

@@ -54,7 +54,7 @@ class DailyClosingController extends Controller
 
         $existing = BranchContext::scope(DailyClosing::whereDate('closing_date', $date))->first();
         $cashBoxInitialTotal = (float) BranchContext::scope(CashBoxInitial::whereDate('date', $date))->sum('initial_amount');
-        $companies = Company::where('is_active', true)->orderBy('name')->get();
+        $companies = Company::where('is_active', true)->orderByBusinessList()->get();
 
         $transferQuery = Transfer::with('company', 'branch')
             ->when($transferListDate, fn($q) => $q->whereDate('transfer_date', $transferListDate))

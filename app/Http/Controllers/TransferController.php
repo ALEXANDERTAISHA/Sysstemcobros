@@ -36,7 +36,7 @@ class TransferController extends Controller
             ->latest()
             ->paginate(25);
 
-        $companies = Company::where('is_active', true)->get();
+        $companies = Company::where('is_active', true)->orderByBusinessList()->get();
         $pendingCount = BranchContext::scope(Transfer::where('status', 'pending'))->count();
 
         return view('transfers.index', compact('transfers', 'search', 'status', 'date', 'company', 'companies', 'pendingCount'));
@@ -44,7 +44,7 @@ class TransferController extends Controller
 
     public function create()
     {
-        $companies = Company::where('is_active', true)->orderBy('name')->get();
+        $companies = Company::where('is_active', true)->orderByBusinessList()->get();
         $clients = Client::orderBy('name')->get(['id', 'name', 'phone']);
         $users = User::orderBy('name')->get(['id', 'name']);
 
@@ -89,7 +89,7 @@ class TransferController extends Controller
     {
         BranchContext::abortIfForbidden($transfer->branch_id);
 
-        $companies = Company::where('is_active', true)->orderBy('name')->get();
+        $companies = Company::where('is_active', true)->orderByBusinessList()->get();
         $clients = Client::orderBy('name')->get(['id', 'name', 'phone']);
         return view('transfers.edit', compact('transfer', 'companies', 'clients'));
     }
