@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Client;
+use App\Models\Company;
 use App\Models\Credit;
 use App\Models\CreditPayment;
 use App\Models\OtherIncome;
@@ -48,12 +49,10 @@ class OtherIncomeController extends Controller
             ->whereIn('status', ['active', 'partial'])
             ->whereDate('granted_date', '<=', today()->toDateString())
             ->whereRaw('total_amount > paid_amount')
-            ->join('companies', 'companies.id', '=', 'credits.company_id')
-            ->where('companies.company_type', Company::TYPE_GENERAL)
-            ->select('credits.*')
-            ->orderByRaw('CASE WHEN credits.due_date IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('credits.due_date')
-            ->orderBy('credits.id');
+            ->whereHas('company', fn($companyQuery) => $companyQuery->where('company_type', Company::TYPE_GENERAL))
+            ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('due_date')
+            ->orderBy('id');
 
         if (BranchContext::isPrivileged() && $branchId) {
             $pendingDebtsQuery->where('branch_id', $branchId);
