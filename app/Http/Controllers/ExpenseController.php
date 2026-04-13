@@ -162,7 +162,7 @@ class ExpenseController extends Controller
         BranchContext::abortIfForbidden($credit->branch_id);
 
         $clients = Client::where('is_active', true)->orderBy('name')->get();
-        $companies = Company::where('is_active', true)->orderByBusinessList()->get();
+        $companies = Company::where('is_active', true)->ofType(Company::TYPE_EXPENSE_DEBIT)->orderByBusinessList()->get();
 
         return view('expenses.edit', compact('credit', 'clients', 'companies'));
     }
