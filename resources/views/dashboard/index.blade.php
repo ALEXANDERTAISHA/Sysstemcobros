@@ -131,6 +131,20 @@
             </div>
         </div>
         <div class="col-lg-4 col-md-6 stat-col">
+            <a href="{{ route('companies.index') }}" class="text-decoration-none d-flex w-100">
+                <div class="small-box bg-secondary">
+                    <div class="inner">
+                        <h3>{{ $companies->count() }}</h3>
+                        <p>Empresas Gastos/Débitos</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-building"></i></div>
+                    <span class="small-box-footer">
+                        Ver empresas <i class="fas fa-arrow-circle-right"></i>
+                    </span>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-4 col-md-6 stat-col">
             <a href="{{ route('other-incomes.index', ['date' => $date]) }}" class="text-decoration-none d-flex w-100">
             <div class="small-box bg-success">
                 <div class="inner">
