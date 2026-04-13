@@ -305,8 +305,7 @@
                                 <p class="dropdown-user-name">{{ auth()->user()->name }}</p>
                                 <p class="dropdown-user-email">{{ auth()->user()->email }}</p>
                                 <p class="dropdown-user-email mb-0">{{ auth()->user()->role_label }}</p>
-                                <p class="dropdown-user-email mb-0">
-                                    {{ auth()->user()->branch?->name ?? 'Sin sucursal' }}</p>
+                                <p class="dropdown-user-email mb-0">{{ auth()->user()->branch?->name ?? 'Sin sucursal' }}</p>
                             </div>
                         </div>
                         <a href="{{ route('profile.edit') }}" class="dropdown-item">
@@ -335,8 +334,7 @@
                 <span class="brand-copy">
                     <span class="brand-text">SystemCobros</span>
                     <span class="brand-branch-text">
-                        Sucursal:
-                        {{ auth()->user()->isAdmin() ? 'Vista Global' : auth()->user()->branch?->name ?? 'Sin sucursal' }}
+                        Sucursal: {{ auth()->user()->isAdmin() ? 'Vista Global' : (auth()->user()->branch?->name ?? 'Sin sucursal') }}
                     </span>
                 </span>
             </a>
@@ -369,9 +367,7 @@
                             }
                             $hasTodayInitialCash = $initialCashQuery->exists();
                             $operationLockedClass = $hasTodayInitialCash ? '' : 'nav-link-disabled';
-                            $operationLockedTitle = $hasTodayInitialCash
-                                ? ''
-                                : 'Primero registra el dinero inicial de caja chica para habilitar esta opción.';
+                            $operationLockedTitle = $hasTodayInitialCash ? '' : 'Primero registra el dinero inicial de caja chica para habilitar esta opción.';
                         @endphp
 
                         <li class="nav-item">
@@ -383,66 +379,65 @@
                         </li>
 
                         @if ($canOperate)
-                            <li class="nav-item {{ $operacionesOpen ? 'menu-open' : '' }}">
-                                <a href="#" class="nav-link {{ $operacionesOpen ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-cogs"></i>
-                                    <p>
-                                        OPERACIONES
-                                        @unless ($hasTodayInitialCash)
-                                            <span class="operation-lock-badge">BLOQUEADO</span>
-                                        @endunless
-                                        <i class="right fas fa-angle-left"></i>
-                                    </p>
-                                </a>
-                                <ul class="nav nav-treeview">
-                                    <li class="nav-item">
-                                        <a href="{{ route('cash-box-initial.index') }}"
-                                            class="nav-link {{ request()->routeIs('cash-box-initial.*') ? 'active' : '' }}">
-                                            <i class="fas fa-coins nav-icon"></i>
-                                            <p>Dinero Inicial Caja Chica</p>
-                                        </a>
-                                    </li>
-
-                                    <li class="nav-item">
-                                        <a href="{{ route('expenses.index') }}"
-                                            class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }} {{ $operationLockedClass }}"
-                                            title="{{ $operationLockedTitle }}"
-                                            aria-disabled="{{ $hasTodayInitialCash ? 'false' : 'true' }}">
-                                            <i class="fas fa-minus-circle nav-icon"></i>
-                                            <p>Gastos / Débitos</p>
-                                        </a>
-                                    </li>
-
-                                    <li class="nav-item">
-                                        <a href="{{ route('other-incomes.index') }}"
-                                            class="nav-link {{ request()->routeIs('other-incomes.*') ? 'active' : '' }} {{ $operationLockedClass }}"
-                                            title="{{ $operationLockedTitle }}"
-                                            aria-disabled="{{ $hasTodayInitialCash ? 'false' : 'true' }}">
-                                            <i class="fas fa-plus-circle nav-icon"></i>
-                                            <p>Otros Ingresos</p>
-                                        </a>
-                                    </li>
-
-                                    <li class="nav-item">
-                                        <a href="{{ route('daily-closings.index') }}"
-                                            class="nav-link {{ request()->routeIs('daily-closings.*') ? 'active' : '' }} {{ $operationLockedClass }}"
-                                            title="{{ $operationLockedTitle }}"
-                                            aria-disabled="{{ $hasTodayInitialCash ? 'false' : 'true' }}">
-                                            <i class="fas fa-cash-register nav-icon"></i>
-                                            <p>Cierre de Caja</p>
-                                        </a>
-                                    </li>
-
+                        <li class="nav-item {{ $operacionesOpen ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ $operacionesOpen ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-cogs"></i>
+                                <p>
+                                    OPERACIONES
                                     @unless ($hasTodayInitialCash)
-                                        <li class="nav-item">
-                                            <div class="operation-lock-note">
-                                                Registra primero el dinero inicial de caja chica del día para habilitar
-                                                todas las opciones operativas.
-                                            </div>
-                                        </li>
+                                        <span class="operation-lock-badge">BLOQUEADO</span>
                                     @endunless
-                                </ul>
-                            </li>
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('cash-box-initial.index') }}"
+                                        class="nav-link {{ request()->routeIs('cash-box-initial.*') ? 'active' : '' }}">
+                                        <i class="fas fa-coins nav-icon"></i>
+                                        <p>Dinero Inicial Caja Chica</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="{{ route('expenses.index') }}"
+                                        class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }} {{ $operationLockedClass }}"
+                                        title="{{ $operationLockedTitle }}"
+                                        aria-disabled="{{ $hasTodayInitialCash ? 'false' : 'true' }}">
+                                        <i class="fas fa-minus-circle nav-icon"></i>
+                                        <p>Gastos / Débitos</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="{{ route('other-incomes.index') }}"
+                                        class="nav-link {{ request()->routeIs('other-incomes.*') ? 'active' : '' }} {{ $operationLockedClass }}"
+                                        title="{{ $operationLockedTitle }}"
+                                        aria-disabled="{{ $hasTodayInitialCash ? 'false' : 'true' }}">
+                                        <i class="fas fa-plus-circle nav-icon"></i>
+                                        <p>Otros Ingresos</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="{{ route('daily-closings.index') }}"
+                                        class="nav-link {{ request()->routeIs('daily-closings.*') ? 'active' : '' }} {{ $operationLockedClass }}"
+                                        title="{{ $operationLockedTitle }}"
+                                        aria-disabled="{{ $hasTodayInitialCash ? 'false' : 'true' }}">
+                                        <i class="fas fa-cash-register nav-icon"></i>
+                                        <p>Cierre de Caja</p>
+                                    </a>
+                                </li>
+
+                                @unless ($hasTodayInitialCash)
+                                    <li class="nav-item">
+                                        <div class="operation-lock-note">
+                                            Registra primero el dinero inicial de caja chica del día para habilitar todas las opciones operativas.
+                                        </div>
+                                    </li>
+                                @endunless
+                            </ul>
+                        </li>
                         @endif
 
                         <li class="nav-item">
@@ -454,50 +449,50 @@
                         </li>
 
                         @if (auth()->user()->isAdmin())
-                            <li class="nav-item {{ $adminOpen ? 'menu-open' : '' }}">
-                                <a href="#" class="nav-link {{ $adminOpen ? 'active' : '' }}">
-                                    <i class="nav-icon fas fa-user-cog"></i>
-                                    <p>
-                                        ADMINISTRACIÓN
-                                        <i class="right fas fa-angle-left"></i>
-                                    </p>
-                                </a>
-                                <ul class="nav nav-treeview">
+                        <li class="nav-item {{ $adminOpen ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ $adminOpen ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-user-cog"></i>
+                                <p>
+                                    ADMINISTRACIÓN
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('clients.index') }}"
+                                        class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
+                                        <i class="fas fa-users nav-icon"></i>
+                                        <p>Clientes</p>
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a href="{{ route('companies.index') }}"
+                                        class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}">
+                                        <i class="fas fa-building nav-icon"></i>
+                                        <p>Empresa Gastos Débitos</p>
+                                    </a>
+                                </li>
+
+                                @if (auth()->user()->isSuperAdmin())
                                     <li class="nav-item">
-                                        <a href="{{ route('clients.index') }}"
-                                            class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
-                                            <i class="fas fa-users nav-icon"></i>
-                                            <p>Clientes</p>
+                                        <a href="{{ route('admin.branches.index') }}"
+                                            class="nav-link {{ request()->routeIs('admin.branches.*') ? 'active' : '' }}">
+                                            <i class="fas fa-code-branch nav-icon"></i>
+                                            <p>Sucursales</p>
                                         </a>
                                     </li>
 
                                     <li class="nav-item">
-                                        <a href="{{ route('companies.index') }}"
-                                            class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}">
-                                            <i class="fas fa-building nav-icon"></i>
-                                            <p>Empresas</p>
+                                        <a href="{{ route('admin.users.index') }}"
+                                            class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                                            <i class="fas fa-user-shield nav-icon"></i>
+                                            <p>Usuarios y Roles</p>
                                         </a>
                                     </li>
-
-                                    @if (auth()->user()->isSuperAdmin())
-                                        <li class="nav-item">
-                                            <a href="{{ route('admin.branches.index') }}"
-                                                class="nav-link {{ request()->routeIs('admin.branches.*') ? 'active' : '' }}">
-                                                <i class="fas fa-code-branch nav-icon"></i>
-                                                <p>Sucursales</p>
-                                            </a>
-                                        </li>
-
-                                        <li class="nav-item">
-                                            <a href="{{ route('admin.users.index') }}"
-                                                class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                                                <i class="fas fa-user-shield nav-icon"></i>
-                                                <p>Usuarios y Roles</p>
-                                            </a>
-                                        </li>
-                                    @endif
-                                </ul>
-                            </li>
+                                @endif
+                            </ul>
+                        </li>
                         @endif
 
                     </ul>
@@ -610,8 +605,7 @@
                         return;
                     }
 
-                    if (input.validity.rangeUnderflow || input.validity.rangeOverflow || input
-                        .validity.stepMismatch) {
+                    if (input.validity.rangeUnderflow || input.validity.rangeOverflow || input.validity.stepMismatch) {
                         input.setCustomValidity('Ingrese un numero valido para este campo.');
                         return;
                     }

@@ -279,9 +279,9 @@
                         </div>
 
                         <div id="company_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Empresa <span class="step-indicator">Paso 2</span></div>
+                            <div class="expense-step-title">Empresa Gastos Débitos <span class="step-indicator">Paso 2</span></div>
                             <div class="expense-step-help">Confirma la empresa asociada al cliente.</div>
-                            <label>Empresa *</label>
+                            <label>Empresa Gastos Débitos *</label>
                             <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror" size="{{ min(($companies->count() + 1), 8) }}">
                                 <option value="">Seleccionar empresa...</option>
                                 @foreach ($companies as $company)
