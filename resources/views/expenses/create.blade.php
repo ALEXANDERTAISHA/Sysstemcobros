@@ -325,9 +325,13 @@
 
                         <div id="granted_section" class="form-group form-group-hidden expense-step-card">
                             <div class="expense-step-title">Fecha de Otorgamiento <span class="step-indicator">Paso 3</span></div>
-                            <div class="expense-step-help">Define cuándo se registró este débito. (No aplica para TRANSFERENCIA ZELLE)</div>
-                            <label>Fecha de Otorgamiento *</label>
-                            <input type="text" id="concept_field" name="concept" class="form-control mb-3" placeholder="ej: TRANSFERENCIA ZELLE" value="{{ old('concept', 'Débito registrado') }}">
+                            <div class="expense-step-help">Define cuándo se registró este débito.</div>
+                            <label>Concepto *</label>
+                            <input type="text" id="concept_field" name="concept" class="form-control mb-3 @error('concept') is-invalid @enderror"
+                                value="{{ old('concept', 'Débito registrado') }}" required>
+                            @error('concept')
+                                <div class="invalid-feedback d-block mb-2">{{ $message }}</div>
+                            @enderror
                             <label>Fecha de Otorgamiento *</label>
                             <input type="date" id="granted_date_input" name="granted_date" class="form-control"
                                 value="{{ old('granted_date', today()->toDateString()) }}" required>
@@ -346,7 +350,7 @@
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="form-group col-md-6 mb-0">
+                                <div class="form-group col-md-6 mb-0" id="due_date_group">
                                     <label>Fecha Límite de Pago *</label>
                                     <input type="date" id="due_date_input" name="due_date"
                                         class="form-control @error('due_date') is-invalid @enderror"
@@ -385,6 +389,7 @@
             const grantedDateInput = document.getElementById('granted_date_input');
             const conceptField = document.getElementById('concept_field');
             const dueDateInput = document.getElementById('due_date_input');
+            const dueDateGroup = document.getElementById('due_date_group');
             const autoFilledMsg = document.getElementById('auto_filled_message');
 
             const clientPill = document.getElementById('client_pill');
@@ -666,14 +671,6 @@
                 return `${year}-${month}-${day}`;
             }
 
-            function today() {
-                const date = new Date();
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            }
-
             function syncDueDateFromGranted(force = false) {
                 if (!grantedDateInput || !dueDateInput || !grantedDateInput.value) {
                     return;
@@ -683,25 +680,29 @@
                     return;
                 }
 
-                dueDateInput.value = addDays(grantedDateInput.value, 7);
-            }
-
-            function isTransferenciaZelle() {
-                return conceptField && conceptField.value.trim().toUpperCase() === 'TRANSFERENCIA ZELLE';
-            }
-
-            function updateGrantedSectionVisibility() {
-                if (!grantedSection) {
+                if (isTransferenciaZelleCompany()) {
                     return;
                 }
 
-                if (isTransferenciaZelle()) {
-                    hideSection(grantedSection);
-                    grantedDateInput.required = false;
-                    grantedDateInput.value = today().toDateString();
+                dueDateInput.value = addDays(grantedDateInput.value, 7);
+            }
+
+            function isTransferenciaZelleCompany() {
+                return selectedText(companySelect).toUpperCase() === 'TRANSFERENCIA ZELLE';
+            }
+
+            function updateDueDateVisibility() {
+                if (!dueDateGroup || !dueDateInput) {
+                    return;
+                }
+
+                if (isTransferenciaZelleCompany()) {
+                    dueDateGroup.style.display = 'none';
+                    dueDateInput.required = false;
+                    dueDateInput.value = '';
                 } else {
-                    showSection(grantedSection);
-                    grantedDateInput.required = true;
+                    dueDateGroup.style.display = '';
+                    dueDateInput.required = true;
                 }
             }
 
@@ -710,13 +711,13 @@
                 const hasCompany = companySelect.value !== '';
                 const hasAmount = (parseFloat(totalAmountInput.value) || 0) > 0;
                 const hasGranted = grantedDateInput.value !== '';
-                const hasDue = dueDateInput.value !== '';
+                const hasDue = isTransferenciaZelleCompany() ? true : dueDateInput.value !== '';
 
                 setPill(clientPill, clientPillValue, hasClient ? selectedText(clientSelect) : '');
                 setPill(companyPill, companyPillValue, hasCompany ? selectedText(companySelect) : '');
                 setPill(amountPill, amountPillValue, hasAmount ? `$${Number(totalAmountInput.value).toFixed(2)}` : '');
                 setPill(grantedPill, grantedPillValue, hasGranted ? formatDate(grantedDateInput.value) : '');
-                setPill(duePill, duePillValue, hasDue ? formatDate(dueDateInput.value) : '');
+                setPill(duePill, duePillValue, !isTransferenciaZelleCompany() && hasDue ? formatDate(dueDateInput.value) : '');
 
                 if (!hasClient) {
                     showSection(clientSection);
@@ -792,7 +793,11 @@
                 }
             });
 
-            companySelect.addEventListener('change', updateVisibility);
+            companySelect.addEventListener('change', function() {
+                updateDueDateVisibility();
+                syncDueDateFromGranted(true);
+                updateVisibility();
+            });
 
             if (clientFilterInput) {
                 clientFilterInput.addEventListener('input', filterClientOptions);
@@ -820,7 +825,6 @@
 
             if (conceptField) {
                 conceptField.addEventListener('input', function() {
-                    updateGrantedSectionVisibility();
                     updateVisibility();
                 });
             }
@@ -883,8 +887,8 @@
                 });
             });
 
+            updateDueDateVisibility();
             syncDueDateFromGranted();
-            updateGrantedSectionVisibility();
             updateVisibility();
         });
     </script>

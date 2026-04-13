@@ -113,7 +113,7 @@ class ExpenseController extends Controller
             'concept' => 'required|string|max:250',
             'total_amount' => 'required|numeric|min:0.01',
             'granted_date' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:granted_date',
+            'due_date' => 'nullable|date|after_or_equal:granted_date',
             'notes' => 'nullable|string',
         ], [
             'required' => 'El campo :attribute es obligatorio.',
@@ -132,6 +132,17 @@ class ExpenseController extends Controller
             'due_date' => 'fecha limite de pago',
             'notes' => 'notas',
         ]);
+
+        $company = Company::findOrFail($data['company_id']);
+        $isTransferenciaZelle = strcasecmp((string) $company->name, 'TRANSFERENCIA ZELLE') === 0;
+
+        if (! $isTransferenciaZelle && empty($data['due_date'])) {
+            return back()->withErrors(['due_date' => 'La fecha limite de pago es obligatoria.'])->withInput();
+        }
+
+        if ($isTransferenciaZelle) {
+            $data['due_date'] = null;
+        }
 
         $data['paid_amount'] = 0;
         $data['status'] = 'active';
