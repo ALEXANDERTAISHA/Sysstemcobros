@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 
 class Company extends Model
 {
@@ -16,6 +17,10 @@ class Company extends Model
 
     public function scopeOfType($query, string $type)
     {
+        if (! Schema::hasColumn($query->getModel()->getTable(), 'company_type')) {
+            return $query;
+        }
+
         return $query->where('company_type', $type);
     }
 
