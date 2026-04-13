@@ -47,7 +47,7 @@
                             <th>Sucursal</th>
                         @endif
                         <th>Cliente</th>
-                        <th>Empresa</th>
+                        <th>Empresa Gastos Débitos</th>
                         <th class="text-right">Total</th>
                         <th class="text-center">Acciones</th>
                     </tr>
