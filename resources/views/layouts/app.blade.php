@@ -473,7 +473,7 @@
 
                                     <li class="nav-item">
                                         <a href="{{ route('companies.index') }}"
-                                            class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}">
+                                            class="nav-link {{ request()->routeIs('companies.*') && !request()->routeIs('companies.gastos-debitos.*') ? 'active' : '' }}">
                                             <i class="fas fa-building nav-icon"></i>
                                             <p>Empresas</p>
                                         </a>
