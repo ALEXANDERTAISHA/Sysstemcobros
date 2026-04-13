@@ -323,11 +323,11 @@
                             </div>
                         </div>
 
-                        <input type="hidden" name="concept" value="{{ old('concept', 'Débito registrado') }}">
-
                         <div id="granted_section" class="form-group form-group-hidden expense-step-card">
                             <div class="expense-step-title">Fecha de Otorgamiento <span class="step-indicator">Paso 3</span></div>
-                            <div class="expense-step-help">Define cuándo se registró este débito.</div>
+                            <div class="expense-step-help">Define cuándo se registró este débito. (No aplica para TRANSFERENCIA ZELLE)</div>
+                            <label>Fecha de Otorgamiento *</label>
+                            <input type="text" id="concept_field" name="concept" class="form-control mb-3" placeholder="ej: TRANSFERENCIA ZELLE" value="{{ old('concept', 'Débito registrado') }}">
                             <label>Fecha de Otorgamiento *</label>
                             <input type="date" id="granted_date_input" name="granted_date" class="form-control"
                                 value="{{ old('granted_date', today()->toDateString()) }}" required>
@@ -383,6 +383,7 @@
             const totalAmountInput = document.getElementById('total_amount_input');
             const grantedSection = document.getElementById('granted_section');
             const grantedDateInput = document.getElementById('granted_date_input');
+            const conceptField = document.getElementById('concept_field');
             const dueDateInput = document.getElementById('due_date_input');
             const autoFilledMsg = document.getElementById('auto_filled_message');
 
@@ -665,6 +666,14 @@
                 return `${year}-${month}-${day}`;
             }
 
+            function today() {
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
             function syncDueDateFromGranted(force = false) {
                 if (!grantedDateInput || !dueDateInput || !grantedDateInput.value) {
                     return;
@@ -675,6 +684,25 @@
                 }
 
                 dueDateInput.value = addDays(grantedDateInput.value, 7);
+            }
+
+            function isTransferenciaZelle() {
+                return conceptField && conceptField.value.trim().toUpperCase() === 'TRANSFERENCIA ZELLE';
+            }
+
+            function updateGrantedSectionVisibility() {
+                if (!grantedSection) {
+                    return;
+                }
+
+                if (isTransferenciaZelle()) {
+                    hideSection(grantedSection);
+                    grantedDateInput.required = false;
+                    grantedDateInput.value = today().toDateString();
+                } else {
+                    showSection(grantedSection);
+                    grantedDateInput.required = true;
+                }
             }
 
             function updateVisibility() {
@@ -790,6 +818,13 @@
             });
             dueDateInput.addEventListener('change', updateVisibility);
 
+            if (conceptField) {
+                conceptField.addEventListener('input', function() {
+                    updateGrantedSectionVisibility();
+                    updateVisibility();
+                });
+            }
+
             editButtons.forEach(function(button) {
                 button.addEventListener('click', function() {
                     const step = this.dataset.editStep;
@@ -849,6 +884,7 @@
             });
 
             syncDueDateFromGranted();
+            updateGrantedSectionVisibility();
             updateVisibility();
         });
     </script>
