@@ -39,8 +39,8 @@
             actualizarlo.</div>
     @endif
 
-    <div class="row mb-3 align-items-start">
-        <div class="col-lg-6 order-lg-1">
+    <div class="row mb-3">
+        <div class="col-lg-6">
             <div class="card card-primary card-outline">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-plus-circle mr-1"></i> Datos de Transferencia</h3>
@@ -49,14 +49,16 @@
                     @csrf
                     <input type="hidden" name="from_daily_closing" value="1">
                     <div class="card-body">
-                        <div class="row align-items-end">
-                            <div class="col-md-7">
-                                <div class="form-group mb-0">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label>Empresa *</label>
-                                    <select name="company_id" class="form-control @error('company_id') is-invalid @enderror" required>
+                                    <select name="company_id" class="form-control @error('company_id') is-invalid @enderror"
+                                        required>
                                         <option value="">Seleccionar empresa...</option>
                                         @foreach ($companies as $c)
-                                            <option value="{{ $c->id }}" {{ old('company_id') == $c->id ? 'selected' : '' }}>
+                                            <option value="{{ $c->id }}"
+                                                {{ old('company_id') == $c->id ? 'selected' : '' }}>
                                                 {{ $c->name }}
                                             </option>
                                         @endforeach
@@ -67,9 +69,39 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-5">
-                                <div class="form-group mb-0">
-                                    <label>Monto *</label>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Fecha de transferencia *</label>
+                                    <input type="date" name="transfer_date"
+                                        class="form-control @error('transfer_date') is-invalid @enderror"
+                                        value="{{ old('transfer_date', $date) }}" required>
+                                    @error('transfer_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Nombre del Remitente *</label>
+                                    <input type="text" class="form-control"
+                                        value="{{ auth()->user()->branch?->name ?? auth()->user()->name ?? 'Usuario actual' }}" readonly>
+                                    <input type="hidden" name="sender_name"
+                                        value="{{ old('sender_name', auth()->user()->branch?->name ?? auth()->user()->name ?? '') }}">
+                                    <small class="form-text text-muted">
+                                        Este campo se registra automaticamente con la sucursal de la cuenta abierta.
+                                    </small>
+                                    @error('sender_name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="receiver_name" value="{{ old('receiver_name', 'N/A') }}">
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Monto ($) *</label>
                                     <input type="number" name="amount" step="0.01" min="0.01"
                                         class="form-control @error('amount') is-invalid @enderror"
                                         value="{{ old('amount') }}" required>
@@ -79,10 +111,10 @@
                                 </div>
                             </div>
 
-                            <input type="hidden" name="transfer_date" value="{{ old('transfer_date', date('Y-m-d')) }}">
-                            <input type="hidden" name="sender_name"
-                                value="{{ old('sender_name', auth()->user()->branch?->name ?? auth()->user()->name ?? '') }}">
-                            <input type="hidden" name="receiver_name" value="{{ old('receiver_name', 'N/A') }}">
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="status" value="sent">
 
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">
@@ -93,7 +125,7 @@
             </div>
         </div>
 
-        <div class="col-lg-6 order-lg-2">
+        <div class="col-lg-6">
             <div class="card card-outline card-primary h-100">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-paper-plane mr-1"></i> Lista de Transferencia</h3>
@@ -139,7 +171,9 @@
                         <table class="table table-sm table-hover mb-0">
                             <thead class="thead-dark">
                                 <tr>
+                                    <th>Fecha</th>
                                     <th>Empresa</th>
+                                    <th>Sucursal (Remitente)</th>
                                     <th class="text-right">Monto</th>
                                     <th class="text-center">Estado</th>
                                     <th class="text-center">Acc.</th>
@@ -148,7 +182,16 @@
                             <tbody id="transferTableBody">
                                 @forelse($transferList as $transfer)
                                     <tr>
+                                        <td>{{ $transfer->transfer_date?->format('d/m/Y') ?? '-' }}</td>
                                         <td><small>{{ $transfer->company?->name ?? '-' }}</small></td>
+                                        <td>
+                                            <small>
+                                                {{ $transfer->branch?->name ?? $transfer->sender_name }}
+                                                @if(auth()->user()->isAdmin() && $transfer->branch?->name)
+                                                    <span class="text-muted">({{ $transfer->sender_name }})</span>
+                                                @endif
+                                            </small>
+                                        </td>
                                         <td class="text-right font-weight-bold">${{ number_format($transfer->amount, 2) }}</td>
                                         <td class="text-center">
                                             <span class="badge badge-{{ $transfer->status_color }}">{{ $transfer->status_label }}</span>
@@ -172,7 +215,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted py-3">
+                                        <td colspan="6" class="text-center text-muted py-3">
                                             Sin transferencias con los filtros aplicados.
                                             @if (($transferTotalCount ?? 0) > 0)
                                                 <a href="{{ route('daily-closings.create', ['date' => $date]) }}" class="btn btn-link btn-sm">
@@ -183,7 +226,7 @@
                                     </tr>
                                 @endforelse
                                 <tr id="transferClientNoResults" style="display: none;">
-                                    <td colspan="4" class="text-center text-muted py-3">Sin resultados en esta página.</td>
+                                    <td colspan="6" class="text-center text-muted py-3">Sin resultados en esta página.</td>
                                 </tr>
                             </tbody>
                         </table>
