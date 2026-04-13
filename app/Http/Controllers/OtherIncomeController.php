@@ -51,8 +51,8 @@ class OtherIncomeController extends Controller
             ->whereRaw('total_amount > paid_amount')
             ->whereHas('company', fn($companyQuery) => $companyQuery->where('company_type', Company::TYPE_GENERAL))
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('due_date')
-            ->orderBy('id');
+            ->orderByDesc('due_date')
+            ->orderByDesc('id');
 
         if (BranchContext::isPrivileged() && $branchId) {
             $pendingDebtsQuery->where('branch_id', $branchId);
