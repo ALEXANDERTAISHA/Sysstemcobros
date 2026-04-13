@@ -185,7 +185,7 @@
                             </div>
                             <div class="expense-flow-pill" id="company_pill">
                                 <div>
-                                    <span class="expense-flow-pill-label">Empresas Gastos Débitos</span>
+                                    <span class="expense-flow-pill-label">Empresa</span>
                                     <span class="expense-flow-pill-value" id="company_pill_value"></span>
                                 </div>
                                 <button type="button" class="expense-flow-edit" data-edit-step="company">
@@ -279,9 +279,9 @@
                         </div>
 
                         <div id="company_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Empresas Gastos Débitos <span class="step-indicator">Paso 2</span></div>
+                            <div class="expense-step-title">Empresa <span class="step-indicator">Paso 2</span></div>
                             <div class="expense-step-help">Confirma la empresa asociada al cliente.</div>
-                            <label>Empresas Gastos Débitos *</label>
+                            <label>Empresa *</label>
                             <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror" size="{{ min(($companies->count() + 1), 8) }}">
                                 <option value="">Seleccionar empresa...</option>
                                 @foreach ($companies as $company)
