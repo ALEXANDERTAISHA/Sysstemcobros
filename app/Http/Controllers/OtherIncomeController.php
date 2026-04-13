@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Client;
-use App\Models\Company;
 use App\Models\Credit;
 use App\Models\CreditPayment;
 use App\Models\OtherIncome;
@@ -49,7 +48,6 @@ class OtherIncomeController extends Controller
             ->whereIn('status', ['active', 'partial'])
             ->whereDate('granted_date', '<=', today()->toDateString())
             ->whereRaw('total_amount > paid_amount')
-            ->whereHas('company', fn($companyQuery) => $companyQuery->where('company_type', Company::TYPE_GENERAL))
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
             ->orderByDesc('due_date')
             ->orderByDesc('id');
@@ -357,8 +355,11 @@ class OtherIncomeController extends Controller
             }
         });
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Cobro total aplicado: ' . $creditsPaid . ' débito(s), monto $' . number_format($totalCollected, 2) . '.');
+        return redirect()->route('other-incomes.index', [
+            'date' => $paymentDate,
+            'client_search' => $client->name,
+            'branch_id' => $branchId,
+        ])->with('success', 'Cobro total aplicado: ' . $creditsPaid . ' débito(s), monto $' . number_format($totalCollected, 2) . '.');
     }
 
     public function sendOverdueReminders(Request $request)
