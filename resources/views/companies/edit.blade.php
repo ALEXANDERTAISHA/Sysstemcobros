@@ -1,8 +1,8 @@
 @extends('layouts.app')
-@section('title', 'Editar Empresa')
-@section('page-title', 'Editar Empresa')
+@section('title', $pageTitle ?? 'Editar Empresa')
+@section('page-title', $pageTitle ?? 'Editar Empresa')
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('companies.index') }}">Empresas</a></li>
+    <li class="breadcrumb-item"><a href="{{ route(($companyRoutePrefix ?? 'companies') . '.index') }}">{{ $pageTitle ?? 'Empresas' }}</a></li>
     <li class="breadcrumb-item active">Editar</li>
 @endsection
 
@@ -13,7 +13,7 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-edit mr-1"></i> Editar: {{ $company->name }}</h3>
                 </div>
-                <form method="POST" action="{{ route('companies.update', $company) }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route(($companyRoutePrefix ?? 'companies') . '.update', $company) }}" enctype="multipart/form-data">
                     @csrf @method('PUT')
                     <div class="card-body">
                         <div class="form-group">
@@ -64,7 +64,7 @@
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Actualizar</button>
-                        <a href="{{ route('companies.index') }}" class="btn btn-secondary ml-2">Cancelar</a>
+                        <a href="{{ route(($companyRoutePrefix ?? 'companies') . '.index') }}" class="btn btn-secondary ml-2">Cancelar</a>
                     </div>
                 </form>
             </div>

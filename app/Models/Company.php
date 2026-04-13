@@ -7,9 +7,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
 {
-    protected $fillable = ['name', 'code', 'color', 'is_active', 'logo_path'];
+    public const TYPE_GENERAL = 'general';
+    public const TYPE_EXPENSE_DEBIT = 'expense_debit';
+
+    protected $fillable = ['name', 'code', 'color', 'is_active', 'logo_path', 'company_type'];
 
     protected $casts = ['is_active' => 'boolean'];
+
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('company_type', $type);
+    }
 
     public function scopeOrderByBusinessList($query)
     {

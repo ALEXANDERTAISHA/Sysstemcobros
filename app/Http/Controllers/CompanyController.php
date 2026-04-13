@@ -10,24 +10,58 @@ class CompanyController extends Controller
 {
     public function index()
     {
-        $companies = Company::withCount('transfers')->orderByBusinessList()->get();
+        $companies = Company::withCount('transfers')
+            ->ofType(Company::TYPE_GENERAL)
+            ->orderByBusinessList()
+            ->get();
+
         $pageTitle = 'Empresas / Compañías';
-        return view('companies.index', compact('companies', 'pageTitle'));
+        $companyRoutePrefix = 'companies';
+
+        return view('companies.index', compact('companies', 'pageTitle', 'companyRoutePrefix'));
     }
 
     public function gastosDebitos()
     {
-        $companies = Company::withCount('transfers')->orderByBusinessList()->get();
+        $companies = Company::withCount('transfers')
+            ->ofType(Company::TYPE_EXPENSE_DEBIT)
+            ->orderByBusinessList()
+            ->get();
+
         $pageTitle = 'Empresas Gastos Débitos';
-        return view('companies.index', compact('companies', 'pageTitle'));
+        $companyRoutePrefix = 'companies.gastos-debitos';
+
+        return view('companies.index', compact('companies', 'pageTitle', 'companyRoutePrefix'));
     }
 
     public function create()
     {
-        return view('companies.create');
+        $pageTitle = 'Nueva Empresa';
+        $companyRoutePrefix = 'companies';
+
+        return view('companies.create', compact('pageTitle', 'companyRoutePrefix'));
+    }
+
+    public function createGastosDebitos()
+    {
+        $pageTitle = 'Nueva Empresa Gastos Débitos';
+        $companyRoutePrefix = 'companies.gastos-debitos';
+        $companyType = Company::TYPE_EXPENSE_DEBIT;
+
+        return view('companies.create', compact('pageTitle', 'companyRoutePrefix', 'companyType'));
     }
 
     public function store(Request $request)
+    {
+        return $this->storeCompany($request, Company::TYPE_GENERAL, 'companies.index', 'Empresa creada correctamente.');
+    }
+
+    public function storeGastosDebitos(Request $request)
+    {
+        return $this->storeCompany($request, Company::TYPE_EXPENSE_DEBIT, 'companies.gastos-debitos.index', 'Empresa Gastos Débitos creada correctamente.');
+    }
+
+    protected function storeCompany(Request $request, string $type, string $redirectRoute, string $successMessage)
     {
         $data = $request->validate([
             'name'      => 'required|string|max:100',
@@ -36,23 +70,51 @@ class CompanyController extends Controller
             'logo'      => 'nullable|image|max:2048',
             'is_active' => 'nullable|boolean',
         ]);
+
         unset($data['logo']);
         $data['is_active'] = $request->boolean('is_active', true);
+        $data['company_type'] = $type;
 
         if ($request->hasFile('logo')) {
             $data['logo_path'] = $request->file('logo')->store('company-logos', 'public');
         }
 
         Company::create($data);
-        return redirect()->route('companies.index')->with('success', 'Empresa creada correctamente.');
+
+        return redirect()->route($redirectRoute)->with('success', $successMessage);
     }
 
     public function edit(Company $company)
     {
-        return view('companies.edit', compact('company'));
+        $pageTitle = 'Editar Empresa';
+        $companyRoutePrefix = 'companies';
+
+        return view('companies.edit', compact('company', 'pageTitle', 'companyRoutePrefix'));
+    }
+
+    public function editGastosDebitos(Company $company)
+    {
+        abort_if($company->company_type !== Company::TYPE_EXPENSE_DEBIT, 404);
+
+        $pageTitle = 'Editar Empresa Gastos Débitos';
+        $companyRoutePrefix = 'companies.gastos-debitos';
+
+        return view('companies.edit', compact('company', 'pageTitle', 'companyRoutePrefix'));
     }
 
     public function update(Request $request, Company $company)
+    {
+        return $this->updateCompany($request, $company, 'companies.index', 'Empresa actualizada.');
+    }
+
+    public function updateGastosDebitos(Request $request, Company $company)
+    {
+        abort_if($company->company_type !== Company::TYPE_EXPENSE_DEBIT, 404);
+
+        return $this->updateCompany($request, $company, 'companies.gastos-debitos.index', 'Empresa Gastos Débitos actualizada.');
+    }
+
+    protected function updateCompany(Request $request, Company $company, string $redirectRoute, string $successMessage)
     {
         $data = $request->validate([
             'name'      => 'required|string|max:100',
@@ -62,6 +124,7 @@ class CompanyController extends Controller
             'remove_logo' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',
         ]);
+
         unset($data['logo'], $data['remove_logo']);
 
         if ($request->boolean('remove_logo') && $company->logo_path) {
@@ -79,15 +142,30 @@ class CompanyController extends Controller
 
         $data['is_active'] = $request->boolean('is_active');
         $company->update($data);
-        return redirect()->route('companies.index')->with('success', 'Empresa actualizada.');
+
+        return redirect()->route($redirectRoute)->with('success', $successMessage);
     }
 
     public function destroy(Company $company)
     {
+        return $this->destroyCompany($company, 'companies.index', 'Empresa eliminada.');
+    }
+
+    public function destroyGastosDebitos(Company $company)
+    {
+        abort_if($company->company_type !== Company::TYPE_EXPENSE_DEBIT, 404);
+
+        return $this->destroyCompany($company, 'companies.gastos-debitos.index', 'Empresa Gastos Débitos eliminada.');
+    }
+
+    protected function destroyCompany(Company $company, string $redirectRoute, string $successMessage)
+    {
         if ($company->transfers()->exists()) {
             return back()->with('error', 'No se puede eliminar una empresa con transferencias registradas.');
         }
+
         $company->delete();
-        return redirect()->route('companies.index')->with('success', 'Empresa eliminada.');
+
+        return redirect()->route($redirectRoute)->with('success', $successMessage);
     }
 }

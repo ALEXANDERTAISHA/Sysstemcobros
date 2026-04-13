@@ -3,6 +3,10 @@
 @section('page-title', $pageTitle ?? 'Empresas / Compañías')
 @section('breadcrumb')<li class="breadcrumb-item active">{{ $pageTitle ?? 'Empresas' }}</li>@endsection
 
+@php
+    $companyRoutePrefix = $companyRoutePrefix ?? 'companies';
+@endphp
+
 @section('content')
     <div class="row">
         <div class="col-lg-8">
@@ -10,7 +14,7 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-building mr-1"></i> Lista de {{ $pageTitle ?? 'Empresas' }}</h3>
                     <div class="card-tools">
-                        <a href="{{ route('companies.create') }}" class="btn btn-primary btn-sm">
+                        <a href="{{ route($companyRoutePrefix . '.create') }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus mr-1"></i> Nueva Empresa
                         </a>
                     </div>
@@ -43,10 +47,10 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <a href="{{ route('companies.edit', $company) }}" class="btn btn-xs btn-warning">
+                                        <a href="{{ route($companyRoutePrefix . '.edit', $company) }}" class="btn btn-xs btn-warning">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form method="POST" action="{{ route('companies.destroy', $company) }}"
+                                        <form method="POST" action="{{ route($companyRoutePrefix . '.destroy', $company) }}"
                                             class="d-inline" onsubmit="return confirm('¿Eliminar empresa?')">
                                             @csrf @method('DELETE')
                                             <button class="btn btn-xs btn-danger"><i class="fas fa-trash"></i></button>

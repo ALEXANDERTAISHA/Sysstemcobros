@@ -32,7 +32,15 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:super_admin,admin')->group(function () {
         // Empresas
-        Route::get('companies/gastos-debitos', [CompanyController::class, 'gastosDebitos'])->name('companies.gastos-debitos');
+        Route::prefix('companies/gastos-debitos')->name('companies.gastos-debitos.')->group(function () {
+            Route::get('/', [CompanyController::class, 'gastosDebitos'])->name('index');
+            Route::get('create', [CompanyController::class, 'createGastosDebitos'])->name('create');
+            Route::post('/', [CompanyController::class, 'storeGastosDebitos'])->name('store');
+            Route::get('{company}/edit', [CompanyController::class, 'editGastosDebitos'])->name('edit');
+            Route::put('{company}', [CompanyController::class, 'updateGastosDebitos'])->name('update');
+            Route::delete('{company}', [CompanyController::class, 'destroyGastosDebitos'])->name('destroy');
+        });
+
         Route::resource('companies', CompanyController::class)->except(['show']);
 
         // Clientes
