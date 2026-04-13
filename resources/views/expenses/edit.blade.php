@@ -28,7 +28,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Empresa Gastos Débitos *</label>
+                            <label>Empresa *</label>
                             <select name="company_id" class="form-control" required>
                                 <option value="">Seleccionar empresa...</option>
                                 @foreach ($companies as $company)
