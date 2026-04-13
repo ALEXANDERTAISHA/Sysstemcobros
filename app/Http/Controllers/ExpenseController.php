@@ -48,7 +48,7 @@ class ExpenseController extends Controller
     public function create()
     {
         $clients = Client::where('is_active', true)->orderBy('name')->get();
-        $companies = Company::where('is_active', true)->orderByBusinessList()->get();
+        $companies = Company::where('is_active', true)->ofType(Company::TYPE_EXPENSE_DEBIT)->orderByBusinessList()->get();
 
         return view('expenses.create', compact('clients', 'companies'));
     }
@@ -91,6 +91,7 @@ class ExpenseController extends Controller
         ]);
 
         $data['is_active'] = true;
+        $data['company_type'] = Company::TYPE_EXPENSE_DEBIT;
 
         $company = Company::create($data);
 
