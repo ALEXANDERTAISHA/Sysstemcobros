@@ -71,14 +71,13 @@
                         <h3 class="card-title"><i class="fas fa-info-circle mr-1"></i> Empresas Predeterminadas</h3>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small">Puedes agregar las empresas de giro que manejas. Ejemplos:</p>
+                        <p class="text-muted small">Empresas registradas (ordenadas por prioridad):</p>
                         <ul class="list-unstyled">
-                            <li><span class="badge mr-1" style="background:#17a2b8;">&nbsp;</span> V. AMERICA</li>
-                            <li><span class="badge mr-1" style="background:#28a745;">&nbsp;</span> LA NACIONAL</li>
-                            <li><span class="badge mr-1" style="background:#fd7e14;">&nbsp;</span> RIA</li>
-                            <li><span class="badge mr-1" style="background:#6f42c1;">&nbsp;</span> W. UNION</li>
-                            <li><span class="badge mr-1" style="background:#e83e8c;">&nbsp;</span> RECARGAS</li>
-                            <li><span class="badge mr-1" style="background:#20c997;">&nbsp;</span> CHEQUES</li>
+                            @forelse($companies->where('is_active', true)->take(10) as $company)
+                                <li><span class="badge mr-1" style="background-color:{{ $company->color }};">&nbsp;</span> {{ $company->name }}</li>
+                            @empty
+                                <li class="text-muted">No hay empresas activas registradas</li>
+                            @endforelse
                         </ul>
                     </div>
                 </div>
