@@ -298,12 +298,12 @@
                             </small>
                             <div class="quick-create-box">
                                 <button type="button" class="quick-create-toggle" id="toggle_quick_company">
-                                    <i class="fas fa-building mr-1"></i>No encuentro la empresa, registrarla aqui
+                                    <i class="fas fa-building mr-1"></i>No encuentro empresa gastos débitos, registrarla aqui
                                 </button>
                                 <div class="quick-create-form" id="quick_company_form_wrap">
                                     <div class="form-row">
                                         <div class="form-group col-md-5">
-                                            <label>Nombre de empresa *</label>
+                                            <label>Nombre de empresa gastos débitos *</label>
                                             <input type="text" class="form-control" id="quick_company_name">
                                         </div>
                                         <div class="form-group col-md-3">
