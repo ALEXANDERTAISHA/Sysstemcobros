@@ -323,6 +323,8 @@
                             </div>
                         </div>
 
+                        <input type="hidden" name="concept" value="{{ old('concept', 'Débito registrado') }}">
+
                         <div id="granted_section" class="form-group form-group-hidden expense-step-card">
                             <div class="expense-step-title">Fecha de Otorgamiento <span class="step-indicator">Paso 3</span></div>
                             <div class="expense-step-help">Define cuándo se registró este débito.</div>
@@ -333,16 +335,7 @@
 
                         <div id="amount_section" class="form-group form-group-hidden expense-step-card">
                             <div class="expense-step-title">Monto y Fecha Límite <span class="step-indicator">Paso 4</span></div>
-                            <div class="expense-step-help">Ingresa el monto y confirma la fecha límite (automática a 7 días). Solo en transferencias ZELLE no se necesita fecha límite.</div>
-                            <div class="form-group mb-3">
-                                <label>Concepto *</label>
-                                <input type="text" id="concept_input" name="concept"
-                                    class="form-control @error('concept') is-invalid @enderror"
-                                    value="{{ old('concept', 'Débito registrado') }}" required>
-                                @error('concept')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            <div class="expense-step-help">Ingresa el monto y confirma la fecha límite (automática a 7 días).</div>
                             <div class="form-row">
                                 <div class="form-group col-md-6 mb-0">
                                     <label>Monto Total ($) *</label>
@@ -353,7 +346,7 @@
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="form-group col-md-6 mb-0" id="due_date_group">
+                                <div class="form-group col-md-6 mb-0">
                                     <label>Fecha Límite de Pago *</label>
                                     <input type="date" id="due_date_input" name="due_date"
                                         class="form-control @error('due_date') is-invalid @enderror"
@@ -391,8 +384,6 @@
             const grantedSection = document.getElementById('granted_section');
             const grantedDateInput = document.getElementById('granted_date_input');
             const dueDateInput = document.getElementById('due_date_input');
-            const dueDateGroup = document.getElementById('due_date_group');
-            const conceptInput = document.getElementById('concept_input');
             const autoFilledMsg = document.getElementById('auto_filled_message');
 
             const clientPill = document.getElementById('client_pill');
@@ -683,28 +674,7 @@
                     return;
                 }
 
-                if (!isTransferenciaZelle()) {
-                    dueDateInput.value = addDays(grantedDateInput.value, 7);
-                }
-            }
-
-            function isTransferenciaZelle() {
-                return conceptInput && conceptInput.value.trim().toUpperCase() === 'TRANSFERENCIA ZELLE';
-            }
-
-            function updateDueDateVisibility() {
-                if (!dueDateGroup || !dueDateInput) {
-                    return;
-                }
-
-                if (isTransferenciaZelle()) {
-                    dueDateGroup.style.display = 'none';
-                    dueDateInput.required = false;
-                    dueDateInput.value = '';
-                } else {
-                    dueDateGroup.style.display = '';
-                    dueDateInput.required = true;
-                }
+                dueDateInput.value = addDays(grantedDateInput.value, 7);
             }
 
             function updateVisibility() {
@@ -712,14 +682,13 @@
                 const hasCompany = companySelect.value !== '';
                 const hasAmount = (parseFloat(totalAmountInput.value) || 0) > 0;
                 const hasGranted = grantedDateInput.value !== '';
-                const isZelle = isTransferenciaZelle();
-                const hasDue = isZelle || dueDateInput.value !== '';
+                const hasDue = dueDateInput.value !== '';
 
                 setPill(clientPill, clientPillValue, hasClient ? selectedText(clientSelect) : '');
                 setPill(companyPill, companyPillValue, hasCompany ? selectedText(companySelect) : '');
                 setPill(amountPill, amountPillValue, hasAmount ? `$${Number(totalAmountInput.value).toFixed(2)}` : '');
                 setPill(grantedPill, grantedPillValue, hasGranted ? formatDate(grantedDateInput.value) : '');
-                setPill(duePill, duePillValue, !isZelle && hasDue ? formatDate(dueDateInput.value) : '');
+                setPill(duePill, duePillValue, hasDue ? formatDate(dueDateInput.value) : '');
 
                 if (!hasClient) {
                     showSection(clientSection);
@@ -753,7 +722,7 @@
 
                 hideSection(grantedSection);
 
-                if (!hasAmount || (!hasDue && !isZelle)) {
+                if (!hasAmount || !hasDue) {
                     showSection(amountSection);
                     return;
                 }
@@ -820,13 +789,6 @@
                 updateVisibility();
             });
             dueDateInput.addEventListener('change', updateVisibility);
-            if (conceptInput) {
-                conceptInput.addEventListener('input', function() {
-                    updateDueDateVisibility();
-                    syncDueDateFromGranted(true);
-                    updateVisibility();
-                });
-            }
 
             editButtons.forEach(function(button) {
                 button.addEventListener('click', function() {
@@ -886,7 +848,6 @@
                 });
             });
 
-            updateDueDateVisibility();
             syncDueDateFromGranted();
             updateVisibility();
         });
