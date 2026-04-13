@@ -49,16 +49,14 @@
                     @csrf
                     <input type="hidden" name="from_daily_closing" value="1">
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
+                        <div class="row align-items-end">
+                            <div class="col-md-7">
+                                <div class="form-group mb-0">
                                     <label>Empresa *</label>
-                                    <select name="company_id" class="form-control @error('company_id') is-invalid @enderror"
-                                        required>
+                                    <select name="company_id" class="form-control @error('company_id') is-invalid @enderror" required>
                                         <option value="">Seleccionar empresa...</option>
                                         @foreach ($companies as $c)
-                                            <option value="{{ $c->id }}"
-                                                {{ old('company_id') == $c->id ? 'selected' : '' }}>
+                                            <option value="{{ $c->id }}" {{ old('company_id') == $c->id ? 'selected' : '' }}>
                                                 {{ $c->name }}
                                             </option>
                                         @endforeach
@@ -69,39 +67,9 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Fecha de transferencia *</label>
-                                    <input type="date" name="transfer_date"
-                                        class="form-control @error('transfer_date') is-invalid @enderror"
-                                        value="{{ old('transfer_date', date('Y-m-d')) }}" required>
-                                    @error('transfer_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Nombre del Remitente *</label>
-                                    <input type="text" class="form-control"
-                                        value="{{ auth()->user()->branch?->name ?? auth()->user()->name ?? 'Usuario actual' }}" readonly>
-                                    <input type="hidden" name="sender_name"
-                                        value="{{ old('sender_name', auth()->user()->branch?->name ?? auth()->user()->name ?? '') }}">
-                                    <small class="form-text text-muted">
-                                        Este campo se registra automaticamente con la sucursal de la cuenta abierta.
-                                    </small>
-                                    @error('sender_name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <input type="hidden" name="receiver_name" value="{{ old('receiver_name', 'N/A') }}">
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Monto ($) *</label>
+                            <div class="col-md-5">
+                                <div class="form-group mb-0">
+                                    <label>Monto *</label>
                                     <input type="number" name="amount" step="0.01" min="0.01"
                                         class="form-control @error('amount') is-invalid @enderror"
                                         value="{{ old('amount') }}" required>
@@ -111,10 +79,10 @@
                                 </div>
                             </div>
 
-                        </div>
-                    </div>
-
-                    <input type="hidden" name="status" value="sent">
+                            <input type="hidden" name="transfer_date" value="{{ old('transfer_date', date('Y-m-d')) }}">
+                            <input type="hidden" name="sender_name"
+                                value="{{ old('sender_name', auth()->user()->branch?->name ?? auth()->user()->name ?? '') }}">
+                            <input type="hidden" name="receiver_name" value="{{ old('receiver_name', 'N/A') }}">
 
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">
