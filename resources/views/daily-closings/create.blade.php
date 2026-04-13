@@ -74,7 +74,7 @@
                                     <label>Fecha de transferencia *</label>
                                     <input type="date" name="transfer_date"
                                         class="form-control @error('transfer_date') is-invalid @enderror"
-                                        value="{{ old('transfer_date', $date) }}" required>
+                                        value="{{ old('transfer_date', date('Y-m-d')) }}" required>
                                     @error('transfer_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -171,9 +171,7 @@
                         <table class="table table-sm table-hover mb-0">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th>Fecha</th>
                                     <th>Empresa</th>
-                                    <th>Sucursal (Remitente)</th>
                                     <th class="text-right">Monto</th>
                                     <th class="text-center">Estado</th>
                                     <th class="text-center">Acc.</th>
@@ -182,16 +180,7 @@
                             <tbody id="transferTableBody">
                                 @forelse($transferList as $transfer)
                                     <tr>
-                                        <td>{{ $transfer->transfer_date?->format('d/m/Y') ?? '-' }}</td>
                                         <td><small>{{ $transfer->company?->name ?? '-' }}</small></td>
-                                        <td>
-                                            <small>
-                                                {{ $transfer->branch?->name ?? $transfer->sender_name }}
-                                                @if(auth()->user()->isAdmin() && $transfer->branch?->name)
-                                                    <span class="text-muted">({{ $transfer->sender_name }})</span>
-                                                @endif
-                                            </small>
-                                        </td>
                                         <td class="text-right font-weight-bold">${{ number_format($transfer->amount, 2) }}</td>
                                         <td class="text-center">
                                             <span class="badge badge-{{ $transfer->status_color }}">{{ $transfer->status_label }}</span>
@@ -215,7 +204,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-3">
+                                        <td colspan="4" class="text-center text-muted py-3">
                                             Sin transferencias con los filtros aplicados.
                                             @if (($transferTotalCount ?? 0) > 0)
                                                 <a href="{{ route('daily-closings.create', ['date' => $date]) }}" class="btn btn-link btn-sm">
@@ -226,7 +215,7 @@
                                     </tr>
                                 @endforelse
                                 <tr id="transferClientNoResults" style="display: none;">
-                                    <td colspan="6" class="text-center text-muted py-3">Sin resultados en esta página.</td>
+                                    <td colspan="4" class="text-center text-muted py-3">Sin resultados en esta página.</td>
                                 </tr>
                             </tbody>
                         </table>
