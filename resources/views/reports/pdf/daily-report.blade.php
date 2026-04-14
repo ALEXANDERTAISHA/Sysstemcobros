@@ -252,7 +252,7 @@
                         <th colspan="2" class="box-title">TOTAL CIERRE DE CAJA</th>
                     </tr>
                     <tr>
-                        <td class="bold">TOTAL INGRESOS</td>
+                        <td class="bold">TOTAL DE TRANSFERENCIAS</td>
                         <td class="right mono">$ {{ number_format($summary['total_incomes'], 2) }}</td>
                     </tr>
                     <tr>
