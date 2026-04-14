@@ -111,6 +111,23 @@ class ReportController extends Controller
 
     private function buildSummary(string $dateFrom, string $dateTo, ?int $companyId, ?int $branchId): array
     {
+        $closingAggregate = $this->dailyClosingAggregate($dateFrom, $dateTo, $branchId);
+        if (!is_null($closingAggregate)) {
+            return [
+                'transfers_count' => 0,
+                'total_incomes' => (float) $closingAggregate['total_incomes'],
+                'total_expenses' => (float) $closingAggregate['total_expenses'],
+                'total_debits' => (float) $closingAggregate['total_expenses'],
+                'total_other_incomes' => (float) $closingAggregate['other_incomes_total'],
+                'value_total' => (float) $closingAggregate['value_total'],
+                'sum_total' => (float) $closingAggregate['sum_total'],
+                'active_credit_balance' => 0.0,
+                'existing_value' => (float) $closingAggregate['existing_value'],
+                'difference' => (float) $closingAggregate['difference'],
+                'final_total' => (float) $closingAggregate['final_total'],
+            ];
+        }
+
         $isSingleDay = $dateFrom === $dateTo;
 
         $summary = $this->financialSummary->summarizeRange(
@@ -125,6 +142,9 @@ class ReportController extends Controller
         $cashBoxInitialTotal = $this->cashBoxInitialTotal($dateFrom, $dateTo, $branchId);
         $summary['total_other_incomes'] = (float) $summary['total_other_incomes'] + $cashBoxInitialTotal;
         $summary['sum_total'] = (float) $summary['value_total'] + (float) $summary['total_other_incomes'];
+        $summary['existing_value'] = $cashBoxInitialTotal;
+        $summary['difference'] = (float) $summary['sum_total'] - $cashBoxInitialTotal;
+        $summary['final_total'] = $summary['difference'];
 
         return $summary;
     }
@@ -153,17 +173,9 @@ class ReportController extends Controller
             ->unique()
             ->implode(' | ');
 
-        // El valor existente se toma automáticamente del dinero inicial definido
-        // para el día o rango del reporte.
-        $existingValueQuery = CashBoxInitial::query()->whereBetween('date', [$dateFrom, $dateTo]);
-        if (BranchContext::isPrivileged() && $branchId) {
-            $existingValueQuery->where('branch_id', $branchId);
-        } else {
-            BranchContext::scope($existingValueQuery);
-        }
-        $existingValue = (float) $existingValueQuery->sum('initial_amount');
-        $difference = (float) $summary['sum_total'] - $existingValue;
-        $finalTotal = $difference;
+        $existingValue = (float) ($summary['existing_value'] ?? 0);
+        $difference = (float) ($summary['difference'] ?? ((float) $summary['sum_total'] - $existingValue));
+        $finalTotal = (float) ($summary['final_total'] ?? $difference);
 
         return [
             'transfers_by_company' => $transfersByCompany,
@@ -206,5 +218,31 @@ class ReportController extends Controller
         }
 
         return (float) $query->sum('initial_amount');
+    }
+
+    private function dailyClosingAggregate(string $dateFrom, string $dateTo, ?int $branchId): ?array
+    {
+        $query = DailyClosing::query()->whereBetween('closing_date', [$dateFrom, $dateTo]);
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $query->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($query);
+        }
+
+        if (! $query->exists()) {
+            return null;
+        }
+
+        return [
+            'total_incomes' => (float) $query->sum('total_incomes'),
+            'total_expenses' => (float) $query->sum('total_expenses'),
+            'value_total' => (float) $query->sum('value_total'),
+            'other_incomes_total' => (float) $query->sum('other_incomes_total'),
+            'sum_total' => (float) $query->sum('sum_total'),
+            'existing_value' => (float) $query->sum('existing_value'),
+            'difference' => (float) $query->sum('difference'),
+            'final_total' => (float) $query->sum('final_total'),
+        ];
     }
 }
