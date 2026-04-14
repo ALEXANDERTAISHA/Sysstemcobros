@@ -4,16 +4,15 @@
 @section('breadcrumb')<li class="breadcrumb-item active">Dinero Inicial Caja Chica</li>@endsection
 
 @section('content')
-    @if (auth()->user()->isAdmin())
+    @if(auth()->user()->isAdmin())
         <div class="row mb-3">
             <div class="col-md-12">
                 <form method="GET" action="{{ route('cash-box-initial.index') }}" class="form-inline justify-content-md-end">
                     <label class="mr-2 mb-0">Sucursal:</label>
                     <select name="branch_id" class="form-control form-control-sm mr-2">
                         <option value="">Todas</option>
-                        @foreach ($branches as $branch)
-                            <option value="{{ $branch->id }}"
-                                {{ (string) $branchId === (string) $branch->id ? 'selected' : '' }}>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}" {{ (string) $branchId === (string) $branch->id ? 'selected' : '' }}>
                                 {{ $branch->name }}
                             </option>
                         @endforeach
@@ -54,9 +53,11 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">$</span>
                                 </div>
-                                <input type="number" id="initial_amount" name="initial_amount" step="0.01"
-                                    min="0" class="form-control @error('initial_amount') is-invalid @enderror"
-                                    value="{{ old('initial_amount', 0) }}" required>
+                                <input type="number" id="initial_amount" name="initial_amount" step="0.01" min="0"
+                                    inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*"
+                                    class="form-control @error('initial_amount') is-invalid @enderror"
+                                    value="{{ old('initial_amount', '') }}"
+                                    required>
                             </div>
                             <small class="form-text text-muted">Efectivo que hay en caja al inicio del día</small>
                             @error('initial_amount')
@@ -72,12 +73,11 @@
                                 <input type="text" id="existing_value_preview" class="form-control"
                                     value="{{ number_format($todayTotal ?? 0, 2, '.', '') }}" readonly>
                             </div>
-                            <small class="form-text text-muted">Se actualiza automaticamente con el dinero inicial
-                                ingresado.</small>
+                            <small class="form-text text-muted">Se actualiza automaticamente con el dinero inicial ingresado.</small>
                         </div>
                         <div class="form-group">
                             <label>Notas</label>
-                            <textarea name="notes" class="form-control" rows="2">{{ old('notes', $initial && today()->toDateString() === $today ? $initial->notes : '') }}</textarea>
+                            <textarea name="notes" class="form-control" rows="2">{{ old('notes', '') }}</textarea>
                         </div>
                     </div>
                     <div class="card-footer">
@@ -94,8 +94,8 @@
             @if (($todayTotal ?? 0) > 0 && today()->toDateString() === $today)
                 <div class="alert alert-info mt-3">
                     <strong><i class="fas fa-check-circle mr-1"></i> Dinero Inicial Registrado Hoy</strong>
-                    <p class="mb-0 mt-2">Monto: <strong class="text-success">${{ number_format($todayTotal, 2) }}</strong>
-                    </p>
+                    <p class="mb-0 mt-2">Monto: <strong
+                            class="text-success">${{ number_format($todayTotal, 2) }}</strong></p>
                     @if ($initial->notes)
                         <p class="mb-0">Notas: <small class="text-muted">{{ $initial->notes }}</small></p>
                     @endif
@@ -113,7 +113,7 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th>Fecha</th>
-                                @if (auth()->user()->isAdmin())
+                                @if(auth()->user()->isAdmin())
                                     <th>Sucursal</th>
                                 @endif
                                 <th class="text-right">Monto ($)</th>
@@ -130,7 +130,7 @@
                                             <span class="badge badge-info ml-1">Hoy</span>
                                         @endif
                                     </td>
-                                    @if (auth()->user()->isAdmin())
+                                    @if(auth()->user()->isAdmin())
                                         <td>{{ $record->branch?->name ?? 'Sin sucursal' }}</td>
                                     @endif
                                     <td class="text-right text-success font-weight-bold">
@@ -144,10 +144,11 @@
                                     </td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-xs btn-warning edit-cash-box-btn"
-                                            data-id="{{ $record->id }}" data-date="{{ $record->date->format('d/m/Y') }}"
+                                            data-id="{{ $record->id }}"
+                                            data-date="{{ $record->date->format('d/m/Y') }}"
                                             data-amount="{{ $record->initial_amount }}"
-                                            data-notes="{{ $record->notes ?? '' }}" data-toggle="modal"
-                                            data-target="#editCashBoxModal">
+                                            data-notes="{{ $record->notes ?? '' }}"
+                                            data-toggle="modal" data-target="#editCashBoxModal">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <form action="{{ route('cash-box-initial.destroy', $record) }}" method="POST"
@@ -163,8 +164,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->user()->isAdmin() ? '5' : '4' }}"
-                                        class="text-center text-muted py-4">Sin registros de dinero inicial
+                                    <td colspan="{{ auth()->user()->isAdmin() ? '5' : '4' }}" class="text-center text-muted py-4">Sin registros de dinero inicial
                                     </td>
                                 </tr>
                             @endforelse
