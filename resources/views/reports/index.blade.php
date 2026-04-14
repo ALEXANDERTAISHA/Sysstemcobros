@@ -89,8 +89,8 @@
         <div class="col-md-3">
             <div class="small-box bg-warning">
                 <div class="inner">
-                    <h3>${{ number_format($summary['sum_total'], 2) }}</h3>
-                    <p>Total Neto</p>
+                    <h3>${{ number_format($printable['final_total'], 2) }}</h3>
+                    <p>TOTAL FINAL (GANANCIAS)</p>
                 </div>
                 <div class="icon"><i class="fas fa-calculator"></i></div>
             </div>
