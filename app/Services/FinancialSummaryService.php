@@ -13,6 +13,17 @@ use Illuminate\Support\Facades\DB;
 
 class FinancialSummaryService
 {
+    private const INCOME_TRANSFER_COMPANIES = [
+        'VIAS AMERICAS TRANSFERENCIAS',
+        'RIA TRANSFERENCIAS',
+        'RIA SERVICIOS',
+        'WESTER UNION TRANSFERENCIAS',
+        'LA NACIONAL TRANSFERENCIAS',
+        'PRODUCTOS DE LA TIENDA',
+        'RECARGAS',
+        'PAQUETERIA',
+    ];
+
     public function transferQuery(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null): Builder
     {
         $query = Transfer::query()
@@ -67,10 +78,19 @@ class FinancialSummaryService
                 ->tap(fn($q) => $this->scopeByBranch($q, $branchId))
             : $this->otherIncomeQuery($dateFrom, $dateTo, $branchId);
 
-        $totalIncomes = (float) (clone $transferQuery)->sum('amount');
+        $transfers = (clone $transferQuery)->get();
+        $transferIncomeTotal = (float) $transfers
+            ->filter(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company?->name))
+            ->sum('amount');
+        $transferExpenseTotal = (float) $transfers
+            ->reject(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company?->name))
+            ->sum('amount');
+
+        $totalIncomes = $transferIncomeTotal;
         $totalDebits = $excludeSameDayCollectedDebits && $dateFrom === $dateTo
             ? $this->calculateSameDayDebitExposure($dateFrom, $branchId)
             : (float) (clone $debitQuery)->sum('total_amount');
+        $totalDebits += $transferExpenseTotal;
         $totalOtherIncomes = (float) (clone $otherIncomeQuery)->sum('amount');
         $transfersCount = (int) (clone $transferQuery)->count();
         $activeCreditQuery = Credit::query()
@@ -91,6 +111,12 @@ class FinancialSummaryService
             'sum_total' => $sumTotal,
             'active_credit_balance' => $activeCreditBalance,
         ];
+    }
+
+    private function isIncomeTransferCompany(?string $companyName): bool
+    {
+        $normalized = mb_strtoupper(trim((string) $companyName));
+        return in_array($normalized, self::INCOME_TRANSFER_COMPANIES, true);
     }
 
     private function calculateSameDayDebitExposure(string $date, ?int $branchId = null): float
