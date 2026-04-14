@@ -59,7 +59,7 @@ class CashBoxInitialController extends Controller
         // Siempre crear nuevo registro (se acumulan durante el día)
         CashBoxInitial::create($assignedData);
 
-        return redirect()->route('cash-box-initial.index')
+        return redirect()->route('dashboard')
             ->with('success', 'Dinero inicial registrado correctamente.');
     }
 
