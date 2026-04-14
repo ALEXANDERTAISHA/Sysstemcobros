@@ -59,6 +59,10 @@ class DailyClosingController extends Controller
             ->orderByBusinessList()
             ->get();
 
+        // Caja chica tambien cuenta como parte de "Otros Ingresos (Fiados)" para el cierre del dia.
+        $otherTotal = (float) $summary['total_other_incomes'] + $cashBoxInitialTotal;
+        $sumTotal = (float) $summary['value_total'] + $otherTotal;
+
         $transferQuery = Transfer::with('company', 'branch')
             ->when($transferListDate, fn($q) => $q->whereDate('transfer_date', $transferListDate))
             ->when(mb_strlen($transferSearch) >= 2, fn($q) => $q->where(function ($subQuery) use ($transferSearch) {
@@ -96,9 +100,9 @@ class DailyClosingController extends Controller
         ) + [
             'totalIncomes' => $summary['total_incomes'],
             'totalExpenses' => $summary['total_expenses'],
-            'otherTotal' => $summary['total_other_incomes'],
+            'otherTotal' => $otherTotal,
             'valueTotal' => $summary['value_total'],
-            'sumTotal' => $summary['sum_total'],
+            'sumTotal' => $sumTotal,
         ]);
     }
 
@@ -116,15 +120,23 @@ class DailyClosingController extends Controller
             excludeTodayIncomes: true,
             excludeSameDayCollectedDebits: true
         );
-        $difference = $summary['sum_total'] - (float) $data['existing_value'];
+
+        $cashBoxInitialTotal = (float) BranchContext::scope(
+            CashBoxInitial::whereDate('date', $data['closing_date'])
+        )->sum('initial_amount');
+
+        $otherIncomesTotal = (float) $summary['total_other_incomes'] + $cashBoxInitialTotal;
+        $sumTotal = (float) $summary['value_total'] + $otherIncomesTotal;
+
+        $difference = $sumTotal - (float) $data['existing_value'];
         $finalTotal = $difference;
 
         $payload = BranchContext::assign([
             'total_incomes' => $summary['total_incomes'],
             'total_expenses' => $summary['total_expenses'],
             'value_total' => $summary['value_total'],
-            'other_incomes_total' => $summary['total_other_incomes'],
-            'sum_total' => $summary['sum_total'],
+            'other_incomes_total' => $otherIncomesTotal,
+            'sum_total' => $sumTotal,
             'existing_value' => $data['existing_value'],
             'difference' => $difference,
             'final_total' => $finalTotal,
