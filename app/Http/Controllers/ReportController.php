@@ -156,6 +156,18 @@ class ReportController extends Controller
         $debits = $this->financialSummary->debitEntries($dateFrom, $dateTo, $branchId);
         $otherIncomes = $this->financialSummary->otherIncomeEntries($dateFrom, $dateTo, $branchId);
         $cashBoxEntries = $this->cashBoxInitialEntries($dateFrom, $dateTo, $branchId);
+        $sameDayPaidCreditIds = $otherIncomes
+            ->filter(function ($income) {
+                return $income->credit
+                    && $income->income_date
+                    && $income->credit->granted_date
+                    && $income->income_date->isSameDay($income->credit->granted_date);
+            })
+            ->pluck('credit_id')
+            ->filter()
+            ->unique()
+            ->values();
+
         $otherIncomes = $otherIncomes->concat($cashBoxEntries);
 
         $dailyClosingNotesQuery = DailyClosing::query()
@@ -184,6 +196,7 @@ class ReportController extends Controller
             'transfers_by_company' => $transfersByCompany,
             'debits' => $debits,
             'other_incomes' => $otherIncomes,
+            'same_day_paid_credit_ids' => $sameDayPaidCreditIds,
             'existing_value' => $existingValue,
             'difference' => $difference,
             'final_total' => $finalTotal,

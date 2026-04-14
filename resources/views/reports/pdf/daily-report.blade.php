@@ -108,6 +108,10 @@
             font-size: 9px;
             color: #4b5563;
         }
+
+        .same-day-highlight td {
+            background: #fff3cd;
+        }
     </style>
 </head>
 
@@ -184,9 +188,10 @@
                     </tr>
                     @php
                         $debitRows = $printable['debits']->values();
+                        $sameDayPaidCreditIds = collect($printable['same_day_paid_credit_ids'] ?? []);
                     @endphp
                     @forelse($debitRows as $i => $row)
-                        <tr>
+                        <tr class="{{ $sameDayPaidCreditIds->contains($row->id) ? 'same-day-highlight' : '' }}">
                             <td class="center">{{ $i + 1 }}</td>
                             <td class="right mono">$ {{ number_format((float) $row->total_amount, 2) }}</td>
                             <td>{{ $row->company?->name ?? '-' }}</td>
@@ -225,7 +230,10 @@
                         $otherIncomeRows = $printable['other_incomes']->values();
                     @endphp
                     @forelse($otherIncomeRows as $i => $row)
-                        <tr>
+                        @php
+                            $isSameDayPaid = isset($row->credit_id) && $sameDayPaidCreditIds->contains($row->credit_id);
+                        @endphp
+                        <tr class="{{ $isSameDayPaid ? 'same-day-highlight' : '' }}">
                             <td class="center">{{ $i + 1 }}</td>
                             <td class="right mono">$ {{ number_format((float) $row->amount, 2) }}</td>
                             <td>

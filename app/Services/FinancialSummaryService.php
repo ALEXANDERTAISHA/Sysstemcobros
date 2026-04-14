@@ -49,7 +49,7 @@ class FinancialSummaryService
     public function otherIncomeQuery(string $dateFrom, string $dateTo, ?int $branchId = null): Builder
     {
         $query = OtherIncome::query()
-            ->with('client')
+            ->with('client', 'credit')
             ->whereDate('income_date', '>=', $dateFrom)
             ->whereDate('income_date', '<=', $dateTo);
 
