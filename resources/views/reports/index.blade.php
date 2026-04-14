@@ -33,7 +33,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        @if (auth()->user()->isAdmin())
+                        @if(auth()->user()->isAdmin())
                             <div class="form-group col-md-2">
                                 <label>Sucursal</label>
                                 <select name="branch_id" class="form-control">
@@ -124,7 +124,7 @@
                             <td>{{ $transfer->company?->name ?? '-' }}</td>
                             <td>
                                 {{ $transfer->branch?->name ?? $transfer->sender_name }}
-                                @if (auth()->user()->isAdmin() && $transfer->branch?->name)
+                                @if(auth()->user()->isAdmin() && $transfer->branch?->name)
                                     <small class="text-muted d-block">{{ $transfer->sender_name }}</small>
                                 @endif
                             </td>
@@ -170,7 +170,7 @@
                             <td class="text-right font-weight-bold">${{ number_format($summary['sum_total'], 2) }}</td>
                         </tr>
                         <tr class="table-light">
-                            <th>Valor Existente / Dinero Inicial Caja Chica</th>
+                            <th>Valor Existente (Caja) *</th>
                             <td class="text-right">${{ number_format($printable['existing_value'], 2) }}</td>
                         </tr>
                         <tr class="table-warning">
