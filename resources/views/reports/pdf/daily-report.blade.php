@@ -283,6 +283,12 @@
                         <td class="bold">TOTAL</td>
                         <td class="right mono">$ {{ number_format($printable['final_total'], 2) }}</td>
                     </tr>
+                    @if (!empty($printable['closing_notes']))
+                        <tr>
+                            <td class="bold">NOTA</td>
+                            <td>{{ $printable['closing_notes'] }}</td>
+                        </tr>
+                    @endif
                 </table>
             </td>
         </tr>

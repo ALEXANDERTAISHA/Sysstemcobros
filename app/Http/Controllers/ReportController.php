@@ -6,6 +6,7 @@ use App\Models\AppSetting;
 use App\Models\Branch;
 use App\Models\CashBoxInitial;
 use App\Models\Company;
+use App\Models\DailyClosing;
 use App\Support\BranchContext;
 use App\Services\FinancialSummaryService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -119,6 +120,23 @@ class ReportController extends Controller
         $debits = $this->financialSummary->debitEntries($dateFrom, $dateTo, $branchId);
         $otherIncomes = $this->financialSummary->otherIncomeEntries($dateFrom, $dateTo, $branchId);
 
+        $dailyClosingNotesQuery = DailyClosing::query()
+            ->whereBetween('closing_date', [$dateFrom, $dateTo]);
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $dailyClosingNotesQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($dailyClosingNotesQuery);
+        }
+
+        $closingNotes = $dailyClosingNotesQuery
+            ->whereNotNull('notes')
+            ->where('notes', '!=', '')
+            ->orderBy('closing_date')
+            ->pluck('notes')
+            ->unique()
+            ->implode(' | ');
+
         // El valor existente se toma automáticamente del dinero inicial definido
         // para el día o rango del reporte.
         $existingValueQuery = CashBoxInitial::query()->whereBetween('date', [$dateFrom, $dateTo]);
@@ -138,6 +156,7 @@ class ReportController extends Controller
             'existing_value' => $existingValue,
             'difference' => $difference,
             'final_total' => $finalTotal,
+            'closing_notes' => $closingNotes,
         ];
     }
 
