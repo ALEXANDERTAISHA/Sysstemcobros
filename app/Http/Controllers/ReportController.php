@@ -131,9 +131,10 @@ class ReportController extends Controller
 
         $closingNotes = $dailyClosingNotesQuery
             ->whereNotNull('notes')
-            ->where('notes', '!=', '')
             ->orderBy('closing_date')
             ->pluck('notes')
+            ->map(fn($note) => trim((string) $note))
+            ->filter(fn($note) => $note !== '')
             ->unique()
             ->implode(' | ');
 
