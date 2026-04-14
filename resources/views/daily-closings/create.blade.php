@@ -392,24 +392,17 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="font-weight-bold text-dark">Valor Existente (Caja) *</label>
-                                    @if (($cashBoxInitialTotal ?? 0) > 0)
-                                        <div class="input-group">
-                                            <div class="input-group-prepend"><span class="input-group-text">$</span></div>
-                                            <input type="number" name="existing_value" id="existing_value"
-                                                step="0.01" min="0" class="form-control"
-                                                value="{{ number_format($cashBoxInitialTotal, 2, '.', '') }}" readonly>
-                                        </div>
-                                        <small class="form-text text-success"><i
-                                                class="fas fa-check-circle mr-1"></i>Dinero inicial acumulado registrado</small>
-                                    @else
-                                        <div class="alert alert-warning" role="alert">
-                                            <i class="fas fa-exclamation-triangle mr-1"></i> <strong>No registrado</strong>
-                                            - Debe registrar el dinero inicial primero en
-                                            <a href="{{ route('cash-box-initial.index', ['date' => $date]) }}"
-                                                class="alert-link font-weight-bold">Dinero Inicial Caja Chica</a>
-                                        </div>
-                                        <input type="hidden" name="existing_value" value="0">
-                                    @endif
+                                    <div class="input-group">
+                                        <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                                        <input type="number" name="existing_value" id="existing_value"
+                                            step="0.01" min="0" inputmode="decimal"
+                                            class="form-control @error('existing_value') is-invalid @enderror"
+                                            value="{{ old('existing_value', $existing?->existing_value) }}" required>
+                                    </div>
+                                    @error('existing_value')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                    <small class="form-text text-muted">Ingresa manualmente el valor existente en caja.</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
