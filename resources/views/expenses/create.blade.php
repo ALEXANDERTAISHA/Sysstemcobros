@@ -684,15 +684,16 @@
                     return;
                 }
 
-                if (isTransferenciaZelleCompany()) {
+                if (isSpecialNoDueDateCompany()) {
                     return;
                 }
 
                 dueDateInput.value = addDays(grantedDateInput.value, 7);
             }
 
-            function isTransferenciaZelleCompany() {
-                return selectedText(companySelect).toUpperCase() === 'TRANSFERENCIA ZELLE';
+            function isSpecialNoDueDateCompany() {
+                const specialCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA'];
+                return specialCompanies.includes(selectedText(companySelect).toUpperCase());
             }
 
             function updateDueDateVisibility() {
@@ -700,7 +701,7 @@
                     return;
                 }
 
-                if (isTransferenciaZelleCompany()) {
+                if (isSpecialNoDueDateCompany()) {
                     dueDateGroup.style.display = 'none';
                     dueDateInput.required = false;
                     dueDateInput.value = '';
@@ -715,13 +716,13 @@
                 const hasCompany = companySelect.value !== '';
                 const hasAmount = (parseFloat(totalAmountInput.value) || 0) > 0;
                 const hasGranted = grantedDateInput.value !== '';
-                const hasDue = isTransferenciaZelleCompany() ? true : dueDateInput.value !== '';
+                const hasDue = isSpecialNoDueDateCompany() ? true : dueDateInput.value !== '';
 
                 setPill(clientPill, clientPillValue, hasClient ? selectedText(clientSelect) : '');
                 setPill(companyPill, companyPillValue, hasCompany ? selectedText(companySelect) : '');
                 setPill(amountPill, amountPillValue, hasAmount ? `$${Number(totalAmountInput.value).toFixed(2)}` : '');
                 setPill(grantedPill, grantedPillValue, hasGranted ? formatDate(grantedDateInput.value) : '');
-                setPill(duePill, duePillValue, !isTransferenciaZelleCompany() && hasDue ? formatDate(dueDateInput.value) : '');
+                setPill(duePill, duePillValue, !isSpecialNoDueDateCompany() && hasDue ? formatDate(dueDateInput.value) : '');
 
                 if (!hasClient) {
                     showSection(clientSection);

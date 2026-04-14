@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 class OtherIncomeController extends Controller
 {
-    private const EXCLUDED_COMPANY_FROM_TRACKING = 'TRANSFERENCIA ZELLE';
+    private const EXCLUDED_COMPANIES_FROM_TRACKING = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA'];
 
     public function __construct(
         private EmailDeliveryService $emailDelivery,
@@ -50,7 +50,7 @@ class OtherIncomeController extends Controller
             ->whereIn('status', ['active', 'partial'])
             ->whereDate('granted_date', '<=', today()->toDateString())
             ->whereRaw('total_amount > paid_amount')
-            ->whereHas('company', fn($query) => $query->whereRaw('UPPER(name) <> ?', [self::EXCLUDED_COMPANY_FROM_TRACKING]))
+            ->whereHas('company', fn($query) => $query->whereNotIn(DB::raw('UPPER(name)'), self::EXCLUDED_COMPANIES_FROM_TRACKING))
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
             ->orderByDesc('due_date')
             ->orderByDesc('id');
@@ -301,7 +301,7 @@ class OtherIncomeController extends Controller
             ->where('client_id', $client->id)
             ->whereIn('status', ['active', 'partial'])
             ->whereRaw('total_amount > paid_amount')
-            ->whereHas('company', fn($query) => $query->whereRaw('UPPER(name) <> ?', [self::EXCLUDED_COMPANY_FROM_TRACKING]))
+            ->whereHas('company', fn($query) => $query->whereNotIn(DB::raw('UPPER(name)'), self::EXCLUDED_COMPANIES_FROM_TRACKING))
             ->orderBy('id');
 
         if (BranchContext::isPrivileged() && $branchId) {
@@ -373,7 +373,7 @@ class OtherIncomeController extends Controller
         $pendingCreditsQuery = Credit::with('client')
             ->whereIn('status', ['active', 'partial'])
             ->whereRaw('total_amount > paid_amount')
-            ->whereHas('company', fn($query) => $query->whereRaw('UPPER(name) <> ?', [self::EXCLUDED_COMPANY_FROM_TRACKING]))
+            ->whereHas('company', fn($query) => $query->whereNotIn(DB::raw('UPPER(name)'), self::EXCLUDED_COMPANIES_FROM_TRACKING))
             ->orderBy('due_date');
 
         if (BranchContext::isPrivileged() && $branchId) {

@@ -134,13 +134,14 @@ class ExpenseController extends Controller
         ]);
 
         $company = Company::findOrFail($data['company_id']);
-        $isTransferenciaZelle = strcasecmp((string) $company->name, 'TRANSFERENCIA ZELLE') === 0;
+        $specialNoDueDateCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA'];
+        $isSpecialNoDueDateCompany = in_array(mb_strtoupper(trim((string) $company->name)), $specialNoDueDateCompanies, true);
 
-        if (! $isTransferenciaZelle && empty($data['due_date'])) {
+        if (! $isSpecialNoDueDateCompany && empty($data['due_date'])) {
             return back()->withErrors(['due_date' => 'La fecha limite de pago es obligatoria.'])->withInput();
         }
 
-        if ($isTransferenciaZelle) {
+        if ($isSpecialNoDueDateCompany) {
             $data['due_date'] = null;
         }
 
