@@ -113,7 +113,7 @@ class ReportController extends Controller
     {
         $isSingleDay = $dateFrom === $dateTo;
 
-        return $this->financialSummary->summarizeRange(
+        $summary = $this->financialSummary->summarizeRange(
             $dateFrom,
             $dateTo,
             $companyId,
@@ -121,6 +121,12 @@ class ReportController extends Controller
             excludeTodayIncomes: $isSingleDay,
             excludeSameDayCollectedDebits: $isSingleDay
         );
+
+        $cashBoxInitialTotal = $this->cashBoxInitialTotal($dateFrom, $dateTo, $branchId);
+        $summary['total_other_incomes'] = (float) $summary['total_other_incomes'] + $cashBoxInitialTotal;
+        $summary['sum_total'] = (float) $summary['value_total'] + (float) $summary['total_other_incomes'];
+
+        return $summary;
     }
 
     private function buildPrintableSections(string $dateFrom, string $dateTo, ?int $companyId, array $summary, ?int $branchId): array
@@ -187,5 +193,18 @@ class ReportController extends Controller
         }
 
         return 'data:' . $mimeType . ';base64,' . base64_encode($binary);
+    }
+
+    private function cashBoxInitialTotal(string $dateFrom, string $dateTo, ?int $branchId): float
+    {
+        $query = CashBoxInitial::query()->whereBetween('date', [$dateFrom, $dateTo]);
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $query->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($query);
+        }
+
+        return (float) $query->sum('initial_amount');
     }
 }
