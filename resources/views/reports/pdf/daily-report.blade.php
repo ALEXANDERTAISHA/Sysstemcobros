@@ -272,7 +272,7 @@
                         <td class="right mono">$ {{ number_format($summary['sum_total'], 2) }}</td>
                     </tr>
                     <tr>
-                        <td class="bold">Valor Existente (Caja) *</td>
+                        <td class="bold">VALOR EXISTENTE (CAJA) *</td>
                         <td class="right mono">$ {{ number_format($printable['existing_value'], 2) }}</td>
                     </tr>
                     <tr>
