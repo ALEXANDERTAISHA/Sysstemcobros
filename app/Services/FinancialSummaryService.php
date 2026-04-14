@@ -39,7 +39,7 @@ class FinancialSummaryService
     public function debitQuery(string $dateFrom, string $dateTo, ?int $branchId = null): Builder
     {
         $query = Credit::query()
-            ->with('client')
+            ->with('client', 'company')
             ->whereDate('granted_date', '>=', $dateFrom)
             ->whereDate('granted_date', '<=', $dateTo);
 

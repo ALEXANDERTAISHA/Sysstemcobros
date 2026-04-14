@@ -174,12 +174,13 @@
             <td style="width: 50%;">
                 <table class="box">
                     <tr>
-                        <th colspan="3" class="box-title">DEBITOS</th>
+                        <th colspan="4" class="box-title">DEBITOS</th>
                     </tr>
                     <tr>
                         <th style="width: 8%;" class="center">#</th>
-                        <th style="width: 22%;" class="right">VALOR</th>
-                        <th style="width: 70%;">DESCRIPCION</th>
+                        <th style="width: 18%;" class="right">VALOR</th>
+                        <th style="width: 29%;">EMPRESA GASTOS DÉBITOS</th>
+                        <th style="width: 45%;">DESCRIPCION</th>
                     </tr>
                     @php
                         $debitRows = $printable['debits']->values();
@@ -188,6 +189,7 @@
                         <tr>
                             <td class="center">{{ $i + 1 }}</td>
                             <td class="right mono">$ {{ number_format((float) $row->total_amount, 2) }}</td>
+                            <td>{{ $row->company?->name ?? '-' }}</td>
                             <td>
                                 {{ $row->concept }}
                                 @if ($row->client)
@@ -197,11 +199,11 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="center" style="color:#888;">Sin débitos</td>
+                            <td colspan="4" class="center" style="color:#888;">Sin débitos</td>
                         </tr>
                     @endforelse
                     <tr class="total-row">
-                        <td colspan="2" class="bold">TOTAL</td>
+                        <td colspan="3" class="bold">TOTAL</td>
                         <td class="right mono">$ {{ number_format($summary['total_expenses'], 2) }}</td>
                     </tr>
                 </table>
