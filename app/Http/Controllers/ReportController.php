@@ -111,7 +111,16 @@ class ReportController extends Controller
 
     private function buildSummary(string $dateFrom, string $dateTo, ?int $companyId, ?int $branchId): array
     {
-        return $this->financialSummary->summarizeRange($dateFrom, $dateTo, $companyId, $branchId);
+        $isSingleDay = $dateFrom === $dateTo;
+
+        return $this->financialSummary->summarizeRange(
+            $dateFrom,
+            $dateTo,
+            $companyId,
+            $branchId,
+            excludeTodayIncomes: $isSingleDay,
+            excludeSameDayCollectedDebits: $isSingleDay
+        );
     }
 
     private function buildPrintableSections(string $dateFrom, string $dateTo, ?int $companyId, array $summary, ?int $branchId): array
