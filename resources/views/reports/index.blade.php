@@ -87,7 +87,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="small-box bg-warning">
+            <div class="small-box bg-primary">
                 <div class="inner">
                     <h3>${{ number_format($printable['final_total'], 2) }}</h3>
                     <p>TOTAL FINAL (GANANCIAS)</p>
