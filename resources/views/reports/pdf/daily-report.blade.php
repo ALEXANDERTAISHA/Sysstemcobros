@@ -229,14 +229,21 @@
                     @forelse($otherIncomeRows as $i => $row)
                         @php
                             $isSameDayPaid = isset($row->credit_id) && $sameDayPaidCreditIds->contains($row->credit_id);
+                            $isDebitCollection = preg_match('/^\s*cobro\s+de\s+d[eé]bito\s*:/iu', (string) $row->description) === 1;
+                            $cleanDetail = trim((string) preg_replace('/^\s*cobro\s+de\s+d[eé]bito\s*:\s*/iu', '', (string) $row->description));
+                            $cleanDetail = trim((string) preg_replace('/^\s*d[eé]bito\s+registrado\s*-\s*/iu', '', $cleanDetail));
                         @endphp
                         <tr class="{{ $isSameDayPaid ? 'same-day-highlight' : '' }}">
                             <td class="center">{{ $i + 1 }}</td>
                             <td class="right mono">$ {{ number_format((float) $row->amount, 2) }}</td>
                             <td>
-                                {{ $row->description }}
-                                @if ($row->client)
-                                    - {{ $row->client->name }}
+                                @if ($isDebitCollection)
+                                    {{ $row->client?->name ?? $cleanDetail }}
+                                @else
+                                    {{ $row->description }}
+                                    @if ($row->client)
+                                        - {{ $row->client->name }}
+                                    @endif
                                 @endif
                             </td>
                         </tr>
