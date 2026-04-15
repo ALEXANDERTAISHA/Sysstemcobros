@@ -51,6 +51,6 @@ class AppSetting extends Model
             return null;
         }
 
-        return route('media.public', ['path' => $normalizedPath]);
+        return route('media.public', ['path' => $normalizedPath], false);
     }
 }

@@ -94,7 +94,7 @@ class User extends Authenticatable
                 $normalizedPath = ltrim($this->avatar_path, '/');
 
                 if (Storage::disk('public')->exists($normalizedPath)) {
-                    return route('media.public', ['path' => $normalizedPath]);
+                    return route('media.public', ['path' => $normalizedPath], false);
                 }
             }
 

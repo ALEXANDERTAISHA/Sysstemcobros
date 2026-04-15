@@ -59,7 +59,7 @@ class Company extends Model
             $normalizedPath = ltrim($this->logo_path, '/');
 
             if (Storage::disk('public')->exists($normalizedPath)) {
-                return route('media.public', ['path' => $normalizedPath]);
+                return route('media.public', ['path' => $normalizedPath], false);
             }
         }
 
