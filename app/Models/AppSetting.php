@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class AppSetting extends Model
 {
@@ -44,6 +45,12 @@ class AppSetting extends Model
             return null;
         }
 
-        return asset('storage/' . ltrim($path, '/'));
+        $normalizedPath = ltrim($path, '/');
+
+        if (!Storage::disk('public')->exists($normalizedPath)) {
+            return null;
+        }
+
+        return route('media.public', ['path' => $normalizedPath]);
     }
 }

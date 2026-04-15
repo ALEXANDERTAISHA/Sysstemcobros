@@ -10,6 +10,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\OtherIncomeController;
 use App\Http\Controllers\DailyClosingController;
 use App\Http\Controllers\CashBoxInitialController;
+use App\Http\Controllers\PublicMediaController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\BranchController as AdminBranchController;
@@ -23,6 +24,7 @@ Route::post('/forgot-password', [LoginController::class, 'sendResetLinkEmail'])-
 Route::get('/reset-password/{token}', [LoginController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/reset-password', [LoginController::class, 'resetPassword'])->name('password.update');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/media/public/{path}', [PublicMediaController::class, 'show'])->where('path', '.*')->name('media.public');
 
 Route::get('/', fn() => redirect()->route('login'));
 

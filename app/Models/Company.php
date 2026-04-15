@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class Company extends Model
 {
@@ -55,7 +56,11 @@ class Company extends Model
     public function getLogoUrlAttribute(): string
     {
         if ($this->logo_path) {
-            return asset('storage/' . ltrim($this->logo_path, '/'));
+            $normalizedPath = ltrim($this->logo_path, '/');
+
+            if (Storage::disk('public')->exists($normalizedPath)) {
+                return route('media.public', ['path' => $normalizedPath]);
+            }
         }
 
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->code ?: $this->name) . '&background=0d6efd&color=ffffff&size=128&bold=true';

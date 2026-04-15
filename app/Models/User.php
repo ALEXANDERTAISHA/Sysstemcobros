@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -90,7 +91,11 @@ class User extends Authenticatable
     {
         return Attribute::get(function () {
             if ($this->avatar_path) {
-                return asset('storage/' . ltrim($this->avatar_path, '/'));
+                $normalizedPath = ltrim($this->avatar_path, '/');
+
+                if (Storage::disk('public')->exists($normalizedPath)) {
+                    return route('media.public', ['path' => $normalizedPath]);
+                }
             }
 
             return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=1a1a2e&color=ffffff&size=128';
