@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- AdminLTE 3 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <!-- Professional Design System -->
+    <link rel="stylesheet" href="{{ asset('css/professional-design.css') }}">
 
     <style>
         body {
@@ -450,6 +452,14 @@
                                 class="nav-link {{ $reportsOpen ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-file-pdf"></i>
                                 <p>Reportes PDF</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('documents.index') }}"
+                                class="nav-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-folder-open" style="color: #3b82f6;"></i>
+                                <p>Documentos</p>
                             </a>
                         </li>
 
