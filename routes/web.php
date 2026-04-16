@@ -123,7 +123,6 @@ Route::middleware('auth')->group(function () {
         // Reportes
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
-
     });
 
     // Perfil de usuario
