@@ -146,7 +146,11 @@
                                         <td>{{ $debt->branch?->name ?? 'Sin sucursal' }}</td>
                                     @endif
                                     <td>
-                                        <a href="{{ route('clients.show', $debt->client) }}">{{ $debt->client->name }}</a>
+                                            @if(auth()->user()->isAdmin())
+                                                <a href="{{ route('clients.show', $debt->client) }}">{{ $debt->client->name }}</a>
+                                            @else
+                                                {{ $debt->client->name }}
+                                            @endif
                                     </td>
                                     <td>{{ $debt->company?->name ?? '-' }}</td>
                                     <td>{{ $debt->due_date?->format('d/m/Y') ?? 'Sin fecha' }}</td>
