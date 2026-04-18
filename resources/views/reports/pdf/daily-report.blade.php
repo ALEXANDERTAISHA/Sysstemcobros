@@ -205,6 +205,7 @@
                             'VIAS AMERICAS CHEQUES',
                             'VIAS AMERICAS TRANSFERENCIAS TARJETA DEBITO',
                             'LA NACIONAL CHEQUE',
+                            'LA NACIONAL CHEQUES',
                             'LA NACIONAL TARJETA DEBITO',
                         ];
                     @endphp
