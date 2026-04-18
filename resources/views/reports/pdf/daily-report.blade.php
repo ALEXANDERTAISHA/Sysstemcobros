@@ -117,7 +117,6 @@
             display: inline-block;
             color: #0f3ea8;
             font-weight: bold;
-            text-decoration: underline;
             background: #dbeafe;
             border: 1px solid #93c5fd;
             border-radius: 4px;
