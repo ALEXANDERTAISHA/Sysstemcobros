@@ -75,4 +75,9 @@ class AppSetting extends Model
 
         return route('media.public', ['path' => $normalizedPath], false);
     }
+
+    public static function faviconUrl(): ?string
+    {
+        return self::authLogoUrl() ?? self::systemLogoUrl();
+    }
 }

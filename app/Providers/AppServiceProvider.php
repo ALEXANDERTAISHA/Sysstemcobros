@@ -23,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('layouts.app', function ($view) {
             $view->with('systemLogoUrl', AppSetting::systemLogoUrl());
+            $view->with('faviconUrl', AppSetting::faviconUrl());
         });
     }
 }

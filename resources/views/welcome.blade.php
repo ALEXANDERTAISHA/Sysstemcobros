@@ -3,6 +3,11 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        @php($faviconUrl = \App\Models\AppSetting::faviconUrl())
+        @if ($faviconUrl)
+            <link rel="icon" type="image/png" href="{{ $faviconUrl }}">
+            <link rel="shortcut icon" href="{{ $faviconUrl }}">
+        @endif
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
