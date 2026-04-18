@@ -78,6 +78,6 @@ class AppSetting extends Model
 
     public static function faviconUrl(): ?string
     {
-        return self::authLogoUrl() ?? self::systemLogoUrl();
+        return self::systemLogoUrl();
     }
 }
