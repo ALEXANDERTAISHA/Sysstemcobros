@@ -173,10 +173,25 @@ class FinancialSummaryService
 
     public function debitEntries(string $dateFrom, string $dateTo, ?int $branchId = null): Collection
     {
-        return $this->debitQuery($dateFrom, $dateTo, $branchId)
+        $creditDebits = $this->debitQuery($dateFrom, $dateTo, $branchId)
             ->orderBy('granted_date')
             ->orderBy('id')
             ->get();
+
+        $transferDebits = $this->transferQuery($dateFrom, $dateTo, null, $branchId)
+            ->get()
+            ->reject(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company?->name))
+            ->map(function (Transfer $transfer) {
+                return (object) [
+                    'id' => 'transfer-' . $transfer->id,
+                    'total_amount' => (float) $transfer->amount,
+                    'company' => $transfer->company,
+                    'client' => null,
+                    'concept' => $transfer->receiver_name ?: 'Débito por transferencia',
+                ];
+            });
+
+        return $creditDebits->concat($transferDebits)->values();
     }
 
     public function otherIncomeEntries(string $dateFrom, string $dateTo, ?int $branchId = null): Collection
