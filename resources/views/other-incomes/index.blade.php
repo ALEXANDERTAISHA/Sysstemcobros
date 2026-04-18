@@ -447,7 +447,7 @@
                 debounceTimer = window.setTimeout(function() {
                     applyInstantTableFilter();
                     syncCollectForm();
-                }, 50);
+                }, 0);
 
                 // Envío al servidor (200ms) pero solo si hay 2+ letras o está vacío
                 window.clearTimeout(serverDebounceTimer);
@@ -456,7 +456,7 @@
                     if (search.length === 0 || search.length >= 2) {
                         submitToServer();
                     }
-                }, 200);
+                }, 100);
             });
 
             // Enter: envío inmediato al servidor para búsqueda completa
