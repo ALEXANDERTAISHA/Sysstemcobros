@@ -273,7 +273,7 @@
                     </tr>
                     <tr>
                         <td class="bold">VALOR TOTAL</td>
-                        <td class="right mono">$ {{ number_format($summary['value_total'], 2) }}</td>
+                        <td class="right mono">$ {{ number_format(abs($summary['value_total']), 2) }}</td>
                     </tr>
                     <tr>
                         <td class="bold">(+) OTROS INGRESOS</td>

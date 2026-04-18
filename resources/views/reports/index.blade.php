@@ -163,7 +163,7 @@
                         </tr>
                         <tr>
                             <th>Valor Total (Ingresos - Débitos)</th>
-                            <td class="text-right">${{ number_format($summary['value_total'], 2) }}</td>
+                            <td class="text-right">${{ number_format(abs($summary['value_total']), 2) }}</td>
                         </tr>
                         <tr class="table-success">
                             <th>Suma Total (Valor Total + Otros Ingresos)</th>
