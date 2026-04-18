@@ -170,7 +170,13 @@ class FinancialSummaryService
             ->get()
             ->reject(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company?->name))
             ->map(function (Transfer $transfer) {
-                $detail = 'Destinatario: ' . trim((string) ($transfer->receiver_name ?: 'Sin destinatario'));
+                $receiverName = trim((string) ($transfer->receiver_name ?? ''));
+                $normalizedReceiverName = mb_strtoupper($receiverName);
+                $hasUsefulReceiver = $receiverName !== '' && !in_array($normalizedReceiverName, ['N/A', 'NA', 'SIN DESTINATARIO'], true);
+
+                $detail = $hasUsefulReceiver
+                    ? 'Destinatario: ' . $receiverName
+                    : trim((string) ($transfer->company?->name ?? 'Débito por transferencia'));
 
                 if (!empty($transfer->transaction_code)) {
                     $detail .= ' | Ref: ' . trim((string) $transfer->transaction_code);

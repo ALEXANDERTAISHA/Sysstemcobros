@@ -113,10 +113,16 @@
             background: #fff3cd;
         }
 
-        .special-debit-company {
-            color: #1d4ed8;
+        .special-debit-badge {
+            display: inline-block;
+            color: #0f3ea8;
             font-weight: bold;
             text-decoration: underline;
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            border-radius: 4px;
+            padding: 2px 5px;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 2px 6px rgba(29, 78, 216, 0.18);
         }
     </style>
 </head>
@@ -210,13 +216,15 @@
                             <td class="center">{{ $i + 1 }}</td>
                             <td class="right mono">$ {{ number_format((float) $row->total_amount, 2) }}</td>
                             <td>
-                                <span class="{{ $isSpecialDebitCompany ? 'special-debit-company' : '' }}">
+                                <span class="{{ $isSpecialDebitCompany ? 'special-debit-badge' : '' }}">
                                     {{ $row->company?->name ?? '-' }}
                                 </span>
                             </td>
                             <td>
                                 @if (!empty($row->is_transfer_debit))
-                                    {{ $row->concept }}
+                                    <span class="{{ $isSpecialDebitCompany ? 'special-debit-badge' : '' }}">
+                                        {{ $row->concept }}
+                                    </span>
                                 @else
                                     {{ $row->client?->name ?? preg_replace('/^\s*d[eé]bito\s+registrado\s*-\s*/iu', '', (string) $row->concept) }}
                                 @endif
