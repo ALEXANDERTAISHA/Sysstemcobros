@@ -182,12 +182,19 @@ class FinancialSummaryService
             ->get()
             ->reject(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company?->name))
             ->map(function (Transfer $transfer) {
+                $detail = 'Destinatario: ' . trim((string) ($transfer->receiver_name ?: 'Sin destinatario'));
+
+                if (!empty($transfer->transaction_code)) {
+                    $detail .= ' | Ref: ' . trim((string) $transfer->transaction_code);
+                }
+
                 return (object) [
                     'id' => 'transfer-' . $transfer->id,
                     'total_amount' => (float) $transfer->amount,
                     'company' => $transfer->company,
                     'client' => null,
-                    'concept' => $transfer->receiver_name ?: 'Débito por transferencia',
+                    'concept' => $detail,
+                    'is_transfer_debit' => true,
                 ];
             });
 

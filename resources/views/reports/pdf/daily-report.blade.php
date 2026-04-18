@@ -196,7 +196,11 @@
                             <td class="right mono">$ {{ number_format((float) $row->total_amount, 2) }}</td>
                             <td>{{ $row->company?->name ?? '-' }}</td>
                             <td>
-                                {{ $row->client?->name ?? preg_replace('/^\s*d[eé]bito\s+registrado\s*-\s*/iu', '', (string) $row->concept) }}
+                                @if (!empty($row->is_transfer_debit))
+                                    {{ $row->concept }}
+                                @else
+                                    {{ $row->client?->name ?? preg_replace('/^\s*d[eé]bito\s+registrado\s*-\s*/iu', '', (string) $row->concept) }}
+                                @endif
                             </td>
                         </tr>
                     @empty
