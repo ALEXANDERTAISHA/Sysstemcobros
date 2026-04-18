@@ -442,21 +442,21 @@
             }
 
             clientSearchInput.addEventListener('input', function() {
-                // Filtrado local instantáneo (120ms = muy rápido, se siente natural)
+                // Filtrado local instantáneo (50ms = muy rápido, se siente natural)
                 window.clearTimeout(debounceTimer);
                 debounceTimer = window.setTimeout(function() {
                     applyInstantTableFilter();
                     syncCollectForm();
-                }, 120);
+                }, 50);
 
-                // Envío al servidor más lento (350ms) pero solo si hay 2+ letras o está vacío
+                // Envío al servidor (200ms) pero solo si hay 2+ letras o está vacío
                 window.clearTimeout(serverDebounceTimer);
                 serverDebounceTimer = window.setTimeout(function() {
                     const search = clientSearchInput.value.trim();
                     if (search.length === 0 || search.length >= 2) {
                         submitToServer();
                     }
-                }, 350);
+                }, 200);
             });
 
             // Enter: envío inmediato al servidor para búsqueda completa
