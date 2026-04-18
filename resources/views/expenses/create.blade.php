@@ -283,7 +283,7 @@
                             <div class="expense-step-help">Confirma la empresa de gastos-débitos asociada al cliente.</div>
                             <label>Empresa Gastos Débitos *</label>
                             @php
-                                $highlightCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA'];
+                                $highlightCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
                                 [$normalCompanies, $highlightedCompanies] = $companies->partition(function ($company) use ($highlightCompanies) {
                                     return !in_array(mb_strtoupper(trim($company->name)), $highlightCompanies, true);
                                 });
@@ -699,7 +699,7 @@
             }
 
             function isSpecialNoDueDateCompany() {
-                const specialCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA'];
+                const specialCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
                 return specialCompanies.includes(selectedText(companySelect).toUpperCase());
             }
 

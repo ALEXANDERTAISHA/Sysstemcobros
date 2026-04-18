@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 class OtherIncomeController extends Controller
 {
-    private const EXCLUDED_COMPANIES_FROM_TRACKING = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA'];
+    private const EXCLUDED_COMPANIES_FROM_TRACKING = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
 
     public function __construct(
         private EmailDeliveryService $emailDelivery,

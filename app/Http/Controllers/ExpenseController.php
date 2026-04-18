@@ -134,7 +134,7 @@ class ExpenseController extends Controller
         ]);
 
         $company = Company::findOrFail($data['company_id']);
-        $specialNoDueDateCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA'];
+        $specialNoDueDateCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
         $isSpecialNoDueDateCompany = in_array(mb_strtoupper(trim((string) $company->name)), $specialNoDueDateCompanies, true);
 
         if (! $isSpecialNoDueDateCompany && empty($data['due_date'])) {
