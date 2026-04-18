@@ -214,7 +214,9 @@
                         @endphp
                         <tr class="{{ $sameDayPaidCreditIds->contains($row->id) ? 'same-day-highlight' : '' }}">
                             <td class="center">{{ $i + 1 }}</td>
-                            <td class="right mono">$ {{ number_format((float) $row->total_amount, 2) }}</td>
+                            <td class="right mono">
+                                <span class="{{ $isSpecialDebitCompany ? 'special-debit-badge' : '' }}">$ {{ number_format((float) $row->total_amount, 2) }}</span>
+                            </td>
                             <td>
                                 <span class="{{ $isSpecialDebitCompany ? 'special-debit-badge' : '' }}">
                                     {{ $row->company?->name ?? '-' }}
