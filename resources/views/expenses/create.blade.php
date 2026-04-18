@@ -282,14 +282,21 @@
                             <div class="expense-step-title">Empresa Gastos Débitos <span class="step-indicator">Paso 2</span></div>
                             <div class="expense-step-help">Confirma la empresa de gastos-débitos asociada al cliente.</div>
                             <label>Empresa Gastos Débitos *</label>
+                            @php
+                                $highlightCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA'];
+                                [$normalCompanies, $highlightedCompanies] = $companies->partition(function ($company) use ($highlightCompanies) {
+                                    return !in_array(mb_strtoupper(trim($company->name)), $highlightCompanies, true);
+                                });
+                            @endphp
                             <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror" size="{{ min(($companies->count() + 1), 8) }}">
                                 <option value="">Seleccionar empresa...</option>
-                                @foreach ($companies as $company)
-                                    @php
-                                        $highlightCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA'];
-                                        $isHighlightedCompany = in_array(mb_strtoupper(trim($company->name)), $highlightCompanies, true);
-                                    @endphp
-                                    <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }} @if($isHighlightedCompany) style="color: #0d6efd; font-weight: 700;" @endif>
+                                @foreach ($normalCompanies as $company)
+                                    <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                        {{ $company->name }}
+                                    </option>
+                                @endforeach
+                                @foreach ($highlightedCompanies as $company)
+                                    <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }} style="color: #0d6efd; font-weight: 700;">
                                         {{ $company->name }}
                                     </option>
                                 @endforeach
