@@ -112,6 +112,12 @@
         .same-day-highlight td {
             background: #fff3cd;
         }
+
+        .special-debit-company {
+            color: #1d4ed8;
+            font-weight: bold;
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -189,12 +195,25 @@
                     @php
                         $debitRows = $printable['debits']->values();
                         $sameDayPaidCreditIds = collect($printable['same_day_paid_credit_ids'] ?? []);
+                        $specialDebitCompanies = [
+                            'VIAS AMERICAS CHEQUES',
+                            'VIAS AMERICAS TRANSFERENCIAS TARJETA DEBITO',
+                            'LA NACIONAL CHEQUE',
+                            'LA NACIONAL TARJETA DEBITO',
+                        ];
                     @endphp
                     @forelse($debitRows as $i => $row)
+                        @php
+                            $isSpecialDebitCompany = in_array(mb_strtoupper(trim((string) ($row->company?->name ?? ''))), $specialDebitCompanies, true);
+                        @endphp
                         <tr class="{{ $sameDayPaidCreditIds->contains($row->id) ? 'same-day-highlight' : '' }}">
                             <td class="center">{{ $i + 1 }}</td>
                             <td class="right mono">$ {{ number_format((float) $row->total_amount, 2) }}</td>
-                            <td>{{ $row->company?->name ?? '-' }}</td>
+                            <td>
+                                <span class="{{ $isSpecialDebitCompany ? 'special-debit-company' : '' }}">
+                                    {{ $row->company?->name ?? '-' }}
+                                </span>
+                            </td>
                             <td>
                                 @if (!empty($row->is_transfer_debit))
                                     {{ $row->concept }}
