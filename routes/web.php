@@ -130,4 +130,5 @@ Route::middleware('auth')->group(function () {
     Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::put('profile/system-logo', [ProfileController::class, 'updateSystemLogo'])->name('profile.system-logo.update');
+    Route::put('profile/auth-logo', [ProfileController::class, 'updateAuthLogo'])->name('profile.auth-logo.update');
 });

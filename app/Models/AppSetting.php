@@ -37,9 +37,31 @@ class AppSetting extends Model
         return self::getValue('system_logo_path');
     }
 
+    public static function authLogoPath(): ?string
+    {
+        return self::getValue('auth_logo_path');
+    }
+
     public static function systemLogoUrl(): ?string
     {
         $path = self::systemLogoPath();
+
+        if (!$path) {
+            return null;
+        }
+
+        $normalizedPath = ltrim($path, '/');
+
+        if (!Storage::disk('public')->exists($normalizedPath)) {
+            return null;
+        }
+
+        return route('media.public', ['path' => $normalizedPath], false);
+    }
+
+    public static function authLogoUrl(): ?string
+    {
+        $path = self::authLogoPath();
 
         if (!$path) {
             return null;

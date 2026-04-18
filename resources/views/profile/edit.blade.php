@@ -188,6 +188,58 @@
                 </form>
             </div>
 
+            <div class="card card-info card-outline">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-sign-in-alt mr-1"></i> Logo de Autenticación</h3>
+                </div>
+                <form method="POST" action="{{ route('profile.auth-logo.update') }}" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="mr-3">
+                                @if ($hasAuthLogo && $authLogoUrl)
+                                    <img src="{{ $authLogoUrl }}" alt="Logo de autenticación" class="img-circle elevation-2"
+                                        style="width:72px;height:72px;object-fit:cover;">
+                                @else
+                                    <div class="img-circle elevation-1 d-flex align-items-center justify-content-center bg-light"
+                                        style="width:72px;height:72px;">
+                                        <i class="fas fa-image text-muted" style="font-size:1.4rem;"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <div>
+                                <strong>Logo autenticación</strong>
+                                <p class="text-muted mb-0">Este logo se mostrará en la pantalla de inicio de sesión.</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Subir logo autenticación</label>
+                            <div class="custom-file">
+                                <input type="file" name="auth_logo" id="auth_logo"
+                                    class="custom-file-input @error('auth_logo') is-invalid @enderror" accept="image/*">
+                                <label class="custom-file-label" for="auth_logo">Seleccionar imagen...</label>
+                                @error('auth_logo')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        @if ($hasAuthLogo)
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="remove_auth_logo"
+                                    name="remove_auth_logo" value="1">
+                                <label class="custom-control-label" for="remove_auth_logo">Eliminar logo autenticación actual</label>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-info"><i class="fas fa-save mr-1"></i> Guardar logo autenticación</button>
+                    </div>
+                </form>
+            </div>
+
         </div>
     </div>
 @endsection
@@ -197,7 +249,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const fileInputs = [
                 document.getElementById('avatar'),
-                document.getElementById('system_logo')
+                document.getElementById('system_logo'),
+                document.getElementById('auth_logo')
             ];
 
             fileInputs.forEach(function(input) {

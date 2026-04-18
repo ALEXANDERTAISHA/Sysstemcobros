@@ -16,6 +16,8 @@ class ProfileController extends Controller
             'user' => $request->user(),
             'systemLogoUrl' => AppSetting::systemLogoUrl(),
             'hasSystemLogo' => (bool) AppSetting::systemLogoPath(),
+            'authLogoUrl' => AppSetting::authLogoUrl(),
+            'hasAuthLogo' => (bool) AppSetting::authLogoPath(),
         ]);
     }
 
@@ -96,5 +98,32 @@ class ProfileController extends Controller
         }
 
         return redirect()->route('profile.edit')->with('success', 'Logo del sistema actualizado correctamente.');
+    }
+
+    public function updateAuthLogo(Request $request)
+    {
+        $data = $request->validate([
+            'auth_logo' => ['nullable', 'image', 'max:2048'],
+            'remove_auth_logo' => ['nullable', 'boolean'],
+        ]);
+
+        $currentPath = AppSetting::authLogoPath();
+
+        if (($data['remove_auth_logo'] ?? false) && $currentPath) {
+            Storage::disk('public')->delete($currentPath);
+            AppSetting::setValue('auth_logo_path', null);
+            $currentPath = null;
+        }
+
+        if ($request->hasFile('auth_logo')) {
+            if ($currentPath) {
+                Storage::disk('public')->delete($currentPath);
+            }
+
+            $storedPath = $request->file('auth_logo')->store('auth-brand', 'public');
+            AppSetting::setValue('auth_logo_path', $storedPath);
+        }
+
+        return redirect()->route('profile.edit')->with('success', 'Logo de autenticación actualizado correctamente.');
     }
 }

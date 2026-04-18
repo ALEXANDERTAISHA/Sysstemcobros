@@ -49,14 +49,14 @@
 </head>
 
 <body class="hold-transition login-page">
-    @php($systemLogoUrl = \App\Models\AppSetting::systemLogoUrl())
+    @php($authLogoUrl = \App\Models\AppSetting::authLogoUrl())
     <div class="login-box">
         <div class="login-logo">
-            @if ($systemLogoUrl)
-                <img src="{{ $systemLogoUrl }}" alt="Logo del sistema" class="login-system-logo d-block mx-auto">
+            @if ($authLogoUrl)
+                <img src="{{ $authLogoUrl }}" alt="Logo de autenticación" class="login-system-logo d-block mx-auto">
             @endif
             <a href="#">
-                @if (!$systemLogoUrl)
+                @if (!$authLogoUrl)
                     <i class="fas fa-dollar-sign mr-2"></i>
                 @endif
                 SystemCobros
