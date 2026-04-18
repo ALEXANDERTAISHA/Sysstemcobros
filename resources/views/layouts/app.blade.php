@@ -266,6 +266,31 @@
             line-height: 1.3;
             font-weight: 600;
         }
+
+        /* Listas de busqueda (cliente/empresa): mas espacio y texto mas legible */
+        select.form-control[name="client_id"],
+        select.form-control[name="company_id"],
+        #client_select,
+        #company_select,
+        #receiver_name_select,
+        #edit_income_client_id {
+            font-size: 1.02rem;
+        }
+
+        select.form-control[name="client_id"] option,
+        select.form-control[name="company_id"] option,
+        #client_select option,
+        #company_select option,
+        #receiver_name_select option,
+        #edit_income_client_id option {
+            font-size: 1.02rem;
+            line-height: 1.65;
+            padding: .42rem .62rem;
+        }
+
+        select.form-control[size]:not([size="1"]) {
+            padding: .28rem;
+        }
     </style>
     @stack('styles')
 </head>
