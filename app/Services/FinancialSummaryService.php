@@ -138,37 +138,25 @@ class FinancialSummaryService
 
     public function transferBreakdownByCompany(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null): Collection
     {
-        $effectiveBranchId = $branchId;
-        $restrictByBranch = false;
+        return $this->transferQuery($dateFrom, $dateTo, $companyId, $branchId)
+            ->get()
+            ->filter(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company?->name))
+            ->groupBy(fn(Transfer $transfer) => $transfer->company_id)
+            ->map(function (Collection $companyTransfers) {
+                /** @var Transfer $firstTransfer */
+                $firstTransfer = $companyTransfers->first();
 
-        if (!BranchContext::isPrivileged()) {
-            $effectiveBranchId = BranchContext::branchId();
-            $restrictByBranch = (bool) $effectiveBranchId;
-        } elseif ($effectiveBranchId) {
-            $restrictByBranch = true;
-        }
-
-        return Company::query()
-            ->where('is_active', true)
-            ->withCount([
-                'transfers as transfers_count' => fn(Builder $query) => $query
-                    ->whereDate('transfer_date', '>=', $dateFrom)
-                    ->whereDate('transfer_date', '<=', $dateTo)
-                    ->whereNotIn('status', ['cancelled'])
-                    ->when($restrictByBranch, fn(Builder $inner) => $inner->where('branch_id', $effectiveBranchId))
-                    ->when($companyId, fn(Builder $inner) => $inner->where('company_id', $companyId)),
+                return (object) [
+                    'name' => $firstTransfer->company?->name ?? '-',
+                    'transfers_count' => $companyTransfers->count(),
+                    'transfers_total_amount' => (float) $companyTransfers->sum('amount'),
+                ];
+            })
+            ->sortBy([
+                fn($row) => -1 * (float) $row->transfers_total_amount,
+                fn($row) => (string) $row->name,
             ])
-            ->withSum([
-                'transfers as transfers_total_amount' => fn(Builder $query) => $query
-                    ->whereDate('transfer_date', '>=', $dateFrom)
-                    ->whereDate('transfer_date', '<=', $dateTo)
-                    ->whereNotIn('status', ['cancelled'])
-                    ->when($restrictByBranch, fn(Builder $inner) => $inner->where('branch_id', $effectiveBranchId))
-                    ->when($companyId, fn(Builder $inner) => $inner->where('company_id', $companyId)),
-            ], 'amount')
-            ->orderByRaw('COALESCE(transfers_total_amount, 0) DESC')
-            ->orderBy('name')
-            ->get();
+            ->values();
     }
 
     public function debitEntries(string $dateFrom, string $dateTo, ?int $branchId = null): Collection
