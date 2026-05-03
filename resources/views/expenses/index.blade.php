@@ -93,7 +93,7 @@
         @if ($credits->hasPages())
             <div class="card-footer bg-white border-top-0">
                 <nav aria-label="Paginación de gastos" class="d-flex justify-content-center">
-                    {{ $credits->withQueryString()->links() }}
+                    {{ $credits->withQueryString()->links('vendor.pagination.bootstrap-4') }}
                 </nav>
             </div>
         @endif
