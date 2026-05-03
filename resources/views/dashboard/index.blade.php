@@ -252,7 +252,7 @@
                     </div>
                     <div class="closing-row d-flex justify-content-between">
                         <span>(-) GASTOS / DÉBITOS</span>
-                        <strong class="text-danger">- ${{ number_format($totalExpenses, 2) }}</strong>
+                        <strong class="text-danger">${{ number_format($totalExpenses, 2) }}</strong>
                     </div>
                     <div class="closing-row d-flex justify-content-between bg-light rounded px-2">
                         <span class="font-weight-bold">VALOR TOTAL</span>
