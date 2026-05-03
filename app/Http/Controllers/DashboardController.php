@@ -88,6 +88,7 @@ class DashboardController extends Controller
             'valueTotal',
             'sumTotal',
             'existingValue',
+            'cashBoxInitialTotal',
             'difference',
             'closing',
             'pendingTransfers',
