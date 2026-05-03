@@ -9,13 +9,17 @@
             <form method="GET" class="w-100" id="other_income_filters_form">
                 <div class="form-row align-items-end">
                     <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-                        <label class="mb-1">Fecha:</label>
-                        <input type="date" name="date" class="form-control" value="{{ $date }}">
+                        <label class="mb-1">Fecha inicio:</label>
+                        <input type="date" name="date_start" class="form-control" value="{{ request('date_start', $dateStart ?? '') }}">
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+                        <label class="mb-1">Fecha fin:</label>
+                        <input type="date" name="date_end" class="form-control" value="{{ request('date_end', $dateEnd ?? '') }}">
                     </div>
                     <div class="col-md-4 col-sm-6 mb-2 mb-md-0">
-                        <label class="mb-1">Cliente Fiado (opcional)</label>
+                        <label class="mb-1">Cliente/Empresa (opcional)</label>
                         <input type="text" name="client_search" id="client_search_input" class="form-control"
-                            placeholder="Escribe para buscar cliente..."
+                            placeholder="Escribe para buscar cliente o empresa..."
                             value="{{ $clientSearch ?? '' }}" autocomplete="off">
                     </div>
                     @if(auth()->user()->isAdmin())
@@ -424,10 +428,17 @@
                     return;
                 }
 
-                // Filtrado local en tabla de DÉBITOS PENDIENTES solamente
+                // Filtrado local en tabla de DÉBITOS PENDIENTES y EMPRESAS
                 let visiblePending = 0;
                 pendingRows.forEach(function(row) {
-                    const matched = row.textContent.toLowerCase().includes(queryLower);
+                    // Busca en columnas de cliente y empresa
+                    const cells = row.querySelectorAll('td');
+                    let matched = false;
+                    cells.forEach(function(cell) {
+                        if (cell.textContent.toLowerCase().includes(queryLower)) {
+                            matched = true;
+                        }
+                    });
                     row.style.display = matched ? '' : 'none';
                     if (matched) visiblePending++;
                 });
