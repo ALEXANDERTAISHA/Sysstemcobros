@@ -152,6 +152,19 @@ class ExpenseController extends Controller
         $credit = Credit::create($data);
         $client = $credit->client;
 
+        // Crear ingreso especial si corresponde
+        if ($isSpecialNoDueDateCompany) {
+            \App\Models\OtherIncome::create([
+                'income_date' => $credit->granted_date,
+                'description' => $credit->concept,
+                'amount' => $credit->total_amount,
+                'client_id' => $credit->client_id,
+                'branch_id' => $credit->branch_id,
+                'credit_id' => $credit->id,
+                'notes' => $credit->notes,
+            ]);
+        }
+
         if ($client->whatsapp) {
             $message = "Hola {$client->name}, se registró un débito por $" . number_format($credit->total_amount, 2) . " por concepto de: {$credit->concept}. Sistema Cobros.";
             $this->whatsApp->send($client->whatsapp, $message, $client->name, Credit::class, $credit->id);
