@@ -54,10 +54,19 @@ class OtherIncomeController extends Controller
         // Filtro de transferencias especiales
         $specialCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
         $specialTransfersQuery = OtherIncome::with('client', 'credit.company')
-            ->whereHas('credit.company', function($q) use ($specialCompanies) {
-                $q->where(function($query) use ($specialCompanies) {
+            ->where(function($query) use ($specialCompanies) {
+                // Si tiene credit_id, filtrar por empresa especial
+                $query->whereHas('credit.company', function($q) use ($specialCompanies) {
+                    $q->where(function($sub) use ($specialCompanies) {
+                        foreach ($specialCompanies as $company) {
+                            $sub->orWhere(DB::raw('UPPER(name)'), 'LIKE', '%' . mb_strtoupper($company) . '%');
+                        }
+                    });
+                });
+                // O si no tiene credit_id, filtrar por descripción
+                $query->orWhere(function($sub) use ($specialCompanies) {
                     foreach ($specialCompanies as $company) {
-                        $query->orWhere(DB::raw('UPPER(name)'), 'LIKE', '%' . mb_strtoupper($company) . '%');
+                        $sub->orWhere(DB::raw('UPPER(description)'), 'LIKE', '%' . mb_strtoupper($company) . '%');
                     }
                 });
             });
