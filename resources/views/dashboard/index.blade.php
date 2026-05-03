@@ -282,22 +282,7 @@
                             ${{ number_format($difference, 2) }}
                         </strong>
                     </div>
-
-                    @if (!$closing)
-                        <div class="mt-3 text-center">
-                            <a href="{{ route('daily-closings.create', ['date' => $date]) }}"
-                                class="btn btn-info btn-block">
-                                <i class="fas fa-save mr-1"></i> Guardar Cierre del Día
-                            </a>
-                        </div>
-                    @else
-                        <div class="mt-2 text-center">
-                            <span class="badge badge-success badge-pill px-3 py-2">
-                                <i class="fas fa-check-circle mr-1"></i> Cierre guardado
-                            </span>
-                            <a href="{{ route('daily-closings.show', $closing) }}"
-                                class="btn btn-sm btn-outline-secondary mt-1">
-                                Ver reporte completo
+                </div>
                             </a>
                         </div>
                     @endif
