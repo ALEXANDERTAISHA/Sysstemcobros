@@ -23,16 +23,28 @@ class DashboardController extends Controller
         $carbonDate = Carbon::parse($date);
         $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
 
-        $summary = $this->financialSummary->summarizeRange($date, $date, null, $branchId);
+
+        $summary = $this->financialSummary->summarizeRange(
+            $date,
+            $date,
+            null,
+            $branchId,
+            true, // excludeTodayIncomes
+            true  // excludeSameDayCollectedDebits
+        );
         $transfersByCompany = $this->financialSummary->transferBreakdownByCompany($date, $date, null, $branchId);
         $debits = $this->financialSummary->debitEntries($date, $date, $branchId);
         $otherIncomes = $this->financialSummary->otherIncomeEntries($date, $date, $branchId);
 
+        $cashBoxInitialTotal = (float) \App\Models\CashBoxInitial::whereDate('date', $date)
+            ->when(BranchContext::isPrivileged() && $branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->sum('initial_amount');
+
         $totalIncomes = $summary['total_incomes'];
         $totalExpenses = $summary['total_expenses'];
-        $totalOtherIncomes = $summary['total_other_incomes'];
+        $totalOtherIncomes = $summary['total_other_incomes'] + $cashBoxInitialTotal;
         $valueTotal = $summary['value_total'];
-        $sumTotal = $summary['sum_total'];
+        $sumTotal = $valueTotal + $totalOtherIncomes;
 
         $closingQuery = DailyClosing::whereDate('closing_date', $date);
         if (BranchContext::isPrivileged() && $branchId) {
