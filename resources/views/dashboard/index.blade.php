@@ -283,11 +283,7 @@
                         </strong>
                     </div>
                 </div>
-                            </a>
-                        </div>
-                    @endif
-                </div>
-            </div>
+
 
         </div>
     </div>
