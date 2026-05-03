@@ -26,26 +26,50 @@ class OtherIncomeController extends Controller
     }
     public function index(Request $request)
     {
+        // Fechas para filtro premium
+        $dateStart = $request->get('date_start');
+        $dateEnd = $request->get('date_end');
         $date = $request->get('date', today()->toDateString());
         $selectedClientId = $request->filled('client_id') ? (int) $request->get('client_id') : null;
         $clientSearch = trim((string) $request->get('client_search', ''));
         $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
 
-        $incomesQuery = OtherIncome::with('client', 'credit.company', 'branch')
-            ->whereDate('income_date', $date)
-            ->orderByDesc('income_date')
-            ->orderByDesc('id');
-
+        // Filtro de ingresos normales
+        $incomesQuery = OtherIncome::with('client', 'credit.company', 'branch');
+        if ($dateStart && $dateEnd) {
+            $incomesQuery->whereBetween('income_date', [$dateStart, $dateEnd]);
+        } else {
+            $incomesQuery->whereDate('income_date', $date);
+        }
         if (BranchContext::isPrivileged() && $branchId) {
             $incomesQuery->where('branch_id', $branchId);
         } else {
             BranchContext::scope($incomesQuery);
         }
-
         $incomes = $incomesQuery->get();
         $total = $incomes->sum('amount');
         $clients = Client::where('is_active', true)->orderBy('name')->get();
 
+        // Filtro de transferencias especiales
+        $specialCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
+        $specialTransfersQuery = OtherIncome::with('client', 'credit.company')
+            ->whereHas('credit.company', function($q) use ($specialCompanies) {
+                $q->whereIn(DB::raw('UPPER(name)'), array_map('mb_strtoupper', $specialCompanies));
+            });
+        if ($dateStart && $dateEnd) {
+            $specialTransfersQuery->whereBetween('income_date', [$dateStart, $dateEnd]);
+        } else {
+            $specialTransfersQuery->whereDate('income_date', $date);
+        }
+        if (BranchContext::isPrivileged() && $branchId) {
+            $specialTransfersQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($specialTransfersQuery);
+        }
+        $specialTransfers = $specialTransfersQuery->get();
+        $specialTransfersTotal = $specialTransfers->sum('amount');
+
+        // Débitos pendientes
         $pendingDebtsQuery = Credit::with('client', 'company', 'branch')
             ->whereIn('status', ['active', 'partial'])
             ->whereDate('granted_date', '<=', today()->toDateString())
@@ -54,28 +78,23 @@ class OtherIncomeController extends Controller
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
             ->orderByDesc('due_date')
             ->orderByDesc('id');
-
         if (BranchContext::isPrivileged() && $branchId) {
             $pendingDebtsQuery->where('branch_id', $branchId);
         } else {
             BranchContext::scope($pendingDebtsQuery);
         }
-
         if (!is_null($selectedClientId)) {
             $pendingDebtsQuery->where('client_id', $selectedClientId);
         } elseif ($clientSearch !== '' && mb_strlen($clientSearch) >= 2) {
             $pendingDebtsQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
         }
-
         $pendingDebts = $pendingDebtsQuery->get();
-
         $pendingDebtTotal = $pendingDebts->sum(fn($credit) => $credit->balance);
         $debtTotals = [
             'active' => (float) $pendingDebts->where('status', 'active')->sum(fn($credit) => $credit->balance),
             'partial' => (float) $pendingDebts->where('status', 'partial')->sum(fn($credit) => $credit->balance),
             'pending' => (float) $pendingDebtTotal,
         ];
-
         $today = now()->startOfDay();
         $clientDebtBreakdown = [
             'overdue' => (float) $pendingDebts
@@ -92,6 +111,8 @@ class OtherIncomeController extends Controller
         return view('other-incomes.index', compact(
             'incomes',
             'date',
+            'dateStart',
+            'dateEnd',
             'total',
             'clients',
             'branches',
@@ -101,7 +122,9 @@ class OtherIncomeController extends Controller
             'pendingDebts',
             'pendingDebtTotal',
             'debtTotals',
-            'clientDebtBreakdown'
+            'clientDebtBreakdown',
+            'specialTransfers',
+            'specialTransfersTotal'
         ));
     }
 

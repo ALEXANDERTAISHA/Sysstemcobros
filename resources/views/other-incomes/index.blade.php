@@ -70,35 +70,98 @@
         </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <div class="info-box bg-danger">
-                <span class="info-box-icon"><i class="fas fa-exclamation-circle"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Deuda Activa</span>
-                    <span class="info-box-number">${{ number_format($debtTotals['active'], 2) }}</span>
+        <div class="row mb-3">
+                <div class="col-md-3">
+                        <div class="info-box bg-danger">
+                                <span class="info-box-icon"><i class="fas fa-exclamation-circle"></i></span>
+                                <div class="info-box-content">
+                                        <span class="info-box-text">Deuda Activa</span>
+                                        <span class="info-box-number">${{ number_format($debtTotals['active'], 2) }}</span>
+                                </div>
+                        </div>
+                </div>
+                <div class="col-md-3">
+                        <div class="info-box bg-info">
+                                <span class="info-box-icon"><i class="fas fa-hourglass-half"></i></span>
+                                <div class="info-box-content">
+                                        <span class="info-box-text">Pago Parcial</span>
+                                        <span class="info-box-number">${{ number_format($debtTotals['partial'], 2) }}</span>
+                                </div>
+                        </div>
+                </div>
+                <div class="col-md-3">
+                        <div class="info-box bg-warning">
+                                <span class="info-box-icon"><i class="fas fa-dollar-sign"></i></span>
+                                <div class="info-box-content">
+                                        <span class="info-box-text">Total Pendiente</span>
+                                        <span class="info-box-number">${{ number_format($debtTotals['pending'], 2) }}</span>
+                                </div>
+                        </div>
+                </div>
+                <div class="col-md-3">
+                        <div class="info-box bg-primary info-box-clickable" id="special-transfers-card" style="cursor:pointer;">
+                                <span class="info-box-icon"><i class="fas fa-exchange-alt"></i></span>
+                                <div class="info-box-content">
+                                        <span class="info-box-text">Transferencias Especiales</span>
+                                        <span class="info-box-number">${{ number_format($specialTransfersTotal ?? 0, 2) }}</span>
+                                </div>
+                        </div>
+                </div>
+        </div>
+
+        <!-- Modal Transferencias Especiales -->
+        <div class="modal fade" id="specialTransfersModal" tabindex="-1" role="dialog" aria-labelledby="specialTransfersModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="specialTransfersModalLabel">Transferencias Especiales</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover table-sm mb-0">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Empresa</th>
+                                        <th>Cliente</th>
+                                        <th>Descripción</th>
+                                        <th class="text-right">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($specialTransfers as $st)
+                                    <tr>
+                                        <td>{{ $st->income_date->format('d/m/Y') }}</td>
+                                        <td>{{ $st->credit?->company?->name ?? '-' }}</td>
+                                        <td>{{ $st->client?->name ?? '-' }}</td>
+                                        <td>{{ $st->description }}</td>
+                                        <td class="text-right">${{ number_format($st->amount, 2) }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr><td colspan="5" class="text-center text-muted">Sin resultados.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="info-box bg-info">
-                <span class="info-box-icon"><i class="fas fa-hourglass-half"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Pago Parcial</span>
-                    <span class="info-box-number">${{ number_format($debtTotals['partial'], 2) }}</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="info-box bg-warning">
-                <span class="info-box-icon"><i class="fas fa-dollar-sign"></i></span>
-                <div class="info-box-content">
-                    <span class="info-box-text">Total Pendiente</span>
-                    <span class="info-box-number">${{ number_format($debtTotals['pending'], 2) }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const card = document.getElementById('special-transfers-card');
+        if(card) {
+            card.addEventListener('click', function() {
+                $('#specialTransfersModal').modal('show');
+            });
+        }
+    });
+</script>
+@endpush
 
     <div class="row">
         <div class="col-12">
