@@ -74,7 +74,7 @@
                             </td>
                             <td>
                                 {{ $transfer->branch?->name ?? $transfer->sender_name }}
-                                @if (auth()->user()->isAdmin() && $transfer->branch?->name)
+                                @if(auth()->user()->isAdmin() && $transfer->branch?->name)
                                     <small class="text-muted d-block">{{ $transfer->sender_name }}</small>
                                 @endif
                             </td>

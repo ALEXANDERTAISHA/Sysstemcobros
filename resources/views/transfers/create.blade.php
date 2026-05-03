@@ -52,10 +52,10 @@
                                 <div class="form-group">
                                     <label>Nombre del Remitente *</label>
                                     <input type="text" class="form-control"
-                                        value="{{ auth()->user()->branch?->name ?? (auth()->user()->name ?? 'Usuario actual') }}"
+                                        value="{{ auth()->user()->branch?->name ?? auth()->user()->name ?? 'Usuario actual' }}"
                                         readonly>
                                     <input type="hidden" name="sender_name"
-                                        value="{{ old('sender_name', auth()->user()->branch?->name ?? (auth()->user()->name ?? '')) }}"
+                                        value="{{ old('sender_name', auth()->user()->branch?->name ?? auth()->user()->name ?? '') }}"
                                         required>
                                     <small class="form-text text-muted">
                                         Se registra automaticamente la sucursal de la cuenta abierta.
