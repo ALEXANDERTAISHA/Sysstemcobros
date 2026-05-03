@@ -92,7 +92,7 @@ class OtherIncomeController extends Controller
         } else {
             BranchContext::scope($specialTransfersQuery);
         }
-        $specialTransfers = $specialTransfersQuery->get();
+        $specialTransfers = $specialTransfersQuery->orderByDesc('income_date')->orderByDesc('id')->get();
         $specialTransfersTotal = $specialTransfers->sum('amount');
 
         // Débitos pendientes
