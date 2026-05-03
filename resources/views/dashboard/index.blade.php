@@ -106,7 +106,7 @@
             <a href="{{ route('cash-box-initial.index', ['date' => $date]) }}" class="text-decoration-none d-flex w-100">
                 <div class="small-box bg-info">
                     <div class="inner">
-                        <h3>${{ number_format($existingValue, 2) }}</h3>
+                        <h3>${{ number_format($cashBoxInitialTotal, 2) }}</h3>
                         <p>Dinero inicial de caja chica</p>
                     </div>
                     <div class="icon"><i class="fas fa-cash-register"></i></div>
@@ -268,7 +268,13 @@
                     </div>
                     <div class="closing-row d-flex justify-content-between">
                         <span>VALOR EXISTENTE</span>
-                        <strong>${{ number_format($existingValue, 2) }}</strong>
+                        <strong>
+                            @if($existingValue !== null)
+                                ${{ number_format($existingValue, 2) }}
+                            @else
+                                —
+                            @endif
+                        </strong>
                     </div>
                     <div class="closing-row d-flex justify-content-between">
                         <span>DIFERENCIA</span>

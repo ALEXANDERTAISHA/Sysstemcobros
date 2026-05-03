@@ -55,19 +55,9 @@ class DashboardController extends Controller
         }
         $closing = $closingQuery->first();
 
-        // Si ya existe un cierre de caja para el día, usar el valor exacto de ese cierre
-        if ($closing && $closing->existing_value !== null) {
-            $existingValue = (float) $closing->existing_value;
-        } else {
-            $existingQuery = CashBoxInitial::whereDate('date', $date);
-            if (BranchContext::isPrivileged() && $branchId) {
-                $existingQuery->where('branch_id', $branchId);
-            } else {
-                BranchContext::scope($existingQuery);
-            }
-            $existingValue = (float) $existingQuery->sum('initial_amount');
-        }
-        $difference    = $sumTotal - $existingValue;
+        // Para la tarjeta de cierre de caja, mostrar el existing_value del cierre si existe, si no dejar null
+        $existingValue = $closing && $closing->existing_value !== null ? (float) $closing->existing_value : null;
+        $difference    = $existingValue !== null ? $sumTotal - $existingValue : null;
 
         $pendingQuery = Transfer::where('status', 'pending');
         if (BranchContext::isPrivileged() && $branchId) {
