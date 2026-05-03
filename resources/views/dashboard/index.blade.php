@@ -268,13 +268,7 @@
                     </div>
                     <div class="closing-row d-flex justify-content-between">
                         <span>VALOR EXISTENTE</span>
-                        <strong>
-                            @if($existingValue !== null)
-                                ${{ number_format($existingValue, 2) }}
-                            @else
-                                —
-                            @endif
-                        </strong>
+                        <strong>${{ number_format($existingValue, 2) }}</strong>
                     </div>
                     <div class="closing-row d-flex justify-content-between">
                         <span>DIFERENCIA</span>
