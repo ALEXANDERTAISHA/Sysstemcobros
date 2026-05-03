@@ -46,6 +46,7 @@ class DashboardController extends Controller
         $valueTotal = $summary['value_total'];
         $sumTotal = $valueTotal + $totalOtherIncomes;
 
+
         $closingQuery = DailyClosing::whereDate('closing_date', $date);
         if (BranchContext::isPrivileged() && $branchId) {
             $closingQuery->where('branch_id', $branchId);
@@ -54,13 +55,18 @@ class DashboardController extends Controller
         }
         $closing = $closingQuery->first();
 
-        $existingQuery = CashBoxInitial::whereDate('date', $date);
-        if (BranchContext::isPrivileged() && $branchId) {
-            $existingQuery->where('branch_id', $branchId);
+        // Si ya existe un cierre de caja para el día, usar el valor exacto de ese cierre
+        if ($closing && $closing->existing_value !== null) {
+            $existingValue = (float) $closing->existing_value;
         } else {
-            BranchContext::scope($existingQuery);
+            $existingQuery = CashBoxInitial::whereDate('date', $date);
+            if (BranchContext::isPrivileged() && $branchId) {
+                $existingQuery->where('branch_id', $branchId);
+            } else {
+                BranchContext::scope($existingQuery);
+            }
+            $existingValue = (float) $existingQuery->sum('initial_amount');
         }
-        $existingValue = (float) $existingQuery->sum('initial_amount');
         $difference    = $sumTotal - $existingValue;
 
         $pendingQuery = Transfer::where('status', 'pending');
