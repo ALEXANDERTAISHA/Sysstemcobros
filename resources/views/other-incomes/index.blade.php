@@ -120,6 +120,25 @@
                         </button>
                     </div>
                     <div class="modal-body">
+                        <form method="GET" id="specialTransfersFilterForm" class="mb-3">
+                            <div class="form-row align-items-end">
+                                <div class="col-md-3 mb-2">
+                                    <label>Fecha inicio</label>
+                                    <input type="date" name="date_start" class="form-control" value="{{ request('date_start', $dateStart ?? '') }}">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label>Fecha fin</label>
+                                    <input type="date" name="date_end" class="form-control" value="{{ request('date_end', $dateEnd ?? '') }}">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label>Buscar por nombre</label>
+                                    <input type="text" name="special_search" class="form-control" value="{{ request('special_search', $specialSearch ?? '') }}" placeholder="Cliente, empresa o descripción">
+                                </div>
+                                <div class="col-auto mb-2">
+                                    <button type="submit" class="btn btn-primary"><i class="fas fa-search mr-1"></i> Filtrar</button>
+                                </div>
+                            </div>
+                        </form>
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover table-sm mb-0">
                                 <thead class="thead-dark">

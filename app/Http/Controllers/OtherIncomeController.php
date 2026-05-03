@@ -29,6 +29,7 @@ class OtherIncomeController extends Controller
         // Fechas para filtro premium
         $dateStart = $request->get('date_start');
         $dateEnd = $request->get('date_end');
+        $specialSearch = trim((string) $request->get('special_search', ''));
         $date = $request->get('date', today()->toDateString());
         $selectedClientId = $request->filled('client_id') ? (int) $request->get('client_id') : null;
         $clientSearch = trim((string) $request->get('client_search', ''));
@@ -54,12 +55,28 @@ class OtherIncomeController extends Controller
         $specialCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
         $specialTransfersQuery = OtherIncome::with('client', 'credit.company')
             ->whereHas('credit.company', function($q) use ($specialCompanies) {
-                $q->whereIn(DB::raw('UPPER(name)'), array_map('mb_strtoupper', $specialCompanies));
+                $q->where(function($query) use ($specialCompanies) {
+                    foreach ($specialCompanies as $company) {
+                        $query->orWhere(DB::raw('UPPER(name)'), 'LIKE', '%' . mb_strtoupper($company) . '%');
+                    }
+                });
             });
         if ($dateStart && $dateEnd) {
             $specialTransfersQuery->whereBetween('income_date', [$dateStart, $dateEnd]);
         } else {
             $specialTransfersQuery->whereDate('income_date', $date);
+        }
+        if ($specialSearch !== '') {
+            $specialTransfersQuery->where(function($query) use ($specialSearch) {
+                $like = '%' . $specialSearch . '%';
+                $query->orWhereHas('client', function($q) use ($like) {
+                    $q->where('name', 'like', $like);
+                });
+                $query->orWhereHas('credit.company', function($q) use ($like) {
+                    $q->where('name', 'like', $like);
+                });
+                $query->orWhere('description', 'like', $like);
+            });
         }
         if (BranchContext::isPrivileged() && $branchId) {
             $specialTransfersQuery->where('branch_id', $branchId);
@@ -113,6 +130,7 @@ class OtherIncomeController extends Controller
             'date',
             'dateStart',
             'dateEnd',
+            'specialSearch',
             'total',
             'clients',
             'branches',
