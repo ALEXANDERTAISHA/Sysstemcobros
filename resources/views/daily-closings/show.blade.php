@@ -10,10 +10,10 @@
     <div class="row mb-3">
         <div class="col">
             <a href="{{ route('reports.export-pdf', ['date_from' => $dailyClosing->closing_date->toDateString(), 'date_to' => $dailyClosing->closing_date->toDateString()]) }}"
-                target="_blank" class="btn btn-secondary">
+                target="_blank" class="btn btn-secondary" style="font-size:1.1em; padding: 0.5em 0.9em;">
                 <i class="fas fa-print mr-1"></i> Imprimir Reporte PDF
             </a>
-            <a href="{{ route('daily-closings.index') }}" class="btn btn-light ml-2">
+            <a href="{{ route('daily-closings.index') }}" class="btn btn-light ml-2" style="font-size:1.1em; padding: 0.5em 0.9em;">
                 <i class="fas fa-arrow-left mr-1"></i> Volver
             </a>
         </div>
