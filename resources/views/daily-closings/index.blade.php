@@ -72,15 +72,15 @@
                             </td>
                             <td class="text-center"> <a
                                     href="{{ route('reports.export-pdf', ['date_from' => $c->closing_date->toDateString(), 'date_to' => $c->closing_date->toDateString()]) }}"
-                                    target="_blank" class="btn btn-xs btn-secondary" title="Imprimir PDF">
+                                    target="_blank" class="btn btn-sm btn-secondary" title="Imprimir PDF" style="font-size:1.1em; padding: 0.5em 0.9em;">
                                     <i class="fas fa-print"></i>
-                                </a> <a href="{{ route('daily-closings.show', $c) }}" class="btn btn-xs btn-info">
+                                </a> <a href="{{ route('daily-closings.show', $c) }}" class="btn btn-sm btn-info" style="font-size:1.1em; padding: 0.5em 0.9em;">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <form method="POST" action="{{ route('daily-closings.destroy', $c) }}" class="d-inline"
                                     onsubmit="return confirm('¿Eliminar este cierre?')">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-xs btn-danger"><i class="fas fa-trash"></i></button>
+                                    <button class="btn btn-sm btn-danger" style="font-size:1.1em; padding: 0.5em 0.9em;"><i class="fas fa-trash"></i></button>
                                 </form>
                             </td>
                         </tr>
