@@ -713,24 +713,28 @@
                         via_zelle: 1
                     },
                     success: function(response) {
-                        // Recargar tablas y totales premium
-                        $.get('{{ route('other-incomes.ajax-refresh-tables') }}', {
-                            date: document.getElementById('collect_date').value,
-                            client_search: document.getElementById('collect_client_search').value,
-                            branch_id: document.getElementById('collect_branch_id') ? document.getElementById('collect_branch_id').value : undefined
-                        }, function(data) {
-                            $('#pending_debts_tbody').replaceWith(data.pendingDebitsHtml);
-                            $('#specialTransfersTableWrapper').html(data.specialTransfersHtml);
-                            $('#specialTransfersTotalValue').text(data.specialTransfersTotal);
-                            $(".badge-warning:contains('Total por cobrar')").text('Total por cobrar: $' + data.pendingDebtTotal);
-                            // Mensaje premium
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Cobro vía ZELLE realizado',
-                                text: 'Los débitos fueron movidos a Transferencias Especiales y registrados en caja.',
-                                timer: 2500,
-                                showConfirmButton: false
+                        // Recargar tablas y totales premium (doble recarga para asegurar sincronía en hostings lentos)
+                        function reloadTables() {
+                            $.get('{{ route('other-incomes.ajax-refresh-tables') }}', {
+                                date: document.getElementById('collect_date').value,
+                                client_search: document.getElementById('collect_client_search').value,
+                                branch_id: document.getElementById('collect_branch_id') ? document.getElementById('collect_branch_id').value : undefined
+                            }, function(data) {
+                                $('#pending_debts_tbody').replaceWith(data.pendingDebitsHtml);
+                                $('#specialTransfersTableWrapper').html(data.specialTransfersHtml);
+                                $('#specialTransfersTotalValue').text(data.specialTransfersTotal);
+                                $(".badge-warning:contains('Total por cobrar')").text('Total por cobrar: $' + data.pendingDebtTotal);
                             });
+                        }
+                        reloadTables();
+                        setTimeout(reloadTables, 600); // segunda recarga tras 600ms
+                        // Mensaje premium
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Cobro vía ZELLE realizado',
+                            text: 'Los débitos fueron movidos a Transferencias Especiales y registrados en caja.',
+                            timer: 2500,
+                            showConfirmButton: false
                         });
                     },
                     error: function(xhr) {
