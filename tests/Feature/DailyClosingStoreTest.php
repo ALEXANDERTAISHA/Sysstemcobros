@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Credit;
+use App\Models\CashBoxInitial;
 use App\Models\DailyClosing;
 use App\Models\OtherIncome;
 use App\Models\Transfer;
@@ -18,12 +19,18 @@ class DailyClosingStoreTest extends TestCase
 
     public function test_daily_closing_is_recalculated_from_real_data(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'super_admin']);
         $this->actingAs($user);
 
+        CashBoxInitial::create([
+            'date' => today()->toDateString(),
+            'initial_amount' => 0,
+            'notes' => 'Caja inicial para habilitar operaciones en la prueba.',
+        ]);
+
         $company = Company::create([
-            'name' => 'Intermex',
-            'code' => 'INT',
+            'name' => 'VIAS AMERICAS TRANSFERENCIAS',
+            'code' => 'VIA',
             'color' => '#123456',
             'is_active' => true,
         ]);
@@ -53,11 +60,21 @@ class DailyClosingStoreTest extends TestCase
             'status' => 'active',
         ]);
 
+        $previousCredit = Credit::create([
+            'client_id' => $client->id,
+            'concept' => 'Fiado anterior',
+            'total_amount' => 20,
+            'paid_amount' => 20,
+            'granted_date' => '2026-04-03',
+            'status' => 'paid',
+        ]);
+
         OtherIncome::create([
             'income_date' => '2026-04-04',
             'description' => 'Cobro de fiado',
             'amount' => 20,
             'client_id' => $client->id,
+            'credit_id' => $previousCredit->id,
         ]);
 
         $response = $this->post(route('daily-closings.store'), [
@@ -85,6 +102,6 @@ class DailyClosingStoreTest extends TestCase
         $this->assertSame('90.00', $closing->sum_total);
         $this->assertSame('10.00', $closing->existing_value);
         $this->assertSame('80.00', $closing->difference);
-        $this->assertSame('90.00', $closing->final_total);
+        $this->assertSame('80.00', $closing->final_total);
     }
 }

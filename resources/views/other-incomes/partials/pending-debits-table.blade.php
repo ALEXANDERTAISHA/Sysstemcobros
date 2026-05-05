@@ -44,7 +44,7 @@
             <button class="btn btn-primary px-3 py-1 font-weight-bold ml-2"
                 style="font-size:1em;"
                 onclick="openCollectZelleModal({{ $debt->id }}, '{{ addslashes($debt->client->name) }}', '{{ addslashes($debt->concept) }}', {{ $debt->balance }})">
-                <i class="fas fa-university mr-1"></i>Cobrar via ZELLE
+                <i class="fas fa-university mr-1"></i>Cobrar vía ZELLE
             </button>
         </td>
     </tr>

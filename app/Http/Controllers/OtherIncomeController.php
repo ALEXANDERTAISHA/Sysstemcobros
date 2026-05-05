@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 class OtherIncomeController extends Controller
 {
     private const EXCLUDED_COMPANIES_FROM_TRACKING = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
+    private const ZELLE_COMPANY_NAME = 'TRANSFERENCIA ZELLE';
 
     public function __construct(
         private EmailDeliveryService $emailDelivery,
@@ -220,7 +221,11 @@ class OtherIncomeController extends Controller
             return back()->withErrors(['amount' => 'El cobro no puede superar el saldo pendiente de $' . number_format($remaining, 2)]);
         }
 
-        DB::transaction(function () use ($credit, $data) {
+        if (abs((float) $data['amount'] - $remaining) > 0.009) {
+            return back()->withErrors(['amount' => 'El cobro via ZELLE debe coincidir con el saldo pendiente exacto de $' . number_format($remaining, 2)]);
+        }
+
+        DB::transaction(function () use ($credit, $data, $remaining) {
             // Marcar crédito como pagado
             $credit->update([
                 'paid_amount' => $credit->total_amount,
@@ -229,14 +234,21 @@ class OtherIncomeController extends Controller
 
             // Crear ingreso en Transferencias Especiales (empresa: TRANSFERENCIA ZELLE)
             $company = \App\Models\Company::firstOrCreate([
-                'name' => 'TRANSFERENCIA ZELLE'
+                'name' => self::ZELLE_COMPANY_NAME
             ], [
                 'is_active' => true
             ]);
+            CreditPayment::create([
+                'credit_id' => $credit->id,
+                'amount' => $remaining,
+                'payment_date' => $data['payment_date'],
+                'notes' => 'Cobro total via ZELLE desde seguimiento de debitos.',
+            ]);
+
             $otherIncome = OtherIncome::create([
                 'income_date' => $data['payment_date'],
                 'description' => 'Cobro vía ZELLE: ' . $credit->concept,
-                'amount' => $data['amount'],
+                'amount' => $remaining,
                 'client_id' => $credit->client_id,
                 'branch_id' => $credit->branch_id,
                 'credit_id' => $credit->id,
@@ -481,6 +493,123 @@ class OtherIncomeController extends Controller
     /**
      * Cobro total de débitos de un cliente vía ZELLE (premium, corregido)
      */
+    public function collectClientDebtsZellePremium(Request $request)
+    {
+        $data = $request->validate([
+            'date' => 'required|date',
+            'client_search' => 'required|string|max:150',
+            'branch_id' => 'nullable|integer',
+        ], [
+            'client_search.required' => 'Escribe el cliente que deseas cobrar via ZELLE.',
+        ]);
+
+        $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
+        $clientSearch = trim((string) $data['client_search']);
+        $date = $data['date'];
+
+        if (mb_strlen($clientSearch) < 2) {
+            return $this->zelleCollectionResponse($request, false, 'Escribe al menos 2 letras para cobrar el filtro via ZELLE.', $date, $clientSearch, $branchId);
+        }
+
+        $pendingDebtsQuery = Credit::with('client', 'company', 'branch')
+            ->whereIn('status', ['active', 'partial'])
+            ->whereDate('granted_date', '<=', today()->toDateString())
+            ->whereRaw('total_amount > paid_amount')
+            ->whereHas('company', fn($query) => $query->whereNotIn(DB::raw('UPPER(name)'), self::EXCLUDED_COMPANIES_FROM_TRACKING))
+            ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
+            ->orderByDesc('due_date')
+            ->orderByDesc('id');
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $pendingDebtsQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($pendingDebtsQuery);
+        }
+        if (mb_strlen($clientSearch) >= 2) {
+            $pendingDebtsQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
+        }
+
+        $pendingDebts = $pendingDebtsQuery->get();
+        if ($pendingDebts->isEmpty()) {
+            return $this->zelleCollectionResponse($request, false, 'El filtro actual no tiene debitos pendientes para cobrar via ZELLE.', $date, $clientSearch, $branchId, 'info');
+        }
+
+        $total = 0.0;
+        $creditsPaid = 0;
+
+        DB::transaction(function () use ($pendingDebts, $date, &$total, &$creditsPaid) {
+            $company = \App\Models\Company::firstOrCreate([
+                'name' => self::ZELLE_COMPANY_NAME
+            ], [
+                'is_active' => true
+            ]);
+            $branchTotals = [];
+
+            foreach ($pendingDebts as $credit) {
+                $amount = (float) $credit->balance;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                CreditPayment::create([
+                    'credit_id' => $credit->id,
+                    'amount' => $amount,
+                    'payment_date' => $date,
+                    'notes' => 'Cobro total via ZELLE desde seguimiento de debitos.',
+                ]);
+
+                $credit->update([
+                    'paid_amount' => (float) $credit->total_amount,
+                    'status' => 'paid',
+                    'company_id' => $company->id,
+                ]);
+
+                OtherIncome::create([
+                    'income_date' => $date,
+                    'description' => 'Cobro via ZELLE: ' . $credit->concept,
+                    'amount' => $amount,
+                    'client_id' => $credit->client_id,
+                    'branch_id' => $credit->branch_id,
+                    'credit_id' => $credit->id,
+                    'notes' => 'Cobro total via ZELLE desde seguimiento de debitos.',
+                ]);
+
+                $total += $amount;
+                $creditsPaid++;
+                $branchTotals[$credit->branch_id] = ($branchTotals[$credit->branch_id] ?? 0) + $amount;
+            }
+
+            foreach ($branchTotals as $creditBranchId => $branchTotal) {
+                \App\Models\DailyClosing::addExpense($creditBranchId, $branchTotal, 'Cobro total via ZELLE de cliente');
+            }
+        });
+
+        return $this->zelleCollectionResponse(
+            $request,
+            true,
+            'Cobro via ZELLE registrado: ' . $creditsPaid . ' debito(s), monto $' . number_format($total, 2) . '. Movido a Transferencias Especiales.',
+            $date,
+            $clientSearch,
+            $branchId
+        );
+    }
+
+    private function zelleCollectionResponse(Request $request, bool $ok, string $message, string $date, string $clientSearch, ?int $branchId, string $level = 'error')
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'ok' => $ok,
+                'message' => $message,
+            ], $ok ? 200 : 422);
+        }
+
+        return redirect()->route('other-incomes.index', [
+            'date' => $date,
+            'client_search' => $clientSearch,
+            'branch_id' => $branchId,
+        ])->with($ok ? 'success' : $level, $message);
+    }
+
     public function collectClientDebtsZelle(Request $request)
     {
         $data = $request->validate([

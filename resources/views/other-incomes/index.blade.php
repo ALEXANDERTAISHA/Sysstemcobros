@@ -36,14 +36,14 @@
                     <div class="col-auto">
                         <button type="submit" form="collect_client_debts_form" class="btn btn-success"
                             onclick="return confirm('¿Cobrar TODO lo pendiente y vencido del cliente buscado y pasarlo a Ingresos del día?')"
-                            {{ empty($clientSearch) || (($clientDebtBreakdown['total'] ?? 0) <= 0) ? 'disabled' : '' }}>
+                            {{ empty($clientSearch) || mb_strlen($clientSearch) < 2 || (($clientDebtBreakdown['total'] ?? 0) <= 0) ? 'disabled' : '' }}>
                             <i class="fas fa-coins mr-1"></i> Cobrar Total Cliente
                         </button>
                     </div>
                     <div class="col-auto">
                         <button type="button" class="btn btn-primary" id="collect_client_debts_zelle_btn"
                             onclick="collectClientDebtsViaZelle(this)"
-                            {{ empty($clientSearch) || (($clientDebtBreakdown['total'] ?? 0) <= 0) ? 'disabled' : '' }}>
+                            {{ empty($clientSearch) || mb_strlen($clientSearch) < 2 || (($clientDebtBreakdown['total'] ?? 0) <= 0) ? 'disabled' : '' }}>
                             <i class="fas fa-university mr-1"></i> Cobrar Total vía ZELLE
                         </button>
                     </div>
@@ -294,7 +294,7 @@
                                         <button class="btn btn-primary px-3 py-1 font-weight-bold ml-2"
                                             style="font-size:1em;"
                                             onclick="openCollectZelleModal({{ $debt->id }}, '{{ addslashes($debt->client->name) }}', '{{ addslashes($debt->concept) }}', {{ $debt->balance }})">
-                                            <i class="fas fa-university mr-1"></i>Cobrar via ZELLE
+                                            <i class="fas fa-university mr-1"></i>Cobrar vía ZELLE
                                         </button>
                                     </td>
                                 </tr>
