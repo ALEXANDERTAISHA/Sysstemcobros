@@ -95,12 +95,14 @@ class OtherIncomeController extends Controller
         $specialTransfers = $specialTransfersQuery->orderByDesc('income_date')->orderByDesc('id')->get();
         $specialTransfersTotal = $specialTransfers->sum('amount');
 
-        // Débitos pendientes
+        // Débitos pendientes (siempre excluir TRANSFERENCIA ZELLE)
         $pendingDebtsQuery = Credit::with('client', 'company', 'branch')
             ->whereIn('status', ['active', 'partial'])
             ->whereDate('granted_date', '<=', today()->toDateString())
             ->whereRaw('total_amount > paid_amount')
-            ->whereHas('company', fn($query) => $query->whereNotIn(DB::raw('UPPER(name)'), self::EXCLUDED_COMPANIES_FROM_TRACKING))
+            ->whereHas('company', function($query) {
+                $query->whereNotIn(DB::raw('UPPER(name)'), ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO']);
+            })
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
             ->orderByDesc('due_date')
             ->orderByDesc('id');
@@ -727,12 +729,14 @@ class OtherIncomeController extends Controller
         $clientSearch = trim((string) $request->get('client_search', ''));
         $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
 
-        // Reutilizar queries del index
+        // Reutilizar queries del index (siempre excluir TRANSFERENCIA ZELLE)
         $pendingDebtsQuery = Credit::with('client', 'company', 'branch')
             ->whereIn('status', ['active', 'partial'])
             ->whereDate('granted_date', '<=', today()->toDateString())
             ->whereRaw('total_amount > paid_amount')
-            ->whereHas('company', fn($query) => $query->whereNotIn(DB::raw('UPPER(name)'), self::EXCLUDED_COMPANIES_FROM_TRACKING))
+            ->whereHas('company', function($query) {
+                $query->whereNotIn(DB::raw('UPPER(name)'), ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO']);
+            })
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
             ->orderByDesc('due_date')
             ->orderByDesc('id');
