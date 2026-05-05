@@ -36,4 +36,21 @@ class DailyClosing extends Model
     {
         return $this->belongsTo(Branch::class);
     }
+
+    /**
+     * Suma un gasto al cierre de caja del día y sucursal dados.
+     */
+    public static function addExpense($branchId, $amount, $description = null)
+    {
+        $date = now()->toDateString();
+        $closing = self::firstOrCreate([
+            'branch_id' => $branchId,
+            'closing_date' => $date,
+        ]);
+        $closing->total_expenses += $amount;
+        $closing->save();
+        // Aquí podrías guardar el detalle del gasto si tienes tabla de detalles
+        // Ejemplo: DailyClosingExpense::create([...])
+        return $closing;
+    }
 }

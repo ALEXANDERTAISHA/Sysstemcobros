@@ -110,6 +110,9 @@ Route::middleware('auth')->group(function () {
         Route::put('other-incomes/{otherIncome}', [OtherIncomeController::class, 'update'])->name('other-incomes.update');
         Route::delete('other-incomes/{otherIncome}', [OtherIncomeController::class, 'destroy'])->name('other-incomes.destroy');
 
+        // Cobro vía ZELLE
+        Route::post('other-incomes/collect-debit-zelle', [OtherIncomeController::class, 'collectDebitZelle'])->name('other-incomes.collect-debit-zelle');
+
         // AJAX tabla transferencias especiales
         Route::get('other-incomes/special-transfers', [OtherIncomeController::class, 'specialTransfersTable'])->name('other-incomes.special-transfers');
 

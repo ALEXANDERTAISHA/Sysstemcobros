@@ -195,6 +195,66 @@ class OtherIncomeController extends Controller
         return redirect()->route('other-incomes.index', ['date' => $date])->with('success', 'Ingreso eliminado.');
     }
 
+    /**
+     * Cobro de débito vía ZELLE (premium)
+     */
+    public function collectDebitZelle(Request $request)
+    {
+        $data = $request->validate([
+            'credit_id' => 'required|exists:credits,id',
+            'payment_date' => 'required|date',
+            'amount' => 'required|numeric|min:0.01',
+        ]);
+
+        $credit = Credit::with('client')->findOrFail($data['credit_id']);
+        BranchContext::abortIfForbidden($credit->branch_id);
+        $remaining = (float) $credit->balance;
+
+        if ($remaining <= 0) {
+            return back()->withErrors(['amount' => 'Este débito ya no tiene saldo pendiente.']);
+        }
+
+        if ((float) $data['amount'] > $remaining) {
+            return back()->withErrors(['amount' => 'El cobro no puede superar el saldo pendiente de $' . number_format($remaining, 2)]);
+        }
+
+        DB::transaction(function () use ($credit, $data) {
+            // Marcar crédito como pagado
+            $credit->update([
+                'paid_amount' => $credit->total_amount,
+                'status' => 'paid',
+            ]);
+
+            // Crear ingreso en Transferencias Especiales (empresa: TRANSFERENCIA ZELLE)
+            $company = \App\Models\Company::firstOrCreate([
+                'name' => 'TRANSFERENCIA ZELLE'
+            ], [
+                'is_active' => true
+            ]);
+            $otherIncome = OtherIncome::create([
+                'income_date' => $data['payment_date'],
+                'description' => 'Cobro vía ZELLE: ' . $credit->concept,
+                'amount' => $data['amount'],
+                'client_id' => $credit->client_id,
+                'branch_id' => $credit->branch_id,
+                'credit_id' => $credit->id,
+                'notes' => 'Cobro realizado vía ZELLE desde seguimiento de débitos.',
+            ]);
+            // Asociar a la empresa especial
+            $credit->company_id = $company->id;
+            $credit->save();
+
+            // Registrar en cierre de caja (Total Gastos / Débitos)
+            \App\Models\DailyClosing::addExpense($credit->branch_id, $data['amount'], 'Cobro vía ZELLE: ' . $credit->concept);
+        });
+
+        // Aquí podrías agregar lógica para registrar en cierre de caja si tienes ese modelo
+        // Ejemplo:
+        // DailyClosing::addExpense($credit->branch_id, $data['amount'], 'Cobro vía ZELLE');
+
+        return redirect()->route('other-incomes.index')->with('success', 'Cobro vía ZELLE registrado correctamente. El débito fue movido a Transferencias Especiales y registrado en caja.');
+    }
+
     public function collectDebit(Request $request)
     {
         $data = $request->validate([
