@@ -477,7 +477,7 @@ class OtherIncomeController extends Controller
     }
 
     /**
-     * Cobro total de débitos de un cliente vía ZELLE (premium)
+     * Cobro total de débitos de un cliente vía ZELLE (premium, corregido)
      */
     public function collectClientDebtsZelle(Request $request)
     {
@@ -512,11 +512,12 @@ class OtherIncomeController extends Controller
             foreach ($pendingDebts as $credit) {
                 $amount = $credit->balance;
                 $total += $amount;
-                $credit->update([
-                    'paid_amount' => $credit->total_amount,
-                    'status' => 'paid',
-                    'company_id' => $company->id,
-                ]);
+                // Marcar crédito como pagado y asociar empresa
+                $credit->paid_amount = $credit->total_amount;
+                $credit->status = 'paid';
+                $credit->company_id = $company->id;
+                $credit->save();
+                // Crear ingreso en Transferencias Especiales
                 \App\Models\OtherIncome::create([
                     'income_date' => $date,
                     'description' => 'Cobro vía ZELLE: ' . $credit->concept,
