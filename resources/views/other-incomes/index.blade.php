@@ -120,7 +120,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form method="GET" id="specialTransfersFilterForm" class="mb-3">
+                        <form method="GET" id="specialTransfersFilterForm" class="mb-3" autocomplete="off">
                             <div class="form-row align-items-end">
                                 <div class="col-md-3 mb-2">
                                     <label>Fecha inicio</label>
@@ -139,31 +139,33 @@
                                 </div>
                             </div>
                         </form>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover table-sm mb-0">
-                                <thead class="thead-dark">
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Empresa</th>
-                                        <th>Cliente</th>
-                                        <th>Descripción</th>
-                                        <th class="text-right">Monto</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($specialTransfers as $st)
-                                    <tr>
-                                        <td>{{ $st->income_date->format('d/m/Y') }}</td>
-                                        <td>{{ $st->credit?->company?->name ?? '-' }}</td>
-                                        <td>{{ $st->client?->name ?? '-' }}</td>
-                                        <td>{{ $st->description }}</td>
-                                        <td class="text-right">${{ number_format($st->amount, 2) }}</td>
-                                    </tr>
-                                    @empty
-                                    <tr><td colspan="5" class="text-center text-muted">Sin resultados.</td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                        <div id="specialTransfersTableWrapper">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover table-sm mb-0">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Empresa</th>
+                                            <th>Cliente</th>
+                                            <th>Descripción</th>
+                                            <th class="text-right">Monto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($specialTransfers as $st)
+                                        <tr>
+                                            <td>{{ $st->income_date->format('d/m/Y') }}</td>
+                                            <td>{{ $st->credit?->company?->name ?? '-' }}</td>
+                                            <td>{{ $st->client?->name ?? '-' }}</td>
+                                            <td>{{ $st->description }}</td>
+                                            <td class="text-right">${{ number_format($st->amount, 2) }}</td>
+                                        </tr>
+                                        @empty
+                                        <tr><td colspan="5" class="text-center text-muted">Sin resultados.</td></tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -178,6 +180,27 @@
                 $('#specialTransfersModal').modal('show');
             });
         }
+
+        // AJAX para filtrar transferencias especiales sin cerrar el modal
+        $('#specialTransfersFilterForm').on('submit', function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            var url = window.location.pathname + '/special-transfers';
+            var data = $form.serialize();
+            // Mostrar loading opcional
+            $('#specialTransfersTableWrapper').html('<div class="text-center py-3">Cargando...</div>');
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: data,
+                success: function(response) {
+                    $('#specialTransfersTableWrapper').html(response);
+                },
+                error: function() {
+                    $('#specialTransfersTableWrapper').html('<div class="text-danger text-center py-3">Error al filtrar. Intente de nuevo.</div>');
+                }
+            });
+        });
     });
 </script>
 @endpush
