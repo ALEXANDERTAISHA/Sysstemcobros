@@ -113,6 +113,9 @@ Route::middleware('auth')->group(function () {
         // Cobro vía ZELLE
         Route::post('other-incomes/collect-debit-zelle', [OtherIncomeController::class, 'collectDebitZelle'])->name('other-incomes.collect-debit-zelle');
 
+        // Cobro total cliente vía ZELLE
+        Route::post('other-incomes/collect-client-debts-zelle', [OtherIncomeController::class, 'collectClientDebtsZelle'])->name('other-incomes.collect-client-debts-zelle');
+
         // AJAX tabla transferencias especiales
         Route::get('other-incomes/special-transfers', [OtherIncomeController::class, 'specialTransfersTable'])->name('other-incomes.special-transfers');
 

@@ -40,6 +40,13 @@
                             <i class="fas fa-coins mr-1"></i> Cobrar Total Cliente
                         </button>
                     </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-primary" id="collect_client_debts_zelle_btn"
+                            onclick="collectClientDebtsViaZelle()"
+                            {{ empty($clientSearch) || (($clientDebtBreakdown['total'] ?? 0) <= 0) ? 'disabled' : '' }}>
+                            <i class="fas fa-university mr-1"></i> Cobrar Total vía ZELLE
+                        </button>
+                    </div>
 
                     @if(!empty($clientSearch))
                         <div class="col-12 mt-2">
@@ -681,6 +688,45 @@
                 payment_date.name = 'payment_date';
                 payment_date.value = (new Date()).toISOString().slice(0,10);
                 form.appendChild(payment_date);
+                var zelle = document.createElement('input');
+                zelle.type = 'hidden';
+                zelle.name = 'via_zelle';
+                zelle.value = '1';
+                form.appendChild(zelle);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function collectClientDebtsViaZelle() {
+            if(confirm('¿Desea cobrar TODO lo pendiente y vencido del cliente buscado vía ZELLE y pasarlo a Transferencias Especiales?')) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route('other-incomes.collect-client-debts-zelle') }}';
+                form.style.display = 'none';
+                var csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = '_token';
+                csrf.value = '{{ csrf_token() }}';
+                form.appendChild(csrf);
+                var date = document.createElement('input');
+                date.type = 'hidden';
+                date.name = 'date';
+                date.value = document.getElementById('collect_date').value;
+                form.appendChild(date);
+                var client_search = document.createElement('input');
+                client_search.type = 'hidden';
+                client_search.name = 'client_search';
+                client_search.value = document.getElementById('collect_client_search').value;
+                form.appendChild(client_search);
+                var branch_id = document.getElementById('collect_branch_id');
+                if(branch_id) {
+                    var branch = document.createElement('input');
+                    branch.type = 'hidden';
+                    branch.name = 'branch_id';
+                    branch.value = branch_id.value;
+                    form.appendChild(branch);
+                }
                 var zelle = document.createElement('input');
                 zelle.type = 'hidden';
                 zelle.name = 'via_zelle';
