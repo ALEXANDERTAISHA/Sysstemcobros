@@ -8,14 +8,6 @@
         <div class="col-12">
             <form method="GET" class="w-100" id="other_income_filters_form">
                 <div class="form-row align-items-end">
-                    <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-                        <label class="mb-1">Fecha inicio:</label>
-                        <input type="date" name="date_start" class="form-control" value="{{ request('date_start', $dateStart ?? '') }}">
-                    </div>
-                    <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-                        <label class="mb-1">Fecha fin:</label>
-                        <input type="date" name="date_end" class="form-control" value="{{ request('date_end', $dateEnd ?? '') }}">
-                    </div>
                     <div class="col-md-4 col-sm-6 mb-2 mb-md-0">
                         <label class="mb-1">Cliente/Empresa (opcional)</label>
                         <input type="text" name="client_search" id="client_search_input" class="form-control"
@@ -287,8 +279,8 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <button class="btn btn-lg btn-success px-4 py-2 font-weight-bold"
-                                            style="font-size:1.1em;"
+                                        <button class="btn btn-success px-3 py-1 font-weight-bold"
+                                            style="font-size:1em;"
                                             onclick="openCollectModal({{ $debt->id }}, '{{ addslashes($debt->client->name) }}', '{{ addslashes($debt->concept) }}', {{ $debt->balance }})">
                                             <i class="fas fa-dollar-sign mr-1"></i>Cobrar
                                         </button>
