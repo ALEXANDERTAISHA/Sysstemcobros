@@ -42,7 +42,7 @@
                     </div>
                     <div class="col-auto">
                         <button type="button" class="btn btn-primary" id="collect_client_debts_zelle_btn"
-                            onclick="collectClientDebtsViaZelle()"
+                            onclick="collectClientDebtsViaZelle(this)"
                             {{ empty($clientSearch) || (($clientDebtBreakdown['total'] ?? 0) <= 0) ? 'disabled' : '' }}>
                             <i class="fas fa-university mr-1"></i> Cobrar Total vía ZELLE
                         </button>
@@ -698,7 +698,8 @@
             }
         }
 
-        function collectClientDebtsViaZelle() {
+        function collectClientDebtsViaZelle(btn) {
+            if(btn) btn.disabled = true;
             if(confirm('¿Desea cobrar TODO lo pendiente y vencido del cliente buscado vía ZELLE y pasarlo a Transferencias Especiales?')) {
                 var form = document.createElement('form');
                 form.method = 'POST';
@@ -734,6 +735,8 @@
                 form.appendChild(zelle);
                 document.body.appendChild(form);
                 form.submit();
+            } else {
+                if(btn) btn.disabled = false;
             }
         }
     </script>
