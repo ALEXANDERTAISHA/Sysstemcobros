@@ -287,7 +287,8 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <button class="btn btn-xs btn-success"
+                                        <button class="btn btn-lg btn-success px-4 py-2 font-weight-bold"
+                                            style="font-size:1.1em;"
                                             onclick="openCollectModal({{ $debt->id }}, '{{ addslashes($debt->client->name) }}', '{{ addslashes($debt->concept) }}', {{ $debt->balance }})">
                                             <i class="fas fa-dollar-sign mr-1"></i>Cobrar
                                         </button>
