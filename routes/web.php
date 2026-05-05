@@ -119,6 +119,9 @@ Route::middleware('auth')->group(function () {
         // AJAX tabla transferencias especiales
         Route::get('other-incomes/special-transfers', [OtherIncomeController::class, 'specialTransfersTable'])->name('other-incomes.special-transfers');
 
+        // AJAX premium: recarga de tablas y totales tras cobro vía ZELLE
+        Route::get('other-incomes/ajax-refresh-tables', [OtherIncomeController::class, 'ajaxRefreshTables'])->name('other-incomes.ajax-refresh-tables');
+
         // Cierre de caja
         Route::get('daily-closings', [DailyClosingController::class, 'index'])->name('daily-closings.index');
         Route::get('daily-closings/create', [DailyClosingController::class, 'create'])->name('daily-closings.create');

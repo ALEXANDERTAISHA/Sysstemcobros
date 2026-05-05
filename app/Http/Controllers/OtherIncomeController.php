@@ -717,4 +717,71 @@ class OtherIncomeController extends Controller
             'total' => number_format($specialTransfersTotal, 2)
         ]);
     }
+
+    /**
+     * AJAX: Recarga premium de tablas y totales tras cobro vía ZELLE
+     */
+    public function ajaxRefreshTables(Request $request)
+    {
+        $date = $request->get('date', today()->toDateString());
+        $clientSearch = trim((string) $request->get('client_search', ''));
+        $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
+
+        // Reutilizar queries del index
+        $pendingDebtsQuery = Credit::with('client', 'company', 'branch')
+            ->whereIn('status', ['active', 'partial'])
+            ->whereDate('granted_date', '<=', today()->toDateString())
+            ->whereRaw('total_amount > paid_amount')
+            ->whereHas('company', fn($query) => $query->whereNotIn(DB::raw('UPPER(name)'), self::EXCLUDED_COMPANIES_FROM_TRACKING))
+            ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
+            ->orderByDesc('due_date')
+            ->orderByDesc('id');
+        if (BranchContext::isPrivileged() && $branchId) {
+            $pendingDebtsQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($pendingDebtsQuery);
+        }
+        if ($clientSearch !== '' && mb_strlen($clientSearch) >= 2) {
+            $pendingDebtsQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
+        }
+        $pendingDebts = $pendingDebtsQuery->get();
+        $pendingDebtTotal = $pendingDebts->sum(fn($credit) => $credit->balance);
+
+        $specialCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
+        $specialTransfersQuery = OtherIncome::with('client', 'credit.company')
+            ->where(function($query) use ($specialCompanies) {
+                // Si tiene credit_id, filtrar por empresa especial
+                $query->whereHas('credit.company', function($q) use ($specialCompanies) {
+                    $q->where(function($sub) use ($specialCompanies) {
+                        foreach ($specialCompanies as $company) {
+                            $sub->orWhere(DB::raw('UPPER(name)'), 'LIKE', '%' . mb_strtoupper($company) . '%');
+                        }
+                    });
+                });
+                // O si no tiene credit_id, filtrar por descripción
+                $query->orWhere(function($sub) use ($specialCompanies) {
+                    foreach ($specialCompanies as $company) {
+                        $sub->orWhere(DB::raw('UPPER(description)'), 'LIKE', '%' . mb_strtoupper($company) . '%');
+                    }
+                });
+            });
+        $specialTransfersQuery->whereDate('income_date', $date);
+        if (BranchContext::isPrivileged() && $branchId) {
+            $specialTransfersQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($specialTransfersQuery);
+        }
+        $specialTransfers = $specialTransfersQuery->orderByDesc('income_date')->orderByDesc('id')->get();
+        $specialTransfersTotal = $specialTransfers->sum('amount');
+
+        $pendingDebitsHtml = view('other-incomes.partials.pending-debits-table', compact('pendingDebts'))->render();
+        $specialTransfersHtml = view('other-incomes.partials.special-transfers-table', compact('specialTransfers'))->render();
+
+        return response()->json([
+            'pendingDebitsHtml' => $pendingDebitsHtml,
+            'pendingDebtTotal' => number_format($pendingDebtTotal, 2),
+            'specialTransfersHtml' => $specialTransfersHtml,
+            'specialTransfersTotal' => number_format($specialTransfersTotal, 2),
+        ]);
+    }
 }

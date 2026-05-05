@@ -701,40 +701,49 @@
         function collectClientDebtsViaZelle(btn) {
             if(btn) btn.disabled = true;
             if(confirm('¿Desea cobrar TODO lo pendiente y vencido del cliente buscado vía ZELLE y pasarlo a Transferencias Especiales?')) {
-                var form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '{{ route('other-incomes.collect-client-debts-zelle') }}';
-                form.style.display = 'none';
-                var csrf = document.createElement('input');
-                csrf.type = 'hidden';
-                csrf.name = '_token';
-                csrf.value = '{{ csrf_token() }}';
-                form.appendChild(csrf);
-                var date = document.createElement('input');
-                date.type = 'hidden';
-                date.name = 'date';
-                date.value = document.getElementById('collect_date').value;
-                form.appendChild(date);
-                var client_search = document.createElement('input');
-                client_search.type = 'hidden';
-                client_search.name = 'client_search';
-                client_search.value = document.getElementById('collect_client_search').value;
-                form.appendChild(client_search);
-                var branch_id = document.getElementById('collect_branch_id');
-                if(branch_id) {
-                    var branch = document.createElement('input');
-                    branch.type = 'hidden';
-                    branch.name = 'branch_id';
-                    branch.value = branch_id.value;
-                    form.appendChild(branch);
-                }
-                var zelle = document.createElement('input');
-                zelle.type = 'hidden';
-                zelle.name = 'via_zelle';
-                zelle.value = '1';
-                form.appendChild(zelle);
-                document.body.appendChild(form);
-                form.submit();
+                // AJAX premium
+                $.ajax({
+                    url: '{{ route('other-incomes.collect-client-debts-zelle') }}',
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        date: document.getElementById('collect_date').value,
+                        client_search: document.getElementById('collect_client_search').value,
+                        branch_id: document.getElementById('collect_branch_id') ? document.getElementById('collect_branch_id').value : undefined,
+                        via_zelle: 1
+                    },
+                    success: function(response) {
+                        // Recargar tablas y totales premium
+                        $.get('{{ route('other-incomes.ajax-refresh-tables') }}', {
+                            date: document.getElementById('collect_date').value,
+                            client_search: document.getElementById('collect_client_search').value,
+                            branch_id: document.getElementById('collect_branch_id') ? document.getElementById('collect_branch_id').value : undefined
+                        }, function(data) {
+                            $('#pending_debts_tbody').replaceWith(data.pendingDebitsHtml);
+                            $('#specialTransfersTableWrapper').html(data.specialTransfersHtml);
+                            $('#specialTransfersTotalValue').text(data.specialTransfersTotal);
+                            $(".badge-warning:contains('Total por cobrar')").text('Total por cobrar: $' + data.pendingDebtTotal);
+                            // Mensaje premium
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Cobro vía ZELLE realizado',
+                                text: 'Los débitos fueron movidos a Transferencias Especiales y registrados en caja.',
+                                timer: 2500,
+                                showConfirmButton: false
+                            });
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: xhr.responseJSON?.message || 'Ocurrió un error al cobrar vía ZELLE.'
+                        });
+                    },
+                    complete: function() {
+                        if(btn) btn.disabled = false;
+                    }
+                });
             } else {
                 if(btn) btn.disabled = false;
             }
