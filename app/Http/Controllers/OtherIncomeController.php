@@ -541,4 +541,59 @@ class OtherIncomeController extends Controller
         return redirect()->route('other-incomes.index')
             ->with('success', $msg);
     }
+
+    /**
+     * AJAX: Tabla de transferencias especiales filtradas
+     */
+    public function specialTransfersTable(Request $request)
+    {
+        $dateStart = $request->get('date_start');
+        $dateEnd = $request->get('date_end');
+        $specialSearch = trim((string) $request->get('special_search', ''));
+        $date = $request->get('date', today()->toDateString());
+        $branchId = \App\Support\BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : \App\Support\BranchContext::branchId();
+
+        $specialCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
+        $specialTransfersQuery = \App\Models\OtherIncome::with('client', 'credit.company')
+            ->where(function($query) use ($specialCompanies) {
+                // Si tiene credit_id, filtrar por empresa especial
+                $query->whereHas('credit.company', function($q) use ($specialCompanies) {
+                    $q->where(function($sub) use ($specialCompanies) {
+                        foreach ($specialCompanies as $company) {
+                            $sub->orWhere(DB::raw('UPPER(name)'), 'LIKE', '%' . mb_strtoupper($company) . '%');
+                        }
+                    });
+                });
+                // O si no tiene credit_id, filtrar por descripción
+                $query->orWhere(function($sub) use ($specialCompanies) {
+                    foreach ($specialCompanies as $company) {
+                        $sub->orWhere(DB::raw('UPPER(description)'), 'LIKE', '%' . mb_strtoupper($company) . '%');
+                    }
+                });
+            });
+        if ($dateStart && $dateEnd) {
+            $specialTransfersQuery->whereBetween('income_date', [$dateStart, $dateEnd]);
+        } else {
+            $specialTransfersQuery->whereDate('income_date', $date);
+        }
+        if ($specialSearch !== '') {
+            $specialTransfersQuery->where(function($query) use ($specialSearch) {
+                $like = '%' . $specialSearch . '%';
+                $query->orWhereHas('client', function($q) use ($like) {
+                    $q->where('name', 'like', $like);
+                });
+                $query->orWhereHas('credit.company', function($q) use ($like) {
+                    $q->where('name', 'like', $like);
+                });
+                $query->orWhere('description', 'like', $like);
+            });
+        }
+        if (\App\Support\BranchContext::isPrivileged() && $branchId) {
+            $specialTransfersQuery->where('branch_id', $branchId);
+        } else {
+            \App\Support\BranchContext::scope($specialTransfersQuery);
+        }
+        $specialTransfers = $specialTransfersQuery->orderByDesc('income_date')->orderByDesc('id')->get();
+        return view('other-incomes.partials.special-transfers-table', compact('specialTransfers'));
+    }
 }

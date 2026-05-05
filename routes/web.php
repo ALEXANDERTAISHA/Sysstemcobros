@@ -110,6 +110,9 @@ Route::middleware('auth')->group(function () {
         Route::put('other-incomes/{otherIncome}', [OtherIncomeController::class, 'update'])->name('other-incomes.update');
         Route::delete('other-incomes/{otherIncome}', [OtherIncomeController::class, 'destroy'])->name('other-incomes.destroy');
 
+        // AJAX tabla transferencias especiales
+        Route::get('other-incomes/special-transfers', [OtherIncomeController::class, 'specialTransfersTable'])->name('other-incomes.special-transfers');
+
         // Cierre de caja
         Route::get('daily-closings', [DailyClosingController::class, 'index'])->name('daily-closings.index');
         Route::get('daily-closings/create', [DailyClosingController::class, 'create'])->name('daily-closings.create');
