@@ -240,7 +240,6 @@ class OtherIncomeController extends Controller
                 'client_id' => $credit->client_id,
                 'branch_id' => $credit->branch_id,
                 'credit_id' => $credit->id,
-                'company_name' => $company->name,
                 'notes' => 'Cobro realizado vía ZELLE desde seguimiento de débitos.',
             ]);
             // Asociar a la empresa especial
@@ -529,7 +528,6 @@ class OtherIncomeController extends Controller
                     'client_id' => $credit->client_id,
                     'branch_id' => $credit->branch_id,
                     'credit_id' => $credit->id,
-                    'company_name' => $company->name,
                     'notes' => 'Cobro total vía ZELLE desde seguimiento de débitos.',
                 ]);
             }

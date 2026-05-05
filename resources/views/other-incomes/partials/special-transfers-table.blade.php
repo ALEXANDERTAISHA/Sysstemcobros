@@ -13,7 +13,7 @@
             @forelse($specialTransfers as $st)
             <tr>
                 <td>{{ $st->income_date->format('d/m/Y') }}</td>
-                <td>{{ $st->credit?->company?->name ?? $st->company_name ?? '-' }}</td>
+                <td>{{ $st->credit?->company?->name ?? '-' }}</td>
                 <td>{{ $st->client?->name ?? '-' }}</td>
                 <td>{{ $st->description }}</td>
                 <td class="text-right">${{ number_format($st->amount, 2) }}</td>

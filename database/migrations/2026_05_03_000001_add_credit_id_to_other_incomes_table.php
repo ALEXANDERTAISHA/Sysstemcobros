@@ -9,9 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('other_incomes', function (Blueprint $table) {
-            if (!Schema::hasColumn('other_incomes', 'credit_id')) {
-                $table->foreignId('credit_id')->nullable()->after('client_id')->constrained('credits')->onDelete('set null');
-            }
+            $table->foreignId('credit_id')->nullable()->after('client_id')->constrained('credits')->onDelete('set null');
         });
     }
 

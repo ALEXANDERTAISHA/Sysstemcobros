@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OtherIncome extends Model
 {
-    protected $fillable = ['income_date', 'description', 'amount', 'client_id', 'branch_id', 'credit_id', 'company_name', 'notes'];
+    protected $fillable = ['income_date', 'description', 'amount', 'client_id', 'branch_id', 'credit_id', 'notes'];
 
     protected $casts = [
         'amount'      => 'decimal:2',
