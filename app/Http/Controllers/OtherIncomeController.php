@@ -543,7 +543,7 @@ class OtherIncomeController extends Controller
     }
 
     /**
-     * AJAX: Tabla de transferencias especiales filtradas
+     * AJAX: Tabla de transferencias especiales filtradas (con total)
      */
     public function specialTransfersTable(Request $request)
     {
@@ -594,6 +594,10 @@ class OtherIncomeController extends Controller
             \App\Support\BranchContext::scope($specialTransfersQuery);
         }
         $specialTransfers = $specialTransfersQuery->orderByDesc('income_date')->orderByDesc('id')->get();
-        return view('other-incomes.partials.special-transfers-table', compact('specialTransfers'));
+        $specialTransfersTotal = $specialTransfers->sum('amount');
+        return response()->json([
+            'html' => view('other-incomes.partials.special-transfers-table', compact('specialTransfers'))->render(),
+            'total' => number_format($specialTransfersTotal, 2)
+        ]);
     }
 }

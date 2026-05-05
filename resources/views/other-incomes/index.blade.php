@@ -134,8 +134,11 @@
                                     <label>Buscar por nombre</label>
                                     <input type="text" name="special_search" class="form-control" value="{{ request('special_search', $specialSearch ?? '') }}" placeholder="Cliente, empresa o descripción">
                                 </div>
-                                <div class="col-auto mb-2">
-                                    <button type="submit" class="btn btn-primary"><i class="fas fa-search mr-1"></i> Filtrar</button>
+                                <div class="col-auto mb-2 d-flex align-items-center">
+                                    <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-search mr-1"></i> Filtrar</button>
+                                    <div id="specialTransfersTotalCard" class="card bg-info text-white mb-0" style="min-width: 140px; min-height: 38px; display: flex; align-items: center; justify-content: center; font-size: 1.1em;">
+                                        <span>Total: $<span id="specialTransfersTotalValue">{{ number_format($specialTransfersTotal ?? 0, 2) }}</span></span>
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -192,12 +195,15 @@
             $.ajax({
                 url: url,
                 type: 'GET',
+                dataType: 'json',
                 data: data,
                 success: function(response) {
-                    $('#specialTransfersTableWrapper').html(response);
+                    $('#specialTransfersTableWrapper').html(response.html);
+                    $('#specialTransfersTotalValue').text(response.total);
                 },
                 error: function() {
                     $('#specialTransfersTableWrapper').html('<div class="text-danger text-center py-3">Error al filtrar. Intente de nuevo.</div>');
+                    $('#specialTransfersTotalValue').text('0.00');
                 }
             });
         });
