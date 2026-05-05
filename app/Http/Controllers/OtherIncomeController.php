@@ -519,6 +519,7 @@ class OtherIncomeController extends Controller
                 $credit->status = 'paid';
                 $credit->company_id = $company->id;
                 $credit->save();
+                $credit->refresh(); // <--- Refrescar la relación
                 // Crear ingreso en Transferencias Especiales
                 \App\Models\OtherIncome::create([
                     'income_date' => $date,
