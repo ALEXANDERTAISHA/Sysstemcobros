@@ -36,13 +36,17 @@ class DashboardController extends Controller
         $debits = $this->financialSummary->debitEntries($date, $date, $branchId);
         $otherIncomes = $this->financialSummary->otherIncomeEntries($date, $date, $branchId);
 
-        $cashBoxInitialTotal = (float) \App\Models\CashBoxInitial::whereDate('date', $date)
-            ->when(BranchContext::isPrivileged() && $branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->sum('initial_amount');
+        $cashBoxInitialQuery = CashBoxInitial::whereDate('date', $date);
+        if (BranchContext::isPrivileged() && $branchId) {
+            $cashBoxInitialQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($cashBoxInitialQuery);
+        }
+        $cashBoxInitialTotal = (float) $cashBoxInitialQuery->sum('initial_amount');
 
         $totalIncomes = $summary['total_incomes'];
         $totalExpenses = $summary['total_expenses'];
-        $totalOtherIncomes = $summary['total_other_incomes'] + $cashBoxInitialTotal;
+        $totalOtherIncomes = $summary['total_other_incomes'];
         $valueTotal = $summary['value_total'];
         $sumTotal = $valueTotal + $totalOtherIncomes;
 

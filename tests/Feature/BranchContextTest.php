@@ -3,7 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Branch;
+use App\Models\CashBoxInitial;
+use App\Models\Client;
 use App\Models\Company;
+use App\Models\Credit;
+use App\Models\OtherIncome;
 use App\Models\Transfer;
 use App\Models\User;
 use App\Support\BranchContext;
@@ -109,5 +113,58 @@ class BranchContextTest extends TestCase
         $this->assertTrue(BranchContext::isPrivileged());
         $this->assertSame(2, BranchContext::scope(Transfer::query())->count());
         $this->assertSame(300.0, (float) BranchContext::scope(Transfer::query())->sum('amount'));
+    }
+
+    public function test_dashboard_does_not_mix_other_income_or_cash_box_between_branches(): void
+    {
+        $ownBranch = Branch::create([
+            'name' => 'Maluvariedades',
+            'code' => 'MALU',
+            'is_active' => true,
+        ]);
+        $otherBranch = Branch::create([
+            'name' => 'Otra Sucursal',
+            'code' => 'OTHER',
+            'is_active' => true,
+        ]);
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'branch_id' => $ownBranch->id,
+        ]);
+        $client = Client::create([
+            'name' => 'Cliente Otra Sucursal',
+            'is_active' => true,
+        ]);
+        $credit = Credit::create([
+            'branch_id' => $otherBranch->id,
+            'client_id' => $client->id,
+            'concept' => 'Fiado anterior',
+            'total_amount' => 55,
+            'paid_amount' => 55,
+            'granted_date' => '2026-05-06',
+            'status' => 'paid',
+        ]);
+
+        CashBoxInitial::create([
+            'branch_id' => $otherBranch->id,
+            'date' => '2026-05-07',
+            'initial_amount' => 3002,
+            'notes' => 'Caja de otra sucursal',
+        ]);
+        OtherIncome::create([
+            'branch_id' => $otherBranch->id,
+            'income_date' => '2026-05-07',
+            'description' => 'Cobro otra sucursal',
+            'amount' => 55,
+            'client_id' => $client->id,
+            'credit_id' => $credit->id,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('dashboard', ['date' => '2026-05-07']));
+
+        $response->assertOk();
+        $this->assertSame(0.0, (float) $response->viewData('totalOtherIncomes'));
+        $this->assertSame(0.0, (float) $response->viewData('existingValue'));
+        $this->assertSame(0.0, (float) $response->viewData('sumTotal'));
     }
 }
