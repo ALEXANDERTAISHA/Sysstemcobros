@@ -28,12 +28,6 @@ class DailyClosingStoreTest extends TestCase
             'notes' => 'Caja inicial para habilitar operaciones en la prueba.',
         ]);
 
-        CashBoxInitial::create([
-            'date' => '2026-04-04',
-            'initial_amount' => 3002,
-            'notes' => 'Caja chica no debe contarse como otros ingresos.',
-        ]);
-
         $company = Company::create([
             'name' => 'VIAS AMERICAS TRANSFERENCIAS',
             'code' => 'VIA',

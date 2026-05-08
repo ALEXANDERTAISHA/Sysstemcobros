@@ -11,6 +11,7 @@ use App\Support\BranchContext;
 use App\Services\FinancialSummaryService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class ReportController extends Controller
@@ -140,6 +141,7 @@ class ReportController extends Controller
         );
 
         $cashBoxInitialTotal = $this->cashBoxInitialTotal($dateFrom, $dateTo, $branchId);
+        $summary['total_other_incomes'] = (float) $summary['total_other_incomes'] + $cashBoxInitialTotal;
         $summary['sum_total'] = (float) $summary['value_total'] + (float) $summary['total_other_incomes'];
         $summary['existing_value'] = $cashBoxInitialTotal;
         $summary['difference'] = (float) $summary['sum_total'] - $cashBoxInitialTotal;
@@ -153,6 +155,7 @@ class ReportController extends Controller
         $transfersByCompany = $this->financialSummary->transferBreakdownByCompany($dateFrom, $dateTo, $companyId, $branchId);
         $debits = $this->financialSummary->debitEntries($dateFrom, $dateTo, $branchId);
         $otherIncomes = $this->financialSummary->otherIncomeEntries($dateFrom, $dateTo, $branchId);
+        $cashBoxEntries = $this->cashBoxInitialEntries($dateFrom, $dateTo, $branchId);
         $sameDayPaidCreditIds = $otherIncomes
             ->filter(function ($income) {
                 return $income->credit
@@ -164,6 +167,8 @@ class ReportController extends Controller
             ->filter()
             ->unique()
             ->values();
+
+        $otherIncomes = $otherIncomes->concat($cashBoxEntries);
 
         $dailyClosingNotesQuery = DailyClosing::query()
             ->whereBetween('closing_date', [$dateFrom, $dateTo]);
@@ -229,6 +234,30 @@ class ReportController extends Controller
         }
 
         return (float) $query->sum('initial_amount');
+    }
+
+    private function cashBoxInitialEntries(string $dateFrom, string $dateTo, ?int $branchId): Collection
+    {
+        $query = CashBoxInitial::query()
+            ->whereBetween('date', [$dateFrom, $dateTo])
+            ->orderBy('date')
+            ->orderBy('id');
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $query->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($query);
+        }
+
+        return $query->get()->map(function (CashBoxInitial $entry) {
+            $note = trim((string) ($entry->notes ?? ''));
+
+            return (object) [
+                'amount' => (float) $entry->initial_amount,
+                'description' => 'Caja chica' . ($note !== '' ? ': ' . $note : ''),
+                'client' => null,
+            ];
+        });
     }
 
     private function dailyClosingAggregate(string $dateFrom, string $dateTo, ?int $branchId): ?array
