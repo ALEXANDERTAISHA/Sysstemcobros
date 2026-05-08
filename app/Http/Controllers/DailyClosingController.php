@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CashBoxInitial;
 use App\Models\Company;
 use App\Models\DailyClosing;
 use App\Models\Branch;
@@ -53,14 +52,12 @@ class DailyClosingController extends Controller
         $transferListDate = $request->get('transfer_list_date', today()->toDateString());
 
         $existing = BranchContext::scope(DailyClosing::whereDate('closing_date', $date))->first();
-        $cashBoxInitialTotal = (float) BranchContext::scope(CashBoxInitial::whereDate('date', $date))->sum('initial_amount');
         $companies = Company::where('is_active', true)
             ->ofType(Company::TYPE_GENERAL)
             ->orderByBusinessList()
             ->get();
 
-        // Caja chica tambien cuenta como parte de "Otros Ingresos (Fiados)" para el cierre del dia.
-        $otherTotal = (float) $summary['total_other_incomes'] + $cashBoxInitialTotal;
+        $otherTotal = (float) $summary['total_other_incomes'];
         $sumTotal = (float) $summary['value_total'] + $otherTotal;
 
         $transferQuery = Transfer::with('company', 'branch')
@@ -89,7 +86,6 @@ class DailyClosingController extends Controller
         return view('daily-closings.create', compact(
             'date',
             'existing',
-            'cashBoxInitialTotal',
             'companies',
             'transferSearch',
             'transferStatus',
@@ -121,11 +117,7 @@ class DailyClosingController extends Controller
             excludeSameDayCollectedDebits: true
         );
 
-        $cashBoxInitialTotal = (float) BranchContext::scope(
-            CashBoxInitial::whereDate('date', $data['closing_date'])
-        )->sum('initial_amount');
-
-        $otherIncomesTotal = (float) $summary['total_other_incomes'] + $cashBoxInitialTotal;
+        $otherIncomesTotal = (float) $summary['total_other_incomes'];
         $sumTotal = (float) $summary['value_total'] + $otherIncomesTotal;
 
         $difference = $sumTotal - (float) $data['existing_value'];
