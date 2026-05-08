@@ -25,7 +25,7 @@ class BranchContext
             return true;
         }
 
-        return in_array($user->role, ['super_admin', 'admin'], true);
+        return $user->role === 'super_admin';
     }
 
     public static function scope(Builder $query, string $column = 'branch_id'): Builder

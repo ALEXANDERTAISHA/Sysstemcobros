@@ -13,7 +13,7 @@
                 <i class="fas fa-calendar-day mr-1"></i> Cerrar Hoy
             </a>
         </div>
-        @if(auth()->user()->isAdmin())
+        @if(auth()->user()->isSuperAdmin())
             <div class="col-md-4">
                 <form method="GET" action="{{ route('daily-closings.index') }}" class="form-inline justify-content-md-end mt-2 mt-md-0">
                     <label class="mr-2 mb-0">Sucursal:</label>
@@ -40,7 +40,7 @@
                 <thead class="thead-dark">
                     <tr>
                         <th>Fecha</th>
-                        @if(auth()->user()->isAdmin())
+                        @if(auth()->user()->isSuperAdmin())
                             <th>Sucursal</th>
                         @endif
                         <th class="text-right">Ingresos</th>
@@ -57,7 +57,7 @@
                     @forelse($closings as $c)
                         <tr>
                             <td><strong>{{ $c->closing_date->format('d/m/Y') }}</strong></td>
-                            @if(auth()->user()->isAdmin())
+                            @if(auth()->user()->isSuperAdmin())
                                 <td>{{ $c->branch?->name ?? 'Sin sucursal' }}</td>
                             @endif
                             <td class="text-right text-success">${{ number_format($c->total_incomes, 2) }}</td>
@@ -86,7 +86,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ auth()->user()->isAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin cierres registrados</td>
+                            <td colspan="{{ auth()->user()->isSuperAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin cierres registrados</td>
                         </tr>
                     @endforelse
                 </tbody>

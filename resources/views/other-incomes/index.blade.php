@@ -14,7 +14,7 @@
                             placeholder="Escribe para buscar cliente o empresa..."
                             value="{{ $clientSearch ?? '' }}" autocomplete="off">
                     </div>
-                    @if(auth()->user()->isAdmin())
+                    @if(auth()->user()->isSuperAdmin())
                         <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
                             <label class="mb-1">Sucursal</label>
                             <select name="branch_id" class="form-control" id="branch_id_filter">
@@ -62,7 +62,7 @@
                 @csrf
                 <input type="hidden" name="date" id="collect_date" value="{{ $date }}">
                 <input type="hidden" name="client_search" id="collect_client_search" value="{{ $clientSearch ?? '' }}">
-                @if(auth()->user()->isAdmin())
+                @if(auth()->user()->isSuperAdmin())
                     <input type="hidden" name="branch_id" id="collect_branch_id" value="{{ $branchId }}">
                 @endif
             </form>
@@ -219,7 +219,7 @@
                         <span class="badge badge-warning mr-2">Total por cobrar: ${{ number_format($pendingDebtTotal, 2) }}</span>
                         <form action="{{ route('other-incomes.send-overdue-reminders') }}" method="POST" class="mb-0">
                             @csrf
-                            @if(auth()->user()->isAdmin())
+                            @if(auth()->user()->isSuperAdmin())
                                 <input type="hidden" name="branch_id" value="{{ $branchId }}">
                             @endif
                             <button type="submit" class="btn btn-sm btn-danger"
@@ -236,7 +236,7 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th>Fecha</th>
-                                @if(auth()->user()->isAdmin())
+                                @if(auth()->user()->isSuperAdmin())
                                     <th>Sucursal</th>
                                 @endif
                                 <th>Cliente</th>
@@ -256,11 +256,11 @@
                                 @endphp
                                 <tr class="filterable-pending-row{{ $isOverdue ? ' table-danger' : '' }}">
                                     <td>{{ $debt->granted_date?->format('d/m/Y') ?? '-' }}</td>
-                                    @if(auth()->user()->isAdmin())
+                                    @if(auth()->user()->isSuperAdmin())
                                         <td>{{ $debt->branch?->name ?? 'Sin sucursal' }}</td>
                                     @endif
                                     <td>
-                                            @if(auth()->user()->isAdmin())
+                                            @if(auth()->user()->isSuperAdmin())
                                                 <a href="{{ route('clients.show', $debt->client) }}">{{ $debt->client->name }}</a>
                                             @else
                                                 {{ $debt->client->name }}
@@ -300,11 +300,11 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
+                                    <td colspan="{{ auth()->user()->isSuperAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
                                 </tr>
                             @endforelse
                             <tr id="pending_debts_no_results" style="display: none;">
-                                <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin resultados en débitos pendientes.</td>
+                                <td colspan="{{ auth()->user()->isSuperAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin resultados en débitos pendientes.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -326,7 +326,7 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th>Fecha</th>
-                                @if(auth()->user()->isAdmin())
+                                @if(auth()->user()->isSuperAdmin())
                                     <th>Sucursal</th>
                                 @endif
                                 <th>Cliente Fiado</th>
@@ -353,7 +353,7 @@
                                             <span class="badge badge-warning ml-1">Hoy</span>
                                         @endif
                                     </td>
-                                    @if(auth()->user()->isAdmin())
+                                    @if(auth()->user()->isSuperAdmin())
                                         <td>{{ $income->branch?->name ?? 'Sin sucursal' }}</td>
                                     @endif
                                     <td>{{ $income->client?->name ?? '-' }}</td>
@@ -390,17 +390,17 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->user()->isAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin ingresos para esta fecha</td>
+                                    <td colspan="{{ auth()->user()->isSuperAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin ingresos para esta fecha</td>
                                 </tr>
                             @endforelse
                             <tr id="incomes_no_results" style="display: none;">
-                                <td colspan="{{ auth()->user()->isAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin resultados en ingresos del día.</td>
+                                <td colspan="{{ auth()->user()->isSuperAdmin() ? '10' : '9' }}" class="text-center text-muted py-4">Sin resultados en ingresos del día.</td>
                             </tr>
                         </tbody>
                         @if ($incomes->count() > 0)
                             <tfoot>
                                 <tr class="table-info">
-                                    <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}"><strong>TOTAL OTROS INGRESOS</strong></td>
+                                    <td colspan="{{ auth()->user()->isSuperAdmin() ? '9' : '8' }}"><strong>TOTAL OTROS INGRESOS</strong></td>
                                     <td class="text-right"><strong>${{ number_format($total, 2) }}</strong></td>
                                 </tr>
                             </tfoot>

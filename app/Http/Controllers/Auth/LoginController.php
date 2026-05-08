@@ -39,7 +39,7 @@ class LoginController extends Controller
                 ])->onlyInput('email');
             }
 
-            if (!$user->isAdmin() && !$user->branch_id) {
+            if (!$user->isSuperAdmin() && !$user->branch_id) {
                 Auth::logout();
                 return back()->withErrors([
                     'email' => 'Tu usuario no tiene sucursal asignada. Contacta al administrador.',

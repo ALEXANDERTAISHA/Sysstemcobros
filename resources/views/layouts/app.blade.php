@@ -366,7 +366,7 @@
                     <span class="brand-text">SystemCobros</span>
                     <span class="brand-branch-text">
                         Sucursal:
-                        {{ auth()->user()->isAdmin() ? 'Vista Global' : auth()->user()->branch?->name ?? 'Sin sucursal' }}
+                        {{ auth()->user()->isSuperAdmin() ? 'Vista Global' : auth()->user()->branch?->name ?? 'Sin sucursal' }}
                     </span>
                 </span>
             </a>
@@ -394,7 +394,7 @@
 
                         @php
                             $initialCashQuery = \App\Models\CashBoxInitial::whereDate('date', today()->toDateString());
-                            if (!auth()->user()->isAdmin()) {
+                            if (!auth()->user()->isSuperAdmin()) {
                                 $initialCashQuery->where('branch_id', auth()->user()->branch_id);
                             }
                             $hasTodayInitialCash = $initialCashQuery->exists();

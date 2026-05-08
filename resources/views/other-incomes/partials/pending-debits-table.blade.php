@@ -6,11 +6,11 @@
     @endphp
     <tr class="filterable-pending-row{{ $isOverdue ? ' table-danger' : '' }}">
         <td>{{ $debt->granted_date?->format('d/m/Y') ?? '-' }}</td>
-        @if(auth()->user()->isAdmin())
+        @if(auth()->user()->isSuperAdmin())
             <td>{{ $debt->branch?->name ?? 'Sin sucursal' }}</td>
         @endif
         <td>
-            @if(auth()->user()->isAdmin())
+            @if(auth()->user()->isSuperAdmin())
                 <a href="{{ route('clients.show', $debt->client) }}">{{ $debt->client->name }}</a>
             @else
                 {{ $debt->client->name }}
@@ -50,10 +50,10 @@
     </tr>
 @empty
     <tr>
-        <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
+        <td colspan="{{ auth()->user()->isSuperAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin débitos pendientes para seguimiento</td>
     </tr>
 @endforelse
 <tr id="pending_debts_no_results" style="display: none;">
-    <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin resultados en débitos pendientes.</td>
+    <td colspan="{{ auth()->user()->isSuperAdmin() ? '9' : '8' }}" class="text-center text-muted py-4">Sin resultados en débitos pendientes.</td>
 </tr>
 </tbody>

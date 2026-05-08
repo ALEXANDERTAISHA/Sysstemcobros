@@ -4,7 +4,7 @@
 @section('breadcrumb')<li class="breadcrumb-item active">Dinero Inicial Caja Chica</li>@endsection
 
 @section('content')
-    @if(auth()->user()->isAdmin())
+    @if(auth()->user()->isSuperAdmin())
         <div class="row mb-3">
             <div class="col-md-12">
                 <form method="GET" action="{{ route('cash-box-initial.index') }}" class="form-inline justify-content-md-end">
@@ -113,7 +113,7 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th>Fecha</th>
-                                @if(auth()->user()->isAdmin())
+                                @if(auth()->user()->isSuperAdmin())
                                     <th>Sucursal</th>
                                 @endif
                                 <th class="text-right">Monto ($)</th>
@@ -130,7 +130,7 @@
                                             <span class="badge badge-info ml-1">Hoy</span>
                                         @endif
                                     </td>
-                                    @if(auth()->user()->isAdmin())
+                                    @if(auth()->user()->isSuperAdmin())
                                         <td>{{ $record->branch?->name ?? 'Sin sucursal' }}</td>
                                     @endif
                                     <td class="text-right text-success font-weight-bold">
@@ -164,7 +164,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ auth()->user()->isAdmin() ? '5' : '4' }}" class="text-center text-muted py-4">Sin registros de dinero inicial
+                                    <td colspan="{{ auth()->user()->isSuperAdmin() ? '5' : '4' }}" class="text-center text-muted py-4">Sin registros de dinero inicial
                                     </td>
                                 </tr>
                             @endforelse

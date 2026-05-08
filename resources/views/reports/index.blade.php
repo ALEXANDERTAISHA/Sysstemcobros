@@ -33,7 +33,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        @if(auth()->user()->isAdmin())
+                        @if(auth()->user()->isSuperAdmin())
                             <div class="form-group col-md-2">
                                 <label>Sucursal</label>
                                 <select name="branch_id" class="form-control">
@@ -124,7 +124,7 @@
                             <td>{{ $transfer->company?->name ?? '-' }}</td>
                             <td>
                                 {{ $transfer->branch?->name ?? $transfer->sender_name }}
-                                @if(auth()->user()->isAdmin() && $transfer->branch?->name)
+                                @if(auth()->user()->isSuperAdmin() && $transfer->branch?->name)
                                     <small class="text-muted d-block">{{ $transfer->sender_name }}</small>
                                 @endif
                             </td>

@@ -74,7 +74,7 @@
                 <div class="col-md-5 mb-2 mb-md-0">
                     <input type="date" name="date" class="form-control" value="{{ $date }}">
                 </div>
-                @if(auth()->user()->isAdmin())
+                @if(auth()->user()->isSuperAdmin())
                     <div class="col-md-5 mb-2 mb-md-0">
                         <select name="branch_id" class="form-control">
                             <option value="">Todas las sucursales</option>
