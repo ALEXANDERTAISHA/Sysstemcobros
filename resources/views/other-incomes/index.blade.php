@@ -286,14 +286,20 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <button class="btn btn-success px-3 py-1 font-weight-bold"
+                                        <button type="button" class="btn btn-success px-3 py-1 font-weight-bold js-collect-debit"
                                             style="font-size:1em;"
-                                            onclick="openCollectModal({{ $debt->id }}, '{{ addslashes($debt->client->name) }}', '{{ addslashes($debt->concept) }}', {{ $debt->balance }})">
+                                            data-credit-id="{{ $debt->id }}"
+                                            data-client-name="{{ $debt->client->name }}"
+                                            data-concept="{{ $debt->concept }}"
+                                            data-balance="{{ number_format($debt->balance, 2, '.', '') }}">
                                             <i class="fas fa-dollar-sign mr-1"></i>Cobrar
                                         </button>
-                                        <button class="btn btn-primary px-3 py-1 font-weight-bold ml-2"
+                                        <button type="button" class="btn btn-primary px-3 py-1 font-weight-bold ml-2 js-collect-zelle"
                                             style="font-size:1em;"
-                                            onclick="openCollectZelleModal({{ $debt->id }}, '{{ addslashes($debt->client->name) }}', '{{ addslashes($debt->concept) }}', {{ $debt->balance }})">
+                                            data-credit-id="{{ $debt->id }}"
+                                            data-client-name="{{ $debt->client->name }}"
+                                            data-concept="{{ $debt->concept }}"
+                                            data-balance="{{ number_format($debt->balance, 2, '.', '') }}">
                                             <i class="fas fa-university mr-1"></i>Cobrar vía ZELLE
                                         </button>
                                     </td>
@@ -732,6 +738,42 @@
                 document.body.appendChild(form);
                 form.submit();
             }
+        }
+
+        function readCollectButtonData(button) {
+            return {
+                creditId: button.dataset.creditId,
+                clientName: button.dataset.clientName || '',
+                concept: button.dataset.concept || '',
+                balance: Number(button.dataset.balance || 0)
+            };
+        }
+
+        document.addEventListener('click', function(event) {
+            const collectButton = event.target.closest('.js-collect-debit');
+            if (collectButton) {
+                event.preventDefault();
+                const data = readCollectButtonData(collectButton);
+                openCollectModal(data.creditId, data.clientName, data.concept, data.balance);
+                return;
+            }
+
+            const zelleButton = event.target.closest('.js-collect-zelle');
+            if (zelleButton) {
+                event.preventDefault();
+                const data = readCollectButtonData(zelleButton);
+                openCollectZelleModal(data.creditId, data.clientName, data.concept, data.balance);
+            }
+        });
+
+        const collectDebitForm = document.getElementById('collect_debit_form');
+        if (collectDebitForm) {
+            collectDebitForm.addEventListener('submit', function() {
+                const amountInput = document.getElementById('collect_amount');
+                if (amountInput) {
+                    amountInput.value = amountInput.value.replace(',', '.');
+                }
+            });
         }
 
         function collectClientDebtsViaZelle(btn) {

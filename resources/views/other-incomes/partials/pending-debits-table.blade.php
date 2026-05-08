@@ -36,14 +36,20 @@
             </span>
         </td>
         <td class="text-center">
-            <button class="btn btn-success px-3 py-1 font-weight-bold"
+            <button type="button" class="btn btn-success px-3 py-1 font-weight-bold js-collect-debit"
                 style="font-size:1em;"
-                onclick="openCollectModal({{ $debt->id }}, '{{ addslashes($debt->client->name) }}', '{{ addslashes($debt->concept) }}', {{ $debt->balance }})">
+                data-credit-id="{{ $debt->id }}"
+                data-client-name="{{ $debt->client->name }}"
+                data-concept="{{ $debt->concept }}"
+                data-balance="{{ number_format($debt->balance, 2, '.', '') }}">
                 <i class="fas fa-dollar-sign mr-1"></i>Cobrar
             </button>
-            <button class="btn btn-primary px-3 py-1 font-weight-bold ml-2"
+            <button type="button" class="btn btn-primary px-3 py-1 font-weight-bold ml-2 js-collect-zelle"
                 style="font-size:1em;"
-                onclick="openCollectZelleModal({{ $debt->id }}, '{{ addslashes($debt->client->name) }}', '{{ addslashes($debt->concept) }}', {{ $debt->balance }})">
+                data-credit-id="{{ $debt->id }}"
+                data-client-name="{{ $debt->client->name }}"
+                data-concept="{{ $debt->concept }}"
+                data-balance="{{ number_format($debt->balance, 2, '.', '') }}">
                 <i class="fas fa-university mr-1"></i>Cobrar vía ZELLE
             </button>
         </td>
