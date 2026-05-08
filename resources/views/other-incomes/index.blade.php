@@ -704,40 +704,6 @@
             document.getElementById('collect_amount').max = Number(balance).toFixed(2);
             document.getElementById('collect_balance_label').textContent = '$' + Number(balance).toFixed(2);
             $('#collectDebitModal').modal('show');
-            return;
-            if(false && confirm('¿Desea cobrar este débito vía ZELLE?\\nCliente: ' + clientName + '\\nConcepto: ' + concept + '\\nMonto: $' + balance.toFixed(2))) {
-                var form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '{{ route('other-incomes.collect-debit-zelle') }}';
-                form.style.display = 'none';
-                var csrf = document.createElement('input');
-                csrf.type = 'hidden';
-                csrf.name = '_token';
-                csrf.value = '{{ csrf_token() }}';
-                form.appendChild(csrf);
-                var credit = document.createElement('input');
-                credit.type = 'hidden';
-                credit.name = 'credit_id';
-                credit.value = creditId;
-                form.appendChild(credit);
-                var amount = document.createElement('input');
-                amount.type = 'hidden';
-                amount.name = 'amount';
-                amount.value = balance;
-                form.appendChild(amount);
-                var payment_date = document.createElement('input');
-                payment_date.type = 'hidden';
-                payment_date.name = 'payment_date';
-                payment_date.value = (new Date()).toISOString().slice(0,10);
-                form.appendChild(payment_date);
-                var zelle = document.createElement('input');
-                zelle.type = 'hidden';
-                zelle.name = 'via_zelle';
-                zelle.value = '1';
-                form.appendChild(zelle);
-                document.body.appendChild(form);
-                form.submit();
-            }
         }
 
         function readCollectButtonData(button) {
