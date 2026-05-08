@@ -460,11 +460,11 @@
     <div class="modal fade" id="collectDebitModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header bg-success">
+                <div class="modal-header bg-success" id="collect_modal_header">
                     <h5 class="modal-title">Registrar Cobro de Débito</h5>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
-                <form method="POST" action="{{ route('other-incomes.collect-debit') }}">
+                <form method="POST" action="{{ route('other-incomes.collect-debit') }}" id="collect_debit_form">
                     @csrf
                     <input type="hidden" name="credit_id" id="collect_credit_id">
                     <div class="modal-body">
@@ -474,7 +474,7 @@
                         </div>
                         <div class="form-group">
                             <label>Fecha de cobro *</label>
-                            <input type="date" name="payment_date" class="form-control" value="{{ $date }}" required>
+                            <input type="date" name="payment_date" id="collect_payment_date" class="form-control" value="{{ $date }}" required>
                         </div>
                         <div class="form-group">
                             <label>Monto cobrado ($) *</label>
@@ -484,12 +484,12 @@
                         </div>
                         <div class="form-group mb-0">
                             <label>Notas</label>
-                            <input type="text" name="notes" class="form-control"
+                            <input type="text" name="notes" id="collect_notes" class="form-control"
                                 placeholder="Ej: pago parcial en caja">
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-success"><i class="fas fa-save mr-1"></i> Registrar cobro</button>
+                        <button type="submit" class="btn btn-success" id="collect_submit_btn"><i class="fas fa-save mr-1"></i> Registrar cobro</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     </div>
                 </form>
@@ -653,6 +653,20 @@
         }
 
         function openCollectModal(creditId, clientName, concept, balance) {
+            const form = document.getElementById('collect_debit_form');
+            const header = document.getElementById('collect_modal_header');
+            const submitBtn = document.getElementById('collect_submit_btn');
+            const notes = document.getElementById('collect_notes');
+
+            form.action = '{{ route('other-incomes.collect-debit') }}';
+            header.classList.remove('bg-primary');
+            header.classList.add('bg-success');
+            submitBtn.classList.remove('btn-primary');
+            submitBtn.classList.add('btn-success');
+            header.querySelector('.modal-title').textContent = 'Registrar Cobro de Debito';
+            notes.placeholder = 'Ej: pago parcial en caja';
+            notes.value = '';
+
             document.getElementById('collect_credit_id').value = creditId;
             document.getElementById('collect_client_name').textContent = clientName;
             document.getElementById('collect_credit_concept').textContent = concept;
@@ -663,7 +677,29 @@
         }
 
         function openCollectZelleModal(creditId, clientName, concept, balance) {
-            if(confirm('¿Desea cobrar este débito vía ZELLE?\\nCliente: ' + clientName + '\\nConcepto: ' + concept + '\\nMonto: $' + balance.toFixed(2))) {
+            const form = document.getElementById('collect_debit_form');
+            const header = document.getElementById('collect_modal_header');
+            const submitBtn = document.getElementById('collect_submit_btn');
+            const notes = document.getElementById('collect_notes');
+
+            form.action = '{{ route('other-incomes.collect-debit-zelle') }}';
+            header.classList.remove('bg-success');
+            header.classList.add('bg-primary');
+            submitBtn.classList.remove('btn-success');
+            submitBtn.classList.add('btn-primary');
+            header.querySelector('.modal-title').textContent = 'Registrar Cobro via ZELLE';
+            notes.placeholder = 'Ej: pago parcial via ZELLE';
+            notes.value = '';
+
+            document.getElementById('collect_credit_id').value = creditId;
+            document.getElementById('collect_client_name').textContent = clientName;
+            document.getElementById('collect_credit_concept').textContent = concept;
+            document.getElementById('collect_amount').value = Number(balance).toFixed(2);
+            document.getElementById('collect_amount').max = Number(balance).toFixed(2);
+            document.getElementById('collect_balance_label').textContent = '$' + Number(balance).toFixed(2);
+            $('#collectDebitModal').modal('show');
+            return;
+            if(false && confirm('¿Desea cobrar este débito vía ZELLE?\\nCliente: ' + clientName + '\\nConcepto: ' + concept + '\\nMonto: $' + balance.toFixed(2))) {
                 var form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '{{ route('other-incomes.collect-debit-zelle') }}';

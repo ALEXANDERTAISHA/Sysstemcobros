@@ -111,7 +111,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('other-incomes/{otherIncome}', [OtherIncomeController::class, 'destroy'])->name('other-incomes.destroy');
 
         // Cobro vía ZELLE
-        Route::post('other-incomes/collect-debit-zelle', [OtherIncomeController::class, 'collectDebitZelle'])->name('other-incomes.collect-debit-zelle');
+        Route::post('other-incomes/collect-debit-zelle', [OtherIncomeController::class, 'collectDebitZelleInline'])->name('other-incomes.collect-debit-zelle');
 
         // Cobro total cliente vía ZELLE
         Route::post('other-incomes/collect-client-debts-zelle', [OtherIncomeController::class, 'collectClientDebtsZellePremium'])->name('other-incomes.collect-client-debts-zelle');

@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\DB;
 
 class FinancialSummaryService
 {
+    private const SPECIAL_TRANSFER_COMPANIES = [
+        'TRANSFERENCIA ZELLE',
+        'ZELLE',
+        'GASTOS TIENDA',
+        'GIRO REENVIADO',
+    ];
+
     private const INCOME_TRANSFER_COMPANIES = [
         'VIAS AMERICAS TRANSFERENCIAS',
         'V. AMERICA',
@@ -59,6 +66,8 @@ class FinancialSummaryService
             ->whereDate('income_date', '>=', $dateFrom)
             ->whereDate('income_date', '<=', $dateTo);
 
+        $this->excludeSpecialTransferIncomes($query);
+
         return $this->scopeByBranch($query, $branchId);
     }
 
@@ -81,6 +90,7 @@ class FinancialSummaryService
                 ->whereDate('income_date', '>=', $dateFrom)
                 ->whereDate('income_date', '<=', $dateTo)
                 ->whereHas('credit', fn(Builder $q) => $q->whereDate('granted_date', '<', $dateFrom))
+                ->tap(fn(Builder $q) => $this->excludeSpecialTransferIncomes($q))
                 ->tap(fn($q) => $this->scopeByBranch($q, $branchId))
             : $this->otherIncomeQuery($dateFrom, $dateTo, $branchId);
 
@@ -145,9 +155,29 @@ class FinancialSummaryService
         )->get(['id', 'total_amount']);
 
         return (float) $credits->sum(function (Credit $credit): float {
-            $sameDayCollected = (float) $credit->payments->sum('amount');
+            $sameDayCollected = (float) $credit->payments
+                ->reject(fn($payment) => $this->isZellePaymentNote($payment->notes))
+                ->sum('amount');
             return max((float) $credit->total_amount - $sameDayCollected, 0);
         });
+    }
+
+    private function excludeSpecialTransferIncomes(Builder $query): Builder
+    {
+        return $query
+            ->whereDoesntHave('credit.company', function (Builder $companyQuery) {
+                $companyQuery->whereIn(DB::raw('UPPER(name)'), self::SPECIAL_TRANSFER_COMPANIES);
+            })
+            ->where(function (Builder $descriptionQuery) {
+                foreach (self::SPECIAL_TRANSFER_COMPANIES as $companyName) {
+                    $descriptionQuery->where(DB::raw('UPPER(description)'), 'NOT LIKE', '%' . $companyName . '%');
+                }
+            });
+    }
+
+    private function isZellePaymentNote(?string $note): bool
+    {
+        return str_contains(mb_strtoupper((string) $note), 'ZELLE');
     }
 
     public function transferBreakdownByCompany(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null): Collection
