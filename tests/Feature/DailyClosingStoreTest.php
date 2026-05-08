@@ -29,10 +29,19 @@ class DailyClosingStoreTest extends TestCase
         ]);
 
         $company = Company::create([
-            'name' => 'VIAS AMERICAS TRANSFERENCIAS',
+            'name' => 'V. AMERICA',
             'code' => 'VIA',
             'color' => '#123456',
             'is_active' => true,
+            'company_type' => Company::TYPE_GENERAL,
+        ]);
+
+        $expenseCompany = Company::create([
+            'name' => 'TRANSFERENCIA ZELLE',
+            'code' => 'ZELLE',
+            'color' => '#654321',
+            'is_active' => true,
+            'company_type' => Company::TYPE_EXPENSE_DEBIT,
         ]);
 
         $client = Client::create([
@@ -48,6 +57,15 @@ class DailyClosingStoreTest extends TestCase
             'sender_name' => 'Remitente',
             'receiver_name' => 'Destinatario',
             'amount' => 100,
+            'status' => 'sent',
+        ]);
+
+        Transfer::create([
+            'company_id' => $expenseCompany->id,
+            'transfer_date' => '2026-04-04',
+            'sender_name' => 'Remitente',
+            'receiver_name' => 'Destinatario',
+            'amount' => 40,
             'status' => 'sent',
         ]);
 
@@ -96,12 +114,12 @@ class DailyClosingStoreTest extends TestCase
 
         $this->assertSame('2026-04-04', $closing->closing_date->toDateString());
         $this->assertSame('100.00', $closing->total_incomes);
-        $this->assertSame('30.00', $closing->total_expenses);
-        $this->assertSame('70.00', $closing->value_total);
+        $this->assertSame('70.00', $closing->total_expenses);
+        $this->assertSame('30.00', $closing->value_total);
         $this->assertSame('20.00', $closing->other_incomes_total);
-        $this->assertSame('90.00', $closing->sum_total);
+        $this->assertSame('50.00', $closing->sum_total);
         $this->assertSame('10.00', $closing->existing_value);
-        $this->assertSame('80.00', $closing->difference);
-        $this->assertSame('80.00', $closing->final_total);
+        $this->assertSame('40.00', $closing->difference);
+        $this->assertSame('40.00', $closing->final_total);
     }
 }

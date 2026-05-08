@@ -15,11 +15,17 @@ class FinancialSummaryService
 {
     private const INCOME_TRANSFER_COMPANIES = [
         'VIAS AMERICAS TRANSFERENCIAS',
+        'V. AMERICA',
         'RIA TRANSFERENCIAS',
+        'RIA',
         'RIA SERVICIOS',
+        'PAGO SERVICIOS RIA',
         'WESTER UNION TRANSFERENCIAS',
+        'W. UNION',
         'LA NACIONAL TRANSFERENCIAS',
+        'LA NACIONAL',
         'PRODUCTOS DE LA TIENDA',
+        'PRODUCTOS DE TIENDA',
         'RECARGAS',
         'PAQUETERIA',
     ];
@@ -80,10 +86,10 @@ class FinancialSummaryService
 
         $transfers = (clone $transferQuery)->get();
         $transferIncomeTotal = (float) $transfers
-            ->filter(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company?->name))
+            ->filter(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company))
             ->sum('amount');
         $transferExpenseTotal = (float) $transfers
-            ->reject(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company?->name))
+            ->reject(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company))
             ->sum('amount');
 
         $totalIncomes = $transferIncomeTotal;
@@ -113,9 +119,17 @@ class FinancialSummaryService
         ];
     }
 
-    private function isIncomeTransferCompany(?string $companyName): bool
+    private function isIncomeTransferCompany(?Company $company): bool
     {
-        $normalized = mb_strtoupper(trim((string) $companyName));
+        if ($company?->company_type === Company::TYPE_GENERAL) {
+            return true;
+        }
+
+        if ($company?->company_type === Company::TYPE_EXPENSE_DEBIT) {
+            return false;
+        }
+
+        $normalized = mb_strtoupper(trim((string) $company?->name));
         return in_array($normalized, self::INCOME_TRANSFER_COMPANIES, true);
     }
 
@@ -140,7 +154,7 @@ class FinancialSummaryService
     {
         return $this->transferQuery($dateFrom, $dateTo, $companyId, $branchId)
             ->get()
-            ->filter(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company?->name))
+            ->filter(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company))
             ->groupBy(fn(Transfer $transfer) => $transfer->company_id)
             ->map(function (Collection $companyTransfers) {
                 /** @var Transfer $firstTransfer */
@@ -168,7 +182,7 @@ class FinancialSummaryService
 
         $transferDebits = $this->transferQuery($dateFrom, $dateTo, null, $branchId)
             ->get()
-            ->reject(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company?->name))
+            ->reject(fn(Transfer $transfer) => $this->isIncomeTransferCompany($transfer->company))
             ->map(function (Transfer $transfer) {
                 $receiverName = trim((string) ($transfer->receiver_name ?? ''));
                 $normalizedReceiverName = mb_strtoupper($receiverName);
