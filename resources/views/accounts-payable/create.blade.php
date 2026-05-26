@@ -1,17 +1,4 @@
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Autoguardado temporal en localStorage
-    const storageKey = 'accountsPayableDraft';
-    const companySelect = document.getElementById('company_select');
-    const totalAmountInput = document.getElementById('total_amount_input');
-    const conceptField = document.getElementById('concept_field');
-    // Cargar datos guardados
-    const draft = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    if (draft.client_id && clientSelect) clientSelect.value = draft.client_id;
-    if (draft.company_id && companySelect) companySelect.value = draft.company_id;
-    if (draft.total_amount && totalAmountInput) totalAmountInput.value = draft.total_amount;
-    if (draft.concept && conceptField) conceptField.value = draft.concept;
+// ...existing code...
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
