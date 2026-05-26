@@ -782,12 +782,7 @@
 
                 hideSection(grantedSection);
 
-                if (!hasAmount || !hasDue) {
-                    showSection(amountSection);
-                    return;
-                }
-
-                hideSection(amountSection);
+                showSection(amountSection);
             }
 
             clientSelect.addEventListener('change', function() {
