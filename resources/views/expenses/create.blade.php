@@ -248,13 +248,9 @@
                                 </button>
                                 <div class="quick-create-form" id="quick_client_form_wrap">
                                     <div class="form-row">
-                                        <div class="form-group col-md-6">
+                                        <div class="form-group col-md-12">
                                             <label>Nombre del cliente *</label>
                                             <input type="text" class="form-control" id="quick_client_name" autocapitalize="words">
-                                        </div>
-                                        <div class="form-group col-md-6">
-                                            <label>Telefono</label>
-                                            <input type="tel" class="form-control" id="quick_client_phone" inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel" placeholder="Solo numeros">
                                         </div>
                                     </div>
                                     <div class="form-row">
@@ -421,7 +417,6 @@
             const quickClientFormWrap = document.getElementById('quick_client_form_wrap');
             const quickClientSubmit = document.getElementById('quick_client_submit');
             const quickClientFeedback = document.getElementById('quick_client_feedback');
-            const quickClientPhoneInput = document.getElementById('quick_client_phone');
             const quickClientEmailInput = document.getElementById('quick_client_email');
             const quickClientWhatsappInput = document.getElementById('quick_client_whatsapp');
             const toggleQuickCompany = document.getElementById('toggle_quick_company');
@@ -495,12 +490,6 @@
                 });
             }
 
-            if (quickClientPhoneInput) {
-                quickClientPhoneInput.addEventListener('input', function() {
-                    this.value = onlyDigits(this.value);
-                });
-            }
-
             if (quickClientWhatsappInput) {
                 quickClientWhatsappInput.addEventListener('input', function() {
                     this.value = onlyDigits(this.value);
@@ -510,7 +499,6 @@
             quickClientSubmit.addEventListener('click', async function() {
                 try {
                     this.disabled = true;
-                    const cleanPhone = onlyDigits(document.getElementById('quick_client_phone').value);
                     const cleanWhatsapp = onlyDigits(document.getElementById('quick_client_whatsapp').value);
                     const emailValue = (document.getElementById('quick_client_email').value || '').trim();
 
@@ -520,14 +508,13 @@
 
                     const data = await postJson('{{ route('expenses.quick-client') }}', {
                         name: document.getElementById('quick_client_name').value,
-                        phone: cleanPhone,
                         email: emailValue,
                         whatsapp: cleanWhatsapp,
                         address: document.getElementById('quick_client_address').value,
                     });
 
                     const option = new Option(
-                        `${data.client.name}${data.client.phone ? ' (' + data.client.phone + ')' : ''}`,
+                        data.client.name,
                         data.client.id,
                         true,
                         true
@@ -535,7 +522,6 @@
                     option.dataset.company = '';
                     option.dataset.search = [
                         data.client.name,
-                        data.client.phone,
                         cleanWhatsapp,
                         emailValue,
                         document.getElementById('quick_client_address').value
