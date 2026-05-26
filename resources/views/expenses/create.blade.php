@@ -349,7 +349,7 @@
                             <div class="expense-step-title">Monto y Fecha Límite <span class="step-indicator">Paso 4</span></div>
                             <div class="expense-step-help">Ingresa el monto y confirma la fecha límite (automática a 7 días).</div>
                             <div class="form-row">
-                                <div class="form-group col-md-6 mb-0">
+                                <div class="form-group col-md-6">
                                     <label>Monto Total ($) *</label>
                                     <input type="number" id="total_amount_input" name="total_amount" step="0.01" min="0.01"
                                         class="form-control @error('total_amount') is-invalid @enderror"
@@ -358,7 +358,7 @@
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="form-group col-md-6 mb-0" id="due_date_group">
+                                <div class="form-group col-md-6" id="due_date_group">
                                     <label>Fecha Límite de Pago *</label>
                                     <input type="date" id="due_date_input" name="due_date"
                                         class="form-control @error('due_date') is-invalid @enderror"
@@ -368,9 +368,15 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="form-group mb-0">
+                                <label>Notas</label>
+                                <textarea name="notes" id="notes_input" class="form-control @error('notes') is-invalid @enderror"
+                                    rows="3" placeholder="Escribe una nota opcional">{{ old('notes') }}</textarea>
+                                @error('notes')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-
-                        <input type="hidden" name="notes" value="{{ old('notes') }}">
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Registrar Débito</button>
@@ -716,7 +722,7 @@
             }
 
             function isSpecialNoDueDateCompany() {
-                const specialCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
+                const specialCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO', 'PRODUCTOS DE LA TIENDA'];
                 return specialCompanies.includes(selectedText(companySelect).toUpperCase());
             }
 
