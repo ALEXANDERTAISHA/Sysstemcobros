@@ -1,6 +1,39 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Autoguardado temporal en localStorage
+    const storageKey = 'accountsPayableDraft';
+    const companySelect = document.getElementById('company_select');
+    const totalAmountInput = document.getElementById('total_amount_input');
+    const conceptField = document.getElementById('concept_field');
+    // Cargar datos guardados
+    const draft = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    if (draft.client_id && clientSelect) clientSelect.value = draft.client_id;
+    if (draft.company_id && companySelect) companySelect.value = draft.company_id;
+    if (draft.total_amount && totalAmountInput) totalAmountInput.value = draft.total_amount;
+    if (draft.concept && conceptField) conceptField.value = draft.concept;
+
+    // Guardar cambios
+    function saveDraft() {
+        localStorage.setItem(storageKey, JSON.stringify({
+            client_id: clientSelect ? clientSelect.value : '',
+            company_id: companySelect ? companySelect.value : '',
+            total_amount: totalAmountInput ? totalAmountInput.value : '',
+            concept: conceptField ? conceptField.value : ''
+        }));
+    }
+    if (clientSelect) clientSelect.addEventListener('change', saveDraft);
+    if (companySelect) companySelect.addEventListener('change', saveDraft);
+    if (totalAmountInput) totalAmountInput.addEventListener('input', saveDraft);
+    if (conceptField) conceptField.addEventListener('input', saveDraft);
+
+    // Limpiar draft al enviar
+    const form = document.querySelector('form[action*="accounts-payable.store"]');
+    if (form) {
+        form.addEventListener('submit', function() {
+            localStorage.removeItem(storageKey);
+        });
+    }
     const clientSelect = document.getElementById('client_select');
     const clientFilterInput = document.getElementById('client_filter_input');
     function normalizeClientSearch(value) {
@@ -129,9 +162,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
 
-                        <div id="client_section" class="form-group form-group-visible expense-step-card">
-                            <div class="expense-step-title">Cliente <span class="step-indicator">Paso 1</span></div>
-                            <div class="expense-step-help">Empieza seleccionando a quién pertenece esta cuenta por pagar.</div>
+                        <div class="form-group expense-step-card">
+                            <div class="expense-step-title">Cliente</div>
+                            <div class="expense-step-help">Selecciona el cliente de la cuenta por pagar.</div>
                             <label>Cliente *</label>
                             <div class="client-filter-wrap" id="client_filter_wrap">
                                 <input type="text" id="client_filter_input" class="form-control client-filter-input" placeholder="Buscar cliente por nombre o teléfono...">
@@ -146,9 +179,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             </select>
                             @error('client_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
-
-                        <div id="company_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Empresa <span class="step-indicator">Paso 2</span></div>
+                        <div class="form-group expense-step-card">
+                            <div class="expense-step-title">Empresa</div>
                             <div class="expense-step-help">Confirma la empresa asociada al cliente.</div>
                             <label>Empresa *</label>
                             <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror" size="{{ min(($companies->count() + 1), 8) }}">
@@ -161,21 +193,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             </select>
                             @error('company_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
-
-                        <div id="amount_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Monto y Concepto <span class="step-indicator">Paso 3</span></div>
-                            <div class="expense-step-help">Ingresa el monto y el concepto de la cuenta por pagar.</div>
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label>Monto Total ($) *</label>
-                                    <input type="number" id="total_amount_input" name="total_amount" step="0.01" min="0.01" class="form-control @error('total_amount') is-invalid @enderror" value="{{ old('total_amount') }}" required>
-                                    @error('total_amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label>Concepto *</label>
-                                    <input type="text" id="concept_field" name="concept" class="form-control @error('concept') is-invalid @enderror" value="{{ old('concept') }}" required>
-                                    @error('concept')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                                </div>
+                        <div class="form-row expense-step-card">
+                            <div class="form-group col-md-6">
+                                <label>Monto Total ($) *</label>
+                                <input type="number" id="total_amount_input" name="total_amount" step="0.01" min="0.01" class="form-control @error('total_amount') is-invalid @enderror" value="{{ old('total_amount') }}" required>
+                                @error('total_amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Concepto *</label>
+                                <input type="text" id="concept_field" name="concept" class="form-control @error('concept') is-invalid @enderror" value="{{ old('concept') }}" required>
+                                @error('concept')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     </div>
