@@ -534,10 +534,7 @@
                 return;
             }
 
-            const SERVER_SEARCH_DELAY = 650;
-            const CLEAR_SEARCH_DELAY = 250;
             let localFilterFrame;
-            let serverDebounceTimer;
             let lastServerSubmittedSignature = [
                 clientSearchInput.value.trim(),
                 dateInput ? dateInput.value : '',
@@ -631,31 +628,9 @@
                 filterForm.submit();
             }
 
-            function scheduleServerSearch(delay) {
-                window.clearTimeout(serverDebounceTimer);
-                serverDebounceTimer = window.setTimeout(function() {
-                    const search = clientSearchInput.value.trim();
-                    if (search.length === 0 || search.length >= 2) {
-                        submitToServer();
-                    } else {
-                        setSearchStatus(false);
-                    }
-                }, delay);
-            }
-
             clientSearchInput.addEventListener('input', function() {
-                const search = clientSearchInput.value.trim();
-
                 queueInstantFilter();
-
-                if (search.length === 1) {
-                    window.clearTimeout(serverDebounceTimer);
-                    setSearchStatus(false);
-                    return;
-                }
-
-                setSearchStatus(search.length >= 2);
-                scheduleServerSearch(search.length === 0 ? CLEAR_SEARCH_DELAY : SERVER_SEARCH_DELAY);
+                setSearchStatus(false);
             });
 
             // Enter: envío inmediato al servidor para búsqueda completa
@@ -665,7 +640,6 @@
                     if (localFilterFrame) {
                         window.cancelAnimationFrame(localFilterFrame);
                     }
-                    window.clearTimeout(serverDebounceTimer);
                     applyInstantTableFilter();
                     syncCollectForm();
                     updateClearButton();
@@ -693,11 +667,10 @@
                     if (localFilterFrame) {
                         window.cancelAnimationFrame(localFilterFrame);
                     }
-                    window.clearTimeout(serverDebounceTimer);
                     applyInstantTableFilter();
                     syncCollectForm();
                     updateClearButton();
-                    submitToServer(true);
+                    submitToServer();
                 });
             }
             // Cambios en fecha o sucursal: envío inmediato (sin debounce)
@@ -706,7 +679,6 @@
                     if (localFilterFrame) {
                         window.cancelAnimationFrame(localFilterFrame);
                     }
-                    window.clearTimeout(serverDebounceTimer);
                     applyInstantTableFilter();
                     syncCollectForm();
                     updateClearButton();
@@ -718,7 +690,6 @@
                     if (localFilterFrame) {
                         window.cancelAnimationFrame(localFilterFrame);
                     }
-                    window.clearTimeout(serverDebounceTimer);
                     applyInstantTableFilter();
                     syncCollectForm();
                     updateClearButton();
