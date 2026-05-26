@@ -7,6 +7,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\AccountPayableController;
 use App\Http\Controllers\OtherIncomeController;
 use App\Http\Controllers\DailyClosingController;
 use App\Http\Controllers\CashBoxInitialController;
@@ -90,6 +91,13 @@ Route::middleware('auth')->group(function () {
         Route::post('expenses/{credit}/payments', [ExpenseController::class, 'storePayment'])->name('expenses.payments.store');
         Route::post('expenses/{credit}/send-reminder', [ExpenseController::class, 'sendReminder'])->name('expenses.send-reminder');
         Route::delete('expenses/{credit}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+
+        Route::get('accounts-payable', [AccountPayableController::class, 'index'])->name('accounts-payable.index');
+        Route::get('accounts-payable/create', [AccountPayableController::class, 'create'])->name('accounts-payable.create');
+        Route::post('accounts-payable', [AccountPayableController::class, 'store'])->name('accounts-payable.store');
+        Route::get('accounts-payable/{accountPayable}', [AccountPayableController::class, 'show'])->name('accounts-payable.show');
+        Route::post('accounts-payable/{accountPayable}/payments', [AccountPayableController::class, 'storePayment'])->name('accounts-payable.payments.store');
+        Route::delete('accounts-payable/{accountPayable}', [AccountPayableController::class, 'destroy'])->name('accounts-payable.destroy');
 
         // Compatibilidad con rutas antiguas de fiados / créditos
         Route::get('credits', fn(\Illuminate\Http\Request $request) => redirect()->route('expenses.index', $request->query()))->name('credits.index');

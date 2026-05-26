@@ -381,6 +381,7 @@
                                 request()->routeIs('cash-box-initial.*') ||
                                 request()->routeIs('transfers.*') ||
                                 request()->routeIs('expenses.*') ||
+                                request()->routeIs('accounts-payable.*') ||
                                 request()->routeIs('other-incomes.*') ||
                                 request()->routeIs('daily-closings.*');
                             $adminOpen =
@@ -440,6 +441,16 @@
                                             aria-disabled="{{ $hasTodayInitialCash ? 'false' : 'true' }}">
                                             <i class="fas fa-minus-circle nav-icon"></i>
                                             <p>Gastos / Débitos</p>
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a href="{{ route('accounts-payable.index') }}"
+                                            class="nav-link {{ request()->routeIs('accounts-payable.*') ? 'active' : '' }} {{ $operationLockedClass }}"
+                                            title="{{ $operationLockedTitle }}"
+                                            aria-disabled="{{ $hasTodayInitialCash ? 'false' : 'true' }}">
+                                            <i class="fas fa-file-invoice-dollar nav-icon"></i>
+                                            <p>Cuentas por Pagar</p>
                                         </a>
                                     </li>
 
