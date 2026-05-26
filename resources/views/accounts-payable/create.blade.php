@@ -46,7 +46,7 @@
                         <div class="form-group">
                             <label>Concepto *</label>
                             <input type="text" name="concept" class="form-control @error('concept') is-invalid @enderror"
-                                value="{{ old('concept', 'Cuenta por pagar') }}" required>
+                                  value="{{ old('concept') }}" required>
                             @error('concept')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
 
