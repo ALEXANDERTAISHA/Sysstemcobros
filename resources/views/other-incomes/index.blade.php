@@ -264,7 +264,8 @@
                                     $isOverdue = $debt->due_date && $debt->due_date->isPast();
                                     $diffDays = $debt->due_date ? (int) now()->startOfDay()->diffInDays($debt->due_date->startOfDay(), false) : null;
                                 @endphp
-                                <tr class="filterable-pending-row{{ $isOverdue ? ' table-danger' : '' }}">
+                                <tr class="filterable-pending-row{{ $isOverdue ? ' table-danger' : '' }}"
+                                    data-search="{{ trim(collect([$debt->client?->name, $debt->client?->phone, $debt->client?->whatsapp, $debt->client?->email, $debt->client?->address])->filter()->implode(' ')) }}">
                                     <td>{{ $debt->granted_date?->format('d/m/Y') ?? '-' }}</td>
                                     @if(auth()->user()->isSuperAdmin())
                                         <td>{{ $debt->branch?->name ?? 'Sin sucursal' }}</td>
@@ -565,7 +566,6 @@
 
             function applyInstantTableFilter() {
                 const query = clientSearchInput.value.trim();
-                const queryLower = query.toLowerCase();
 
                 if (query.length === 0) {
                     // Reset: mostrar todos los débitos pendientes
@@ -577,13 +577,35 @@
                 // Filtrado local en tabla de DÉBITOS PENDIENTES y EMPRESAS
                 let visiblePending = 0;
                 pendingRows.forEach(function(row) {
-                    const matched = row.textContent.toLowerCase().includes(queryLower);
+                    const matched = clientSearchMatches(row.dataset.search || row.textContent, query);
                     row.style.display = matched ? '' : 'none';
                     if (matched) visiblePending++;
                 });
                 if (pendingNoResults) {
                     pendingNoResults.style.display = pendingRows.length > 0 && visiblePending === 0 ? '' : 'none';
                 }
+            }
+
+            function normalizeClientSearch(value) {
+                return (value || '')
+                    .toString()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toLowerCase();
+            }
+
+            function clientSearchMatches(searchableText, term) {
+                const tokens = normalizeClientSearch(term).split(' ').filter(Boolean);
+                if (tokens.length === 0) {
+                    return true;
+                }
+
+                const normalizedText = normalizeClientSearch(searchableText);
+                return tokens.every(function(token) {
+                    return normalizedText.includes(token);
+                });
             }
 
             function queueInstantFilter() {

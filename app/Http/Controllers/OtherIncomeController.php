@@ -116,7 +116,7 @@ class OtherIncomeController extends Controller
         if (!is_null($selectedClientId)) {
             $pendingDebtsQuery->where('client_id', $selectedClientId);
         } elseif ($clientSearch !== '' && mb_strlen($clientSearch) >= 2) {
-            $pendingDebtsQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
+            $this->applyClientSearchToCredits($pendingDebtsQuery, $clientSearch);
         }
         $pendingDebts = $pendingDebtsQuery->get();
         $pendingDebtTotal = $pendingDebts->sum(fn($credit) => $credit->balance);
@@ -389,10 +389,13 @@ class OtherIncomeController extends Controller
         $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
         $clientSearch = trim((string) $data['client_search']);
 
-        $matchedClients = Client::query()
-            ->where('name', 'like', "%{$clientSearch}%")
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        $matchedClientsQuery = Client::query();
+        $this->applyClientTokenSearch(
+            $matchedClientsQuery,
+            collect(preg_split('/\s+/', $clientSearch) ?: [])->filter()->values()
+        );
+
+        $matchedClients = $matchedClientsQuery->orderBy('name')->get(['id', 'name']);
 
         if ($matchedClients->isEmpty()) {
             return redirect()->route('other-incomes.index', [
@@ -519,7 +522,7 @@ class OtherIncomeController extends Controller
             BranchContext::scope($pendingDebtsQuery);
         }
         if (mb_strlen($clientSearch) >= 2) {
-            $pendingDebtsQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
+            $this->applyClientSearchToCredits($pendingDebtsQuery, $clientSearch);
         }
 
         $pendingDebts = $pendingDebtsQuery->get();
@@ -874,7 +877,7 @@ class OtherIncomeController extends Controller
             BranchContext::scope($pendingDebtsQuery);
         }
         if ($clientSearch !== '' && mb_strlen($clientSearch) >= 2) {
-            $pendingDebtsQuery->whereHas('client', fn($query) => $query->where('name', 'like', "%{$clientSearch}%"));
+            $this->applyClientSearchToCredits($pendingDebtsQuery, $clientSearch);
         }
         $pendingDebts = $pendingDebtsQuery->get();
         $pendingDebtTotal = $pendingDebts->sum(fn($credit) => $credit->balance);
@@ -915,5 +918,34 @@ class OtherIncomeController extends Controller
             'specialTransfersHtml' => $specialTransfersHtml,
             'specialTransfersTotal' => number_format($specialTransfersTotal, 2),
         ]);
+    }
+
+    private function applyClientSearchToCredits($creditsQuery, string $search): void
+    {
+        $tokens = collect(preg_split('/\s+/', trim($search)) ?: [])
+            ->filter()
+            ->values();
+
+        if ($tokens->isEmpty()) {
+            return;
+        }
+
+        $creditsQuery->whereHas('client', function ($clientQuery) use ($tokens) {
+            $this->applyClientTokenSearch($clientQuery, $tokens);
+        });
+    }
+
+    private function applyClientTokenSearch($clientQuery, $tokens): void
+    {
+        foreach ($tokens as $token) {
+            $like = '%' . $token . '%';
+            $clientQuery->where(function ($tokenQuery) use ($like) {
+                $tokenQuery->where('name', 'like', $like)
+                    ->orWhere('phone', 'like', $like)
+                    ->orWhere('whatsapp', 'like', $like)
+                    ->orWhere('email', 'like', $like)
+                    ->orWhere('address', 'like', $like);
+            });
+        }
     }
 }

@@ -82,6 +82,29 @@ class OtherIncomeZelleCollectionTest extends TestCase
         $this->assertSame(0.0, $summary['total_other_incomes']);
     }
 
+    public function test_other_income_pending_debts_search_matches_any_client_name_tokens(): void
+    {
+        [$branch, $company, $client, $user] = $this->baseData();
+        $client->update(['name' => 'Juan Carlos Perez Gomez', 'phone' => '5551234']);
+
+        Credit::create([
+            'branch_id' => $branch->id,
+            'client_id' => $client->id,
+            'company_id' => $company->id,
+            'concept' => 'Debito por cliente compuesto',
+            'total_amount' => 80,
+            'paid_amount' => 0,
+            'granted_date' => today()->toDateString(),
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('other-incomes.index', ['client_search' => 'Carlos Gomez']))
+            ->assertOk()
+            ->assertSee('Juan Carlos Perez Gomez')
+            ->assertSee('Debito por cliente compuesto');
+    }
+
     private function baseData(): array
     {
         $branch = Branch::create([

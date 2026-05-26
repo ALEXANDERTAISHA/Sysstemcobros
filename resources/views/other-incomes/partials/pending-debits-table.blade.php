@@ -4,7 +4,8 @@
         $isOverdue = $debt->due_date && $debt->due_date->isPast();
         $diffDays = $debt->due_date ? (int) now()->startOfDay()->diffInDays($debt->due_date->startOfDay(), false) : null;
     @endphp
-    <tr class="filterable-pending-row{{ $isOverdue ? ' table-danger' : '' }}">
+    <tr class="filterable-pending-row{{ $isOverdue ? ' table-danger' : '' }}"
+        data-search="{{ trim(collect([$debt->client?->name, $debt->client?->phone, $debt->client?->whatsapp, $debt->client?->email, $debt->client?->address])->filter()->implode(' ')) }}">
         <td>{{ $debt->granted_date?->format('d/m/Y') ?? '-' }}</td>
         @if(auth()->user()->isSuperAdmin())
             <td>{{ $debt->branch?->name ?? 'Sin sucursal' }}</td>
