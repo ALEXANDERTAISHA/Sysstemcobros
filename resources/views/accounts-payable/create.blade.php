@@ -6,9 +6,32 @@
     <li class="breadcrumb-item active">Nueva</li>
 @endsection
 
+
+@push('styles')
+    <style>
+        .form-group-hidden { opacity: 0; max-height: 0; overflow: hidden; pointer-events: none; transition: opacity 0.45s ease, max-height 0.45s ease, margin 0.45s ease; margin: 0; }
+        .form-group-visible { opacity: 1; max-height: 500px; pointer-events: auto; transition: opacity 0.45s ease, max-height 0.45s ease, margin 0.45s ease; margin-bottom: 1rem; }
+        .step-indicator { font-size: 0.85rem; color: #999; margin-top: 0.25rem; }
+        .form-group label::after { content: " "; }
+        .expense-flow-summary { display: grid; gap: 10px; margin-bottom: 1rem; }
+        .expense-flow-pill { display: none; align-items: center; justify-content: space-between; padding: 0.75rem 0.9rem; border-radius: 10px; background: #fff8e1; border: 1px solid #ffe08a; }
+        .expense-flow-pill.is-visible { display: flex; }
+        .expense-flow-pill-label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: #8a6d3b; }
+        .expense-flow-pill-value { display: block; color: #2f2f2f; font-weight: 600; }
+        .expense-flow-edit { border: 0; background: transparent; color: #856404; font-size: 0.85rem; font-weight: 600; }
+        .expense-step-card { border: 1px dashed #f1c40f; border-radius: 12px; background: linear-gradient(180deg, #fffdf6 0%, #ffffff 100%); padding: 1rem; }
+        .expense-step-title { margin-bottom: 0.35rem; font-size: 1rem; font-weight: 700; color: #6b4f00; }
+        .expense-step-help { margin-bottom: 0.9rem; color: #8c8c8c; font-size: 0.9rem; }
+        .client-filter-wrap { margin-bottom: .6rem; }
+        .client-filter-input { border-radius: 10px; border: 1px solid #ecd38a; background: #fffdf5; }
+        .client-filter-input:focus { border-color: #d6a800; box-shadow: 0 0 0 .15rem rgba(214, 168, 0, .15); }
+        #client_select option { white-space: pre; }
+    </style>
+@endpush
+
 @section('content')
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-7">
             <div class="card card-warning card-outline">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-file-invoice-dollar mr-1"></i> Registrar Cuenta por Pagar</h3>
@@ -16,51 +39,85 @@
                 <form method="POST" action="{{ route('accounts-payable.store') }}">
                     @csrf
                     <div class="card-body">
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label>Cliente *</label>
-                                <select name="client_id" class="form-control @error('client_id') is-invalid @enderror" required>
-                                    <option value="">Seleccionar cliente...</option>
-                                    @foreach($clients as $client)
-                                        <option value="{{ $client->id }}" {{ old('client_id', request('client_id')) == $client->id ? 'selected' : '' }}>
-                                            {{ $client->name }}{{ $client->phone ? ' (' . $client->phone . ')' : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('client_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        <div class="expense-flow-summary">
+                            <div class="expense-flow-pill" id="client_pill">
+                                <div>
+                                    <span class="expense-flow-pill-label">Cliente</span>
+                                    <span class="expense-flow-pill-value" id="client_pill_value"></span>
+                                </div>
+                                <button type="button" class="expense-flow-edit" data-edit-step="client">
+                                    <i class="fas fa-pen mr-1"></i>Editar
+                                </button>
                             </div>
-                            <div class="form-group col-md-6">
-                                <label>Empresa</label>
-                                <select name="company_id" class="form-control @error('company_id') is-invalid @enderror">
-                                    <option value="">Sin empresa...</option>
-                                    @foreach($companies as $company)
-                                        <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
-                                            {{ $company->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('company_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <div class="expense-flow-pill" id="company_pill">
+                                <div>
+                                    <span class="expense-flow-pill-label">Empresa</span>
+                                    <span class="expense-flow-pill-value" id="company_pill_value"></span>
+                                </div>
+                                <button type="button" class="expense-flow-edit" data-edit-step="company">
+                                    <i class="fas fa-pen mr-1"></i>Editar
+                                </button>
                             </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Concepto *</label>
-                            <input type="text" name="concept" class="form-control @error('concept') is-invalid @enderror"
-                                  value="{{ old('concept') }}" required>
-                            @error('concept')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group col-md-12">
-                                <label>Monto Total ($) *</label>
-                                <input type="number" name="total_amount" step="0.01" min="0.01"
-                                    class="form-control @error('total_amount') is-invalid @enderror"
-                                    value="{{ old('total_amount') }}" required>
-                                @error('total_amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <div class="expense-flow-pill" id="amount_pill">
+                                <div>
+                                    <span class="expense-flow-pill-label">Monto Total</span>
+                                    <span class="expense-flow-pill-value" id="amount_pill_value"></span>
+                                </div>
+                                <button type="button" class="expense-flow-edit" data-edit-step="amount">
+                                    <i class="fas fa-pen mr-1"></i>Editar
+                                </button>
                             </div>
                         </div>
 
-                            <!-- Notas field removed as requested -->
+                        <div id="client_section" class="form-group form-group-visible expense-step-card">
+                            <div class="expense-step-title">Cliente <span class="step-indicator">Paso 1</span></div>
+                            <div class="expense-step-help">Empieza seleccionando a quién pertenece esta cuenta por pagar.</div>
+                            <label>Cliente *</label>
+                            <div class="client-filter-wrap" id="client_filter_wrap">
+                                <input type="text" id="client_filter_input" class="form-control client-filter-input" placeholder="Buscar cliente por nombre o teléfono...">
+                            </div>
+                            <select id="client_select" name="client_id" class="form-control @error('client_id') is-invalid @enderror" required size="1">
+                                <option value="">Seleccionar cliente...</option>
+                                @foreach ($clients as $client)
+                                    <option value="{{ $client->id }}" data-company="{{ $client->company_id ?? '' }}" data-search="{{ trim(collect([$client->name, $client->phone, $client->whatsapp, $client->email, $client->address])->filter()->implode(' ')) }}" {{ old('client_id', request('client_id')) == $client->id ? 'selected' : '' }}>
+                                        {{ $client->name }}&nbsp;&nbsp;{{ $client->phone ? "({$client->phone})" : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('client_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div id="company_section" class="form-group form-group-hidden expense-step-card">
+                            <div class="expense-step-title">Empresa <span class="step-indicator">Paso 2</span></div>
+                            <div class="expense-step-help">Confirma la empresa asociada al cliente.</div>
+                            <label>Empresa *</label>
+                            <select id="company_select" name="company_id" class="form-control @error('company_id') is-invalid @enderror" size="{{ min(($companies->count() + 1), 8) }}">
+                                <option value="">Seleccionar empresa...</option>
+                                @foreach ($companies as $company)
+                                    <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                                        {{ $company->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('company_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div id="amount_section" class="form-group form-group-hidden expense-step-card">
+                            <div class="expense-step-title">Monto y Concepto <span class="step-indicator">Paso 3</span></div>
+                            <div class="expense-step-help">Ingresa el monto y el concepto de la cuenta por pagar.</div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Monto Total ($) *</label>
+                                    <input type="number" id="total_amount_input" name="total_amount" step="0.01" min="0.01" class="form-control @error('total_amount') is-invalid @enderror" value="{{ old('total_amount') }}" required>
+                                    @error('total_amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Concepto *</label>
+                                    <input type="text" id="concept_field" name="concept" class="form-control @error('concept') is-invalid @enderror" value="{{ old('concept') }}" required>
+                                    @error('concept')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Registrar Cuenta</button>
