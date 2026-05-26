@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
+// ...existing code...
     <style>
         .form-group-hidden { opacity: 0; max-height: 0; overflow: hidden; pointer-events: none; transition: opacity 0.45s ease, max-height 0.45s ease, margin 0.45s ease; margin: 0; }
         .form-group-visible { opacity: 1; max-height: 500px; pointer-events: auto; transition: opacity 0.45s ease, max-height 0.45s ease, margin 0.45s ease; margin-bottom: 1rem; }
