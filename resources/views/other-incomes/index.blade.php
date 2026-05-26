@@ -10,9 +10,19 @@
                 <div class="form-row align-items-end">
                     <div class="col-md-4 col-sm-6 mb-2 mb-md-0">
                         <label class="mb-1">Cliente/Empresa (opcional)</label>
-                        <input type="text" name="client_search" id="client_search_input" class="form-control"
-                            placeholder="Escribe para buscar cliente o empresa..."
-                            value="{{ $clientSearch ?? '' }}" autocomplete="off">
+                        <div class="input-group">
+                            <input type="text" name="client_search" id="client_search_input" class="form-control"
+                                placeholder="Escribe para buscar cliente o empresa..."
+                                value="{{ $clientSearch ?? '' }}" autocomplete="off">
+                            <div class="input-group-append">
+                                <button type="button" id="client_search_clear" class="btn btn-outline-secondary"
+                                    title="Limpiar busqueda" aria-label="Limpiar busqueda"
+                                    style="{{ empty($clientSearch) ? 'display:none;' : '' }}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small id="client_search_status" class="text-muted d-none">Buscando...</small>
                     </div>
                     @if(auth()->user()->isSuperAdmin())
                         <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
@@ -509,21 +519,23 @@
         document.addEventListener('DOMContentLoaded', function() {
             const filterForm = document.getElementById('other_income_filters_form');
             const clientSearchInput = document.getElementById('client_search_input');
+            const clientSearchClear = document.getElementById('client_search_clear');
+            const clientSearchStatus = document.getElementById('client_search_status');
             const dateInput = filterForm ? filterForm.querySelector('input[name="date"]') : null;
             const branchInput = document.getElementById('branch_id_filter');
             const collectDate = document.getElementById('collect_date');
             const collectClientSearch = document.getElementById('collect_client_search');
             const collectBranchId = document.getElementById('collect_branch_id');
             const pendingRows = Array.from(document.querySelectorAll('.filterable-pending-row'));
-            const incomeRows = Array.from(document.querySelectorAll('.filterable-income-row'));
             const pendingNoResults = document.getElementById('pending_debts_no_results');
-            const incomesNoResults = document.getElementById('incomes_no_results');
 
             if (!filterForm || !clientSearchInput) {
                 return;
             }
 
-            let debounceTimer;
+            const SERVER_SEARCH_DELAY = 650;
+            const CLEAR_SEARCH_DELAY = 250;
+            let localFilterFrame;
             let serverDebounceTimer;
             let lastServerSubmittedSignature = [
                 clientSearchInput.value.trim(),
@@ -537,6 +549,18 @@
                     dateInput ? dateInput.value : '',
                     branchInput ? branchInput.value : ''
                 ].join('|');
+            }
+
+            function setSearchStatus(isSearching) {
+                if (clientSearchStatus) {
+                    clientSearchStatus.classList.toggle('d-none', !isSearching);
+                }
+            }
+
+            function updateClearButton() {
+                if (clientSearchClear) {
+                    clientSearchClear.style.display = clientSearchInput.value.length > 0 ? '' : 'none';
+                }
             }
 
             function applyInstantTableFilter() {
@@ -553,14 +577,7 @@
                 // Filtrado local en tabla de DÉBITOS PENDIENTES y EMPRESAS
                 let visiblePending = 0;
                 pendingRows.forEach(function(row) {
-                    // Busca en columnas de cliente y empresa
-                    const cells = row.querySelectorAll('td');
-                    let matched = false;
-                    cells.forEach(function(cell) {
-                        if (cell.textContent.toLowerCase().includes(queryLower)) {
-                            matched = true;
-                        }
-                    });
+                    const matched = row.textContent.toLowerCase().includes(queryLower);
                     row.style.display = matched ? '' : 'none';
                     if (matched) visiblePending++;
                 });
@@ -569,41 +586,67 @@
                 }
             }
 
-            function submitToServer() {
+            function queueInstantFilter() {
+                if (localFilterFrame) {
+                    window.cancelAnimationFrame(localFilterFrame);
+                }
+
+                localFilterFrame = window.requestAnimationFrame(function() {
+                    applyInstantTableFilter();
+                    syncCollectForm();
+                    updateClearButton();
+                });
+            }
+
+            function submitToServer(force = false) {
                 const signature = getCurrentSignature();
-                if (signature === lastServerSubmittedSignature) {
+                if (!force && signature === lastServerSubmittedSignature) {
+                    setSearchStatus(false);
                     return;
                 }
                 lastServerSubmittedSignature = signature;
+                setSearchStatus(true);
                 filterForm.submit();
             }
 
-            clientSearchInput.addEventListener('input', function() {
-                // Filtrado local instantáneo (50ms = muy rápido, se siente natural)
-                window.clearTimeout(debounceTimer);
-                debounceTimer = window.setTimeout(function() {
-                    applyInstantTableFilter();
-                    syncCollectForm();
-                }, 0);
-
-                // Envío al servidor (200ms) pero solo si hay 2+ letras o está vacío
+            function scheduleServerSearch(delay) {
                 window.clearTimeout(serverDebounceTimer);
                 serverDebounceTimer = window.setTimeout(function() {
                     const search = clientSearchInput.value.trim();
                     if (search.length === 0 || search.length >= 2) {
                         submitToServer();
+                    } else {
+                        setSearchStatus(false);
                     }
-                }, 100);
+                }, delay);
+            }
+
+            clientSearchInput.addEventListener('input', function() {
+                const search = clientSearchInput.value.trim();
+
+                queueInstantFilter();
+
+                if (search.length === 1) {
+                    window.clearTimeout(serverDebounceTimer);
+                    setSearchStatus(false);
+                    return;
+                }
+
+                setSearchStatus(search.length >= 2);
+                scheduleServerSearch(search.length === 0 ? CLEAR_SEARCH_DELAY : SERVER_SEARCH_DELAY);
             });
 
             // Enter: envío inmediato al servidor para búsqueda completa
             clientSearchInput.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    window.clearTimeout(debounceTimer);
+                    if (localFilterFrame) {
+                        window.cancelAnimationFrame(localFilterFrame);
+                    }
                     window.clearTimeout(serverDebounceTimer);
                     applyInstantTableFilter();
                     syncCollectForm();
+                    updateClearButton();
                     submitToServer();
                 }
             });
@@ -621,27 +664,48 @@
             }
 
             clientSearchInput.addEventListener('change', syncCollectForm);
-            // Cambios en fecha o sucursal: envío inmediato (sin debounce)
-            if (dateInput) {
-                dateInput.addEventListener('change', function() {
-                    window.clearTimeout(debounceTimer);
+            if (clientSearchClear) {
+                clientSearchClear.addEventListener('click', function() {
+                    clientSearchInput.value = '';
+                    clientSearchInput.focus();
+                    if (localFilterFrame) {
+                        window.cancelAnimationFrame(localFilterFrame);
+                    }
                     window.clearTimeout(serverDebounceTimer);
                     applyInstantTableFilter();
                     syncCollectForm();
+                    updateClearButton();
+                    submitToServer(true);
+                });
+            }
+            // Cambios en fecha o sucursal: envío inmediato (sin debounce)
+            if (dateInput) {
+                dateInput.addEventListener('change', function() {
+                    if (localFilterFrame) {
+                        window.cancelAnimationFrame(localFilterFrame);
+                    }
+                    window.clearTimeout(serverDebounceTimer);
+                    applyInstantTableFilter();
+                    syncCollectForm();
+                    updateClearButton();
                     submitToServer();
                 });
             }
             if (branchInput) {
                 branchInput.addEventListener('change', function() {
-                    window.clearTimeout(debounceTimer);
+                    if (localFilterFrame) {
+                        window.cancelAnimationFrame(localFilterFrame);
+                    }
                     window.clearTimeout(serverDebounceTimer);
                     applyInstantTableFilter();
                     syncCollectForm();
+                    updateClearButton();
                     submitToServer();
                 });
             }
 
             syncCollectForm();
+            updateClearButton();
             applyInstantTableFilter();
         });
     </script>
