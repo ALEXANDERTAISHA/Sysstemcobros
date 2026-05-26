@@ -1,3 +1,63 @@
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const clientSelect = document.getElementById('client_select');
+    const clientFilterInput = document.getElementById('client_filter_input');
+    function normalizeClientSearch(value) {
+        return (value || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    }
+    function clientOptionMatches(option, term) {
+        const tokens = normalizeClientSearch(term).split(' ').filter(Boolean);
+        if (tokens.length === 0) return true;
+        const searchableText = normalizeClientSearch(option.dataset.search || option.text);
+        return tokens.every(function(token) { return searchableText.includes(token); });
+    }
+    function filterClientOptions() {
+        if (!clientFilterInput || !clientSelect) return;
+        const term = clientFilterInput.value.trim();
+        Array.from(clientSelect.options).forEach(function(option, index) {
+            if (index === 0) { option.hidden = false; return; }
+            option.hidden = !clientOptionMatches(option, term);
+        });
+        if (term === '') {
+            clientSelect.value = '';
+            collapseClientSelect();
+        } else {
+            expandClientSelect();
+        }
+    }
+    function expandClientSelect() {
+        if (!clientSelect || clientSelect.value) return;
+        const visibleCount = Array.from(clientSelect.options).filter((option, index) => index === 0 || !option.hidden).length;
+        const visibleOptions = Math.min(Math.max(visibleCount, 2), 8);
+        clientSelect.setAttribute('size', String(visibleOptions));
+        clientSelect.classList.add('select-expanded');
+    }
+    function collapseClientSelect() {
+        if (!clientSelect) return;
+        clientSelect.setAttribute('size', '1');
+        clientSelect.classList.remove('select-expanded');
+    }
+    function selectFirstMatchingClientOption() {
+        if (!clientSelect) return;
+        const firstMatch = Array.from(clientSelect.options).find(function(option, index) { return index > 0 && !option.hidden; });
+        if (firstMatch) {
+            clientSelect.value = firstMatch.value;
+            clientSelect.dispatchEvent(new Event('change'));
+        }
+    }
+    if (clientFilterInput) {
+        clientFilterInput.addEventListener('input', filterClientOptions);
+        clientFilterInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                selectFirstMatchingClientOption();
+            }
+        });
+    }
+});
+</script>
+@endpush
 @extends('layouts.app')
 @section('title', 'Nueva Cuenta por Pagar')
 @section('page-title', 'Registrar Cuenta por Pagar')
