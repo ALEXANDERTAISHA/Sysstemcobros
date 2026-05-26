@@ -233,6 +233,7 @@
                                 <option value="">Seleccionar cliente...</option>
                                 @foreach ($clients as $client)
                                     <option value="{{ $client->id }}" data-company="{{ $client->company_id ?? '' }}"
+                                        data-search="{{ trim(collect([$client->name, $client->phone, $client->whatsapp, $client->email, $client->address])->filter()->implode(' ')) }}"
                                         {{ old('client_id', request('client_id')) == $client->id ? 'selected' : '' }}>
                                         {{ $client->name }}&nbsp;&nbsp;{{ $client->phone ? "({$client->phone})" : '' }}
                                     </option>
@@ -531,6 +532,14 @@
                         true,
                         true
                     );
+                    option.dataset.company = '';
+                    option.dataset.search = [
+                        data.client.name,
+                        data.client.phone,
+                        cleanWhatsapp,
+                        emailValue,
+                        document.getElementById('quick_client_address').value
+                    ].filter(Boolean).join(' ');
                     clientSelect.add(option);
                     clientToCompany[String(data.client.id)] = '';
                     quickClientFormWrap.classList.remove('is-visible');
@@ -633,12 +642,34 @@
                 companySelect.classList.remove('select-expanded');
             }
 
+            function normalizeClientSearch(value) {
+                return (value || '')
+                    .toString()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toLowerCase();
+            }
+
+            function clientOptionMatches(option, term) {
+                const tokens = normalizeClientSearch(term).split(' ').filter(Boolean);
+                if (tokens.length === 0) {
+                    return true;
+                }
+
+                const searchableText = normalizeClientSearch(option.dataset.search || option.text);
+                return tokens.every(function(token) {
+                    return searchableText.includes(token);
+                });
+            }
+
             function filterClientOptions() {
                 if (!clientFilterInput || !clientSelect) {
                     return;
                 }
 
-                const term = clientFilterInput.value.trim().toLowerCase();
+                const term = clientFilterInput.value.trim();
 
                 Array.from(clientSelect.options).forEach(function(option, index) {
                     if (index === 0) {
@@ -646,7 +677,7 @@
                         return;
                     }
 
-                    option.hidden = term !== '' && !option.text.toLowerCase().includes(term);
+                    option.hidden = !clientOptionMatches(option, term);
                 });
 
                 if (term === '') {
