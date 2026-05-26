@@ -41,14 +41,14 @@ class AccountPayableTest extends TestCase
             'company_id' => $company->id,
             'concept' => 'Factura proveedor',
             'total_amount' => 100,
-            'issued_date' => '2026-05-26',
             'notes' => 'Compra independiente',
         ]);
 
         $account = AccountPayable::firstOrFail();
         $response->assertRedirect(route('accounts-payable.show', $account));
         $this->assertDatabaseCount('credits', 0);
-        $this->assertSame('2026-06-02', $account->due_date->toDateString());
+        $this->assertSame(today()->toDateString(), $account->issued_date->toDateString());
+        $this->assertSame(today()->addDays(7)->toDateString(), $account->due_date->toDateString());
 
         $this->post(route('accounts-payable.payments.store', $account), [
             'amount' => 40,

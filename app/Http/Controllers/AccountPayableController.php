@@ -59,10 +59,12 @@ class AccountPayableController extends Controller
             'company_id' => 'nullable|exists:companies,id',
             'concept' => 'required|string|max:250',
             'total_amount' => 'required|numeric|min:0.01',
-            'issued_date' => 'required|date',
+            'issued_date' => 'nullable|date',
             'due_date' => 'nullable|date|after_or_equal:issued_date',
             'notes' => 'nullable|string',
         ]);
+
+        $data['issued_date'] = $data['issued_date'] ?? today()->toDateString();
 
         if (empty($data['due_date'])) {
             $data['due_date'] = Carbon::parse($data['issued_date'])->addDays(7)->toDateString();

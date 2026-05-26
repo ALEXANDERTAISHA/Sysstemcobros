@@ -51,24 +51,12 @@
                         </div>
 
                         <div class="form-row">
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-12">
                                 <label>Monto Total ($) *</label>
                                 <input type="number" name="total_amount" step="0.01" min="0.01"
                                     class="form-control @error('total_amount') is-invalid @enderror"
                                     value="{{ old('total_amount') }}" required>
                                 @error('total_amount')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label>Fecha *</label>
-                                <input type="date" name="issued_date" class="form-control @error('issued_date') is-invalid @enderror"
-                                    value="{{ old('issued_date', today()->toDateString()) }}" required>
-                                @error('issued_date')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label>Fecha Limite</label>
-                                <input type="date" name="due_date" class="form-control @error('due_date') is-invalid @enderror"
-                                    value="{{ old('due_date') }}">
-                                @error('due_date')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                         </div>
 
