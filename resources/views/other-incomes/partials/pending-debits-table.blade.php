@@ -3,6 +3,7 @@
     @php
         $isOverdue = $debt->due_date && $debt->due_date->isPast();
         $diffDays = $debt->due_date ? (int) now()->startOfDay()->diffInDays($debt->due_date->startOfDay(), false) : null;
+        $debtNote = trim((string) ($debt->notes ?? ''));
     @endphp
     <tr class="filterable-pending-row{{ $isOverdue ? ' table-danger' : '' }}"
         data-search="{{ trim(collect([$debt->client?->name, $debt->client?->phone, $debt->client?->whatsapp, $debt->client?->email, $debt->client?->address])->filter()->implode(' ')) }}">
@@ -12,9 +13,9 @@
         @endif
         <td>
             @if(auth()->user()->isSuperAdmin())
-                <a href="{{ route('clients.show', $debt->client) }}">{{ $debt->client->name }}</a>
+                <a href="{{ route('clients.show', $debt->client) }}" title="{{ $debtNote !== '' ? 'Nota: ' . $debtNote : '' }}">{{ $debt->client->name }}</a>
             @else
-                {{ $debt->client->name }}
+                <span title="{{ $debtNote !== '' ? 'Nota: ' . $debtNote : '' }}">{{ $debt->client->name }}</span>
             @endif
         </td>
         <td>{{ $debt->company?->name ?? '-' }}</td>

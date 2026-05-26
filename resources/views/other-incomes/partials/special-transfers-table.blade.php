@@ -11,10 +11,19 @@
         </thead>
         <tbody>
             @forelse($specialTransfers as $st)
+            @php
+                $specialNote = trim((string) ($st->notes ?: ($st->credit?->notes ?? '')));
+            @endphp
             <tr>
                 <td>{{ $st->income_date->format('d/m/Y') }}</td>
                 <td>{{ $st->credit?->company?->name ?? '-' }}</td>
-                <td>{{ $st->client?->name ?? '-' }}</td>
+                <td>
+                    @if($st->client)
+                        <span title="{{ $specialNote !== '' ? 'Nota: ' . $specialNote : '' }}">{{ $st->client->name }}</span>
+                    @else
+                        -
+                    @endif
+                </td>
                 <td>{{ $st->description }}</td>
                 <td class="text-right">${{ number_format($st->amount, 2) }}</td>
             </tr>

@@ -52,6 +52,10 @@ class ExpenseCreateTest extends TestCase
 
         $income = OtherIncome::where('credit_id', $credit->id)->firstOrFail();
         $this->assertSame('Nota visible de prueba', $income->notes);
+
+        $this->get(route('other-incomes.index'))
+            ->assertOk()
+            ->assertSee('Nota: Nota visible de prueba');
     }
 
     public function test_regular_company_credit_gets_automatic_due_date_when_hidden_field_is_not_sent(): void

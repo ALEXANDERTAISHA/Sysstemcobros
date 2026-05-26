@@ -165,10 +165,19 @@
                                     </thead>
                                     <tbody>
                                         @forelse($specialTransfers as $st)
+                                        @php
+                                            $specialNote = trim((string) ($st->notes ?: ($st->credit?->notes ?? '')));
+                                        @endphp
                                         <tr>
                                             <td>{{ $st->income_date->format('d/m/Y') }}</td>
                                             <td>{{ $st->credit?->company?->name ?? '-' }}</td>
-                                            <td>{{ $st->client?->name ?? '-' }}</td>
+                                            <td>
+                                                @if($st->client)
+                                                    <span title="{{ $specialNote !== '' ? 'Nota: ' . $specialNote : '' }}">{{ $st->client->name }}</span>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
                                             <td>{{ $st->description }}</td>
                                             <td class="text-right">${{ number_format($st->amount, 2) }}</td>
                                         </tr>
@@ -263,6 +272,7 @@
                                 @php
                                     $isOverdue = $debt->due_date && $debt->due_date->isPast();
                                     $diffDays = $debt->due_date ? (int) now()->startOfDay()->diffInDays($debt->due_date->startOfDay(), false) : null;
+                                    $debtNote = trim((string) ($debt->notes ?? ''));
                                 @endphp
                                 <tr class="filterable-pending-row{{ $isOverdue ? ' table-danger' : '' }}"
                                     data-search="{{ trim(collect([$debt->client?->name, $debt->client?->phone, $debt->client?->whatsapp, $debt->client?->email, $debt->client?->address])->filter()->implode(' ')) }}">
@@ -272,9 +282,9 @@
                                     @endif
                                     <td>
                                             @if(auth()->user()->isSuperAdmin())
-                                                <a href="{{ route('clients.show', $debt->client) }}">{{ $debt->client->name }}</a>
+                                                <a href="{{ route('clients.show', $debt->client) }}" title="{{ $debtNote !== '' ? 'Nota: ' . $debtNote : '' }}">{{ $debt->client->name }}</a>
                                             @else
-                                                {{ $debt->client->name }}
+                                                <span title="{{ $debtNote !== '' ? 'Nota: ' . $debtNote : '' }}">{{ $debt->client->name }}</span>
                                             @endif
                                     </td>
                                     <td>{{ $debt->company?->name ?? '-' }}</td>
@@ -362,6 +372,7 @@
                                     $incomeCredit = $income->credit;
                                     $isToday = $income->income_date->isToday();
                                     $creditIsToday = $incomeCredit && $incomeCredit->granted_date->isToday();
+                                    $incomeNote = trim((string) ($income->notes ?: ($incomeCredit?->notes ?? '')));
                                 @endphp
                                 <tr class="filterable-income-row{{ $isToday && $creditIsToday ? ' table-warning' : '' }}">
                                     <td>
@@ -373,7 +384,13 @@
                                     @if(auth()->user()->isSuperAdmin())
                                         <td>{{ $income->branch?->name ?? 'Sin sucursal' }}</td>
                                     @endif
-                                    <td>{{ $income->client?->name ?? '-' }}</td>
+                                    <td>
+                                        @if($income->client)
+                                            <span title="{{ $incomeNote !== '' ? 'Nota: ' . $incomeNote : '' }}">{{ $income->client->name }}</span>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td>{{ $income->credit?->company?->name ?? '-' }}</td>
                                     <td>{{ $income->description }}</td>
                                     <td class="text-right text-info font-weight-bold">
