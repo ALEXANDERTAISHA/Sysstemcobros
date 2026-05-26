@@ -210,7 +210,7 @@
                                     <i class="fas fa-pen mr-1"></i>Editar
                                 </button>
                             </div>
-                            <div class="expense-flow-pill" id="due_pill">
+                            <div class="expense-flow-pill d-none" id="due_pill">
                                 <div>
                                     <span class="expense-flow-pill-label">Fecha Límite de Pago</span>
                                     <span class="expense-flow-pill-value" id="due_pill_value"></span>
@@ -346,8 +346,8 @@
                         </div>
 
                         <div id="amount_section" class="form-group form-group-hidden expense-step-card">
-                            <div class="expense-step-title">Monto y Fecha Límite <span class="step-indicator">Paso 4</span></div>
-                            <div class="expense-step-help">Ingresa el monto y confirma la fecha límite (automática a 7 días).</div>
+                            <div class="expense-step-title">Monto y Notas <span class="step-indicator">Paso 4</span></div>
+                            <div class="expense-step-help">Ingresa el monto y agrega una nota si aplica.</div>
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>Monto Total ($) *</label>
@@ -362,7 +362,7 @@
                                     <label>Fecha Límite de Pago *</label>
                                     <input type="date" id="due_date_input" name="due_date"
                                         class="form-control @error('due_date') is-invalid @enderror"
-                                        value="{{ old('due_date') }}" required>
+                                        value="{{ old('due_date') }}">
                                     @error('due_date')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
@@ -710,11 +710,12 @@
                     return;
                 }
 
-                if (!force && dueDateInput.value) {
+                if (isSpecialNoDueDateCompany()) {
+                    dueDateInput.value = '';
                     return;
                 }
 
-                if (isSpecialNoDueDateCompany()) {
+                if (!force && dueDateInput.value) {
                     return;
                 }
 
@@ -731,14 +732,9 @@
                     return;
                 }
 
-                if (isSpecialNoDueDateCompany()) {
-                    dueDateGroup.style.display = 'none';
-                    dueDateInput.required = false;
-                    dueDateInput.value = '';
-                } else {
-                    dueDateGroup.style.display = '';
-                    dueDateInput.required = true;
-                }
+                dueDateGroup.style.display = 'none';
+                dueDateInput.required = false;
+                syncDueDateFromGranted(true);
             }
 
             function updateVisibility() {
@@ -746,13 +742,13 @@
                 const hasCompany = companySelect.value !== '';
                 const hasAmount = (parseFloat(totalAmountInput.value) || 0) > 0;
                 const hasGranted = grantedDateInput.value !== '';
-                const hasDue = isSpecialNoDueDateCompany() ? true : dueDateInput.value !== '';
+                const hasDue = true;
 
                 setPill(clientPill, clientPillValue, hasClient ? selectedText(clientSelect) : '');
                 setPill(companyPill, companyPillValue, hasCompany ? selectedText(companySelect) : '');
                 setPill(amountPill, amountPillValue, hasAmount ? `$${Number(totalAmountInput.value).toFixed(2)}` : '');
                 setPill(grantedPill, grantedPillValue, hasGranted ? formatDate(grantedDateInput.value) : '');
-                setPill(duePill, duePillValue, !isSpecialNoDueDateCompany() && hasDue ? formatDate(dueDateInput.value) : '');
+                setPill(duePill, duePillValue, '');
 
                 if (!hasClient) {
                     showSection(clientSection);

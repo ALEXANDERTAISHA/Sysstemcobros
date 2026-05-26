@@ -53,4 +53,36 @@ class ExpenseCreateTest extends TestCase
         $income = OtherIncome::where('credit_id', $credit->id)->firstOrFail();
         $this->assertSame('Nota visible de prueba', $income->notes);
     }
+
+    public function test_regular_company_credit_gets_automatic_due_date_when_hidden_field_is_not_sent(): void
+    {
+        $user = User::factory()->create(['role' => 'super_admin']);
+        CashBoxInitial::create([
+            'date' => today()->toDateString(),
+            'initial_amount' => 1,
+            'notes' => 'Habilitar operaciones',
+        ]);
+        $client = Client::create([
+            'name' => 'Cliente Regular',
+            'is_active' => true,
+        ]);
+        $company = Company::create([
+            'name' => 'VIA AMERICAS',
+            'code' => 'VIA',
+            'color' => '#123456',
+            'is_active' => true,
+            'company_type' => Company::TYPE_EXPENSE_DEBIT,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('expenses.store'), [
+            'client_id' => $client->id,
+            'company_id' => $company->id,
+            'concept' => 'Debito regular',
+            'total_amount' => 40,
+            'granted_date' => '2026-05-25',
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $this->assertSame('2026-06-01', Credit::firstOrFail()->due_date->toDateString());
+    }
 }

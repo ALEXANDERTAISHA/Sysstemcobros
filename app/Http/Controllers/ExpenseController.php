@@ -10,6 +10,7 @@ use App\Models\CreditPayment;
 use App\Support\BranchContext;
 use App\Services\EmailDeliveryService;
 use App\Services\WhatsAppService;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -137,12 +138,10 @@ class ExpenseController extends Controller
         $specialNoDueDateCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO', 'PRODUCTOS DE LA TIENDA'];
         $isSpecialNoDueDateCompany = in_array(mb_strtoupper(trim((string) $company->name)), $specialNoDueDateCompanies, true);
 
-        if (! $isSpecialNoDueDateCompany && empty($data['due_date'])) {
-            return back()->withErrors(['due_date' => 'La fecha limite de pago es obligatoria.'])->withInput();
-        }
-
         if ($isSpecialNoDueDateCompany) {
             $data['due_date'] = null;
+        } elseif (empty($data['due_date'])) {
+            $data['due_date'] = Carbon::parse($data['granted_date'])->addDays(7)->toDateString();
         }
 
         $data['paid_amount'] = 0;
