@@ -12,6 +12,36 @@ document.addEventListener('DOMContentLoaded', function() {
     if (draft.company_id && companySelect) companySelect.value = draft.company_id;
     if (draft.total_amount && totalAmountInput) totalAmountInput.value = draft.total_amount;
     if (draft.concept && conceptField) conceptField.value = draft.concept;
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Autoguardado temporal y resumen visual interactivo
+    const storageKey = 'accountsPayableDraft';
+    const clientSelect = document.getElementById('client_select');
+    const companySelect = document.getElementById('company_select');
+    const totalAmountInput = document.getElementById('total_amount_input');
+    const conceptField = document.getElementById('concept_field');
+    // Pills
+    const clientPillValue = document.getElementById('client_pill_value');
+    const companyPillValue = document.getElementById('company_pill_value');
+    const amountPillValue = document.getElementById('amount_pill_value');
+    const conceptPillValue = document.getElementById('concept_pill_value');
+
+    // Cargar datos guardados
+    const draft = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    if (draft.client_id && clientSelect) clientSelect.value = draft.client_id;
+    if (draft.company_id && companySelect) companySelect.value = draft.company_id;
+    if (draft.total_amount && totalAmountInput) totalAmountInput.value = draft.total_amount;
+    if (draft.concept && conceptField) conceptField.value = draft.concept;
+
+    // Actualizar pills
+    function updatePills() {
+        clientPillValue.textContent = clientSelect && clientSelect.value ? clientSelect.options[clientSelect.selectedIndex].text.trim() : '';
+        companyPillValue.textContent = companySelect && companySelect.value ? companySelect.options[companySelect.selectedIndex].text.trim() : '';
+        amountPillValue.textContent = totalAmountInput && totalAmountInput.value ? `$${Number(totalAmountInput.value).toFixed(2)}` : '';
+        conceptPillValue.textContent = conceptField && conceptField.value ? conceptField.value : '';
+    }
+    updatePills();
 
     // Guardar cambios
     function saveDraft() {
@@ -21,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             total_amount: totalAmountInput ? totalAmountInput.value : '',
             concept: conceptField ? conceptField.value : ''
         }));
+        updatePills();
     }
     if (clientSelect) clientSelect.addEventListener('change', saveDraft);
     if (companySelect) companySelect.addEventListener('change', saveDraft);
@@ -34,7 +65,8 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.removeItem(storageKey);
         });
     }
-    const clientSelect = document.getElementById('client_select');
+
+    // Búsqueda interactiva cliente
     const clientFilterInput = document.getElementById('client_filter_input');
     function normalizeClientSearch(value) {
         return (value || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -58,16 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             expandClientSelect();
         }
-    }
-
-    // Expande la lista al enfocar el input
-    if (clientFilterInput) {
-        clientFilterInput.addEventListener('focus', function() {
-            expandClientSelect();
-        });
-        clientFilterInput.addEventListener('blur', function() {
-            setTimeout(collapseClientSelect, 150); // Espera para permitir selección
-        });
+        updatePills();
     }
     function expandClientSelect() {
         if (!clientSelect || clientSelect.value) return;
@@ -97,20 +120,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectFirstMatchingClientOption();
             }
         });
+        clientFilterInput.addEventListener('focus', function() {
+            expandClientSelect();
+        });
+        clientFilterInput.addEventListener('blur', function() {
+            setTimeout(collapseClientSelect, 150);
+        });
     }
 });
 </script>
 @endpush
-@extends('layouts.app')
-@section('title', 'Nueva Cuenta por Pagar')
-@section('page-title', 'Registrar Cuenta por Pagar')
-@section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('accounts-payable.index') }}">Cuentas por Pagar</a></li>
-    <li class="breadcrumb-item active">Nueva</li>
-@endsection
-
-
-@push('styles')
     <style>
         .form-group-hidden { opacity: 0; max-height: 0; overflow: hidden; pointer-events: none; transition: opacity 0.45s ease, max-height 0.45s ease, margin 0.45s ease; margin: 0; }
         .form-group-visible { opacity: 1; max-height: 500px; pointer-events: auto; transition: opacity 0.45s ease, max-height 0.45s ease, margin 0.45s ease; margin-bottom: 1rem; }
@@ -143,32 +162,29 @@ document.addEventListener('DOMContentLoaded', function() {
                     @csrf
                     <div class="card-body">
                         <div class="expense-flow-summary">
-                            <div class="expense-flow-pill" id="client_pill">
+                            <div class="expense-flow-pill is-visible" id="client_pill">
                                 <div>
                                     <span class="expense-flow-pill-label">Cliente</span>
                                     <span class="expense-flow-pill-value" id="client_pill_value"></span>
                                 </div>
-                                <button type="button" class="expense-flow-edit" data-edit-step="client">
-                                    <i class="fas fa-pen mr-1"></i>Editar
-                                </button>
                             </div>
-                            <div class="expense-flow-pill" id="company_pill">
+                            <div class="expense-flow-pill is-visible" id="company_pill">
                                 <div>
                                     <span class="expense-flow-pill-label">Empresa</span>
                                     <span class="expense-flow-pill-value" id="company_pill_value"></span>
                                 </div>
-                                <button type="button" class="expense-flow-edit" data-edit-step="company">
-                                    <i class="fas fa-pen mr-1"></i>Editar
-                                </button>
                             </div>
-                            <div class="expense-flow-pill" id="amount_pill">
+                            <div class="expense-flow-pill is-visible" id="amount_pill">
                                 <div>
                                     <span class="expense-flow-pill-label">Monto Total</span>
                                     <span class="expense-flow-pill-value" id="amount_pill_value"></span>
                                 </div>
-                                <button type="button" class="expense-flow-edit" data-edit-step="amount">
-                                    <i class="fas fa-pen mr-1"></i>Editar
-                                </button>
+                            </div>
+                            <div class="expense-flow-pill is-visible" id="concept_pill">
+                                <div>
+                                    <span class="expense-flow-pill-label">Concepto</span>
+                                    <span class="expense-flow-pill-value" id="concept_pill_value"></span>
+                                </div>
                             </div>
                         </div>
 
