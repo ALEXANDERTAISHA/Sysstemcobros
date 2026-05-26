@@ -60,12 +60,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group mb-0">
-                            <label>Notas</label>
-                            <textarea name="notes" class="form-control @error('notes') is-invalid @enderror" rows="3"
-                                placeholder="Observaciones opcionales">{{ old('notes') }}</textarea>
-                            @error('notes')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
+                            <!-- Notas field removed as requested -->
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> Registrar Cuenta</button>
