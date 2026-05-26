@@ -59,6 +59,16 @@ document.addEventListener('DOMContentLoaded', function() {
             expandClientSelect();
         }
     }
+
+    // Expande la lista al enfocar el input
+    if (clientFilterInput) {
+        clientFilterInput.addEventListener('focus', function() {
+            expandClientSelect();
+        });
+        clientFilterInput.addEventListener('blur', function() {
+            setTimeout(collapseClientSelect, 150); // Espera para permitir selección
+        });
+    }
     function expandClientSelect() {
         if (!clientSelect || clientSelect.value) return;
         const visibleCount = Array.from(clientSelect.options).filter((option, index) => index === 0 || !option.hidden).length;
