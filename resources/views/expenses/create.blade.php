@@ -367,14 +367,14 @@
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
-                            <div class="form-group mb-0">
-                                <label>Notas</label>
-                                <textarea name="notes" id="notes_input" class="form-control @error('notes') is-invalid @enderror"
-                                    rows="3" placeholder="Escribe una nota opcional">{{ old('notes') }}</textarea>
-                                @error('notes')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
+                                <div class="form-group col-md-6 mb-0" id="notes_group">
+                                    <label>Notas</label>
+                                    <textarea name="notes" id="notes_input" class="form-control @error('notes') is-invalid @enderror"
+                                        rows="3" placeholder="Escribe una nota opcional">{{ old('notes') }}</textarea>
+                                    @error('notes')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     </div>
