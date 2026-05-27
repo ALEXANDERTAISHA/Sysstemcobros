@@ -52,11 +52,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (index === 0) { option.hidden = false; return; }
             option.hidden = !clientOptionMatches(option, term);
         });
+        expandClientSelect();
         if (term === '') {
             clientSelect.value = '';
-            collapseClientSelect();
-        } else {
-            expandClientSelect();
         }
     }
 
@@ -66,7 +64,34 @@ document.addEventListener('DOMContentLoaded', function() {
             expandClientSelect();
         });
         clientFilterInput.addEventListener('blur', function() {
-            setTimeout(collapseClientSelect, 150); // Espera para permitir selección
+            setTimeout(collapseClientSelect, 200); // Espera para permitir selección
+        });
+        clientFilterInput.addEventListener('input', filterClientOptions);
+        clientFilterInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                selectFirstMatchingClientOption();
+                collapseClientSelect();
+            } else if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                // Selecciona el siguiente visible
+                let idx = clientSelect.selectedIndex;
+                let options = Array.from(clientSelect.options);
+                let next = options.findIndex((opt, i) => i > idx && !opt.hidden);
+                if (next !== -1) {
+                    clientSelect.selectedIndex = next;
+                }
+                expandClientSelect();
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                let idx = clientSelect.selectedIndex;
+                let options = Array.from(clientSelect.options);
+                let prev = options.slice(0, idx).reverse().findIndex(opt => !opt.hidden);
+                if (prev !== -1) {
+                    clientSelect.selectedIndex = idx - prev - 1;
+                }
+                expandClientSelect();
+            }
         });
     }
     function expandClientSelect() {
@@ -89,15 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
             clientSelect.dispatchEvent(new Event('change'));
         }
     }
-    if (clientFilterInput) {
-        clientFilterInput.addEventListener('input', filterClientOptions);
-        clientFilterInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                selectFirstMatchingClientOption();
-            }
-        });
-    }
+    // ...el resto del código permanece igual...
 });
 </script>
 @endpush
