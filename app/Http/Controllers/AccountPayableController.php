@@ -29,35 +29,6 @@
         }
         return redirect()->route('accounts-payable.index')->with('success', 'Cobro total realizado por $' . number_format($total, 2));
     }
-<?php
-
-namespace App\Http\Controllers;
-
-use App\Models\AccountPayable;
-use App\Models\AccountPayablePayment;
-use App\Models\Branch;
-use App\Models\Client;
-use App\Models\Company;
-use App\Support\BranchContext;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-
-class AccountPayableController extends Controller
-{
-    public function index(Request $request)
-    {
-        $search = trim((string) $request->get('search', ''));
-        $status = $request->get('status', 'all');
-        $date = $request->get('date');
-        $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
-
-        $accountsQuery = AccountPayable::with('client', 'company', 'branch')
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($sub) use ($search) {
-                    $sub->where('concept', 'like', "%{$search}%")
-                        ->orWhereHas('client', fn($clientQuery) => $clientQuery->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('company', fn($companyQuery) => $companyQuery->where('name', 'like', "%{$search}%"));
-                });
             })
             ->when($status !== 'all', fn($query) => $query->where('status', $status))
             ->when($date, fn($query) => $query->whereDate('issued_date', $date))
