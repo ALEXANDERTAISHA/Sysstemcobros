@@ -31,10 +31,109 @@
             </form>
         </div>
         <div class="col-md-4 text-right">
-            <a href="{{ route('accounts-payable.create') }}" class="btn btn-warning">
+            <a href="{{ route('accounts-payable.create') }}" class="btn btn-warning mr-2">
                 <i class="fas fa-plus mr-1"></i> Nueva Cuenta
             </a>
+            <button id="btn-cobrar-total" class="btn btn-success" style="display:none;">
+                <i class="fas fa-cash-register mr-1"></i> Cobrar total
+            </button>
         </div>
+    <!-- Modal Cobrar Total -->
+    <div class="modal fade" id="modalCobrarTotal" tabindex="-1" role="dialog" aria-labelledby="modalCobrarTotalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCobrarTotalLabel">Cobrar total al cliente</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="form-cobrar-total" method="POST" action="{{ route('accounts-payable.index') }}/cobrar-total">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <strong>Cliente:</strong> <span id="modal-cliente-nombre"></span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Monto a Pagar ($):</strong> <span id="modal-monto-total"></span>
+                        </div>
+                        <input type="hidden" name="client_id" id="modal-client-id">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Confirmar cobro</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Botón Cobrar total ---
+        const searchInput = document.querySelector('input[name="search"]');
+        const cobrarBtn = document.getElementById('btn-cobrar-total');
+        let lastClientId = null;
+        function getVisibleClientIdAndName() {
+            // Busca el primer cliente visible en la tabla
+            const rows = document.querySelectorAll('table tbody tr');
+            let clientId = null, clientName = null, total = 0;
+            rows.forEach(row => {
+                if (row.querySelector('td a[href*="clients/"]')) {
+                    const link = row.querySelector('td a[href*="clients/"]');
+                    const name = link.textContent.trim();
+                    const href = link.getAttribute('href');
+                    const match = href.match(/clients\/(\d+)/);
+                    if (match) {
+                        const id = match[1];
+                        if (!clientId) {
+                            clientId = id;
+                            clientName = name;
+                        }
+                    }
+                }
+            });
+            // Suma el saldo de todas las filas del mismo cliente
+            if (clientId) {
+                rows.forEach(row => {
+                    const link = row.querySelector('td a[href*="clients/' + clientId + '"]');
+                    if (link) {
+                        const saldoTd = row.querySelector('td.text-right.font-weight-bold');
+                        if (saldoTd) {
+                            const saldo = parseFloat(saldoTd.textContent.replace(/[^\d\.]/g, ''));
+                            total += saldo;
+                        }
+                    }
+                });
+            }
+            return { clientId, clientName, total };
+        }
+        function updateCobrarBtnVisibility() {
+            const { clientId } = getVisibleClientIdAndName();
+            if (searchInput && searchInput.value.trim() && clientId) {
+                cobrarBtn.style.display = '';
+                lastClientId = clientId;
+            } else {
+                cobrarBtn.style.display = 'none';
+                lastClientId = null;
+            }
+        }
+        if (searchInput) {
+            searchInput.addEventListener('input', updateCobrarBtnVisibility);
+            updateCobrarBtnVisibility();
+        }
+        cobrarBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const { clientId, clientName, total } = getVisibleClientIdAndName();
+            if (!clientId) return;
+            document.getElementById('modal-cliente-nombre').textContent = clientName;
+            document.getElementById('modal-monto-total').textContent = total.toFixed(2);
+            document.getElementById('modal-client-id').value = clientId;
+            $('#modalCobrarTotal').modal('show');
+        });
+    });
+    </script>
+    @endpush
     </div>
 
     <div class="card card-outline card-warning">

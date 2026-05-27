@@ -1,3 +1,34 @@
+    /**
+     * Cobra el total de todas las cuentas por pagar activas de un cliente.
+     */
+    public function cobrarTotal(Request $request)
+    {
+        $request->validate([
+            'client_id' => 'required|exists:clients,id',
+        ]);
+        $clientId = $request->input('client_id');
+        $accounts = AccountPayable::where('client_id', $clientId)
+            ->where('status', '!=', 'paid')
+            ->get();
+        $total = 0;
+        foreach ($accounts as $account) {
+            $balance = $account->balance;
+            if ($balance > 0) {
+                AccountPayablePayment::create([
+                    'account_payable_id' => $account->id,
+                    'amount' => $balance,
+                    'payment_date' => now()->toDateString(),
+                    'notes' => 'Cobro total automático',
+                ]);
+                $account->update([
+                    'paid_amount' => $account->paid_amount + $balance,
+                    'status' => 'paid',
+                ]);
+                $total += $balance;
+            }
+        }
+        return redirect()->route('accounts-payable.index')->with('success', 'Cobro total realizado por $' . number_format($total, 2));
+    }
 <?php
 
 namespace App\Http\Controllers;

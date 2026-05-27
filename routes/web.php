@@ -95,6 +95,7 @@ Route::middleware('auth')->group(function () {
         Route::get('accounts-payable', [AccountPayableController::class, 'index'])->name('accounts-payable.index');
         Route::get('accounts-payable/create', [AccountPayableController::class, 'create'])->name('accounts-payable.create');
         Route::post('accounts-payable', [AccountPayableController::class, 'store'])->name('accounts-payable.store');
+        Route::post('accounts-payable/cobrar-total', [AccountPayableController::class, 'cobrarTotal'])->name('accounts-payable.cobrar-total');
         Route::get('accounts-payable/{accountPayable}', [AccountPayableController::class, 'show'])->name('accounts-payable.show');
         Route::post('accounts-payable/{accountPayable}/payments', [AccountPayableController::class, 'storePayment'])->name('accounts-payable.payments.store');
         Route::delete('accounts-payable/{accountPayable}', [AccountPayableController::class, 'destroy'])->name('accounts-payable.destroy');
