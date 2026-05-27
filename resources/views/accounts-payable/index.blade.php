@@ -75,12 +75,12 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ route('accounts-payable.show', $account) }}" class="btn btn-info" title="Ver"><i class="fas fa-eye"></i></a>
+                                <div class="btn-group" style="gap: 0.5rem;">
+                                    <a href="{{ route('accounts-payable.show', $account) }}" class="btn btn-info" title="Ver" style="font-size: 1.35rem; padding: 0.35rem 0.7rem;"><i class="fas fa-eye"></i></a>
                                     <form method="POST" action="{{ route('accounts-payable.destroy', $account) }}" class="d-inline"
                                         onsubmit="return confirm('¿Eliminar esta cuenta por pagar?')">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-danger" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                        <button class="btn btn-danger" title="Eliminar" style="font-size: 1.35rem; padding: 0.35rem 0.7rem;"><i class="fas fa-trash"></i></button>
                                     </form>
                                 </div>
                             </td>
