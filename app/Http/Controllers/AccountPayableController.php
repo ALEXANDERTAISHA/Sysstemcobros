@@ -1,3 +1,18 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\AccountPayable;
+use App\Models\AccountPayablePayment;
+use App\Models\Branch;
+use App\Models\Client;
+use App\Models\Company;
+use App\Support\BranchContext;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+
+class AccountPayableController extends Controller
+{
     /**
      * Cobra el total de todas las cuentas por pagar activas de un cliente.
      */
