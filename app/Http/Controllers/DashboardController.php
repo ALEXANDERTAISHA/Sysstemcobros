@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\AccountPayable;
 use App\Models\Branch;
 use App\Models\CashBoxInitial;
 use App\Models\Company;
@@ -87,6 +88,9 @@ class DashboardController extends Controller
         $totalClients = Client::where('is_active', true)->count();
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
 
+        // Cuentas por pagar activas (pendientes)
+        $totalAccountsPayable = AccountPayable::where('status', '!=', 'paid')->sum('total_amount') - AccountPayable::where('status', '!=', 'paid')->sum('paid_amount');
+
         return view('dashboard.index', compact(
             'date',
             'branchId',
@@ -106,7 +110,8 @@ class DashboardController extends Controller
             'closing',
             'pendingTransfers',
             'activeCredits',
-            'totalClients'
+            'totalClients',
+            'totalAccountsPayable'
         ));
     }
 }

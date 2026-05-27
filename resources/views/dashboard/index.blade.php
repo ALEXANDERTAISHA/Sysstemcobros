@@ -144,6 +144,20 @@
             </div>
             </a>
         </div>
+        <div class="col-lg-4 col-md-6 stat-col">
+            <a href="{{ url('accounts-payable') }}" class="text-decoration-none d-flex w-100">
+                <div class="small-box" style="background: #ffe082; color: #6b4f00;">
+                    <div class="inner">
+                        <h3>${{ number_format($totalAccountsPayable, 2) }}</h3>
+                        <p>Cuentas por Pagar Pendientes</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <span class="small-box-footer" style="color: #6b4f00;">
+                        Ver cuentas por pagar <i class="fas fa-arrow-circle-right"></i>
+                    </span>
+                </div>
+            </a>
+        </div>
     </div>
 
     <div class="row">
