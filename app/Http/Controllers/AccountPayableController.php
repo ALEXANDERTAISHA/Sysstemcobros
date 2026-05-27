@@ -13,6 +13,35 @@ use Illuminate\Support\Carbon;
 
 class AccountPayableController extends Controller
 {
+    public function index(Request $request)
+    {
+        $search = $request->get('search');
+        $status = $request->get('status', 'all');
+        $date = $request->get('date');
+        $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
+
+        $accountsQuery = AccountPayable::with('client', 'company', 'branch')
+            ->when($search, fn($query) => $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('concept', 'like', "%{$search}%")
+                    ->orWhereHas('client', fn($clientQuery) => $clientQuery->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('company', fn($companyQuery) => $companyQuery->where('name', 'like', "%{$search}%"));
+            }))
+            ->when($status !== 'all', fn($query) => $query->where('status', $status))
+            ->when($date, fn($query) => $query->whereDate('issued_date', $date))
+            ->latest();
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $accountsQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($accountsQuery);
+        }
+
+        $accounts = $accountsQuery->paginate(20)->withQueryString();
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
+        return view('accounts-payable.index', compact('accounts', 'search', 'status', 'date', 'branches', 'branchId'));
+    }
+
     /**
      * Cobra el total de todas las cuentas por pagar activas de un cliente.
      */
@@ -43,22 +72,6 @@ class AccountPayableController extends Controller
             }
         }
         return redirect()->route('accounts-payable.index')->with('success', 'Cobro total realizado por $' . number_format($total, 2));
-    }
-            })
-            ->when($status !== 'all', fn($query) => $query->where('status', $status))
-            ->when($date, fn($query) => $query->whereDate('issued_date', $date))
-            ->latest();
-
-        if (BranchContext::isPrivileged() && $branchId) {
-            $accountsQuery->where('branch_id', $branchId);
-        } else {
-            BranchContext::scope($accountsQuery);
-        }
-
-        $accounts = $accountsQuery->paginate(20)->withQueryString();
-        $branches = Branch::where('is_active', true)->orderBy('name')->get();
-
-        return view('accounts-payable.index', compact('accounts', 'search', 'status', 'date', 'branches', 'branchId'));
     }
 
     public function create()
