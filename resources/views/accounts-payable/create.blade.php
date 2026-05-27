@@ -12,30 +12,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (draft.company_id && companySelect) companySelect.value = draft.company_id;
     if (draft.total_amount && totalAmountInput) totalAmountInput.value = draft.total_amount;
     if (draft.concept && conceptField) conceptField.value = draft.concept;
-
-    // Guardar cambios
-    function saveDraft() {
-        localStorage.setItem(storageKey, JSON.stringify({
-            client_id: clientSelect ? clientSelect.value : '',
-            company_id: companySelect ? companySelect.value : '',
-            total_amount: totalAmountInput ? totalAmountInput.value : '',
-            concept: conceptField ? conceptField.value : ''
-        }));
-    }
-    if (clientSelect) clientSelect.addEventListener('change', saveDraft);
-    if (companySelect) companySelect.addEventListener('change', saveDraft);
-    if (totalAmountInput) totalAmountInput.addEventListener('input', saveDraft);
-    if (conceptField) conceptField.addEventListener('input', saveDraft);
-
-    // Limpiar draft al enviar
-    const form = document.querySelector('form[action*="accounts-payable.store"]');
-    if (form) {
-        form.addEventListener('submit', function() {
-            localStorage.removeItem(storageKey);
-        });
-    }
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
     const clientSelect = document.getElementById('client_select');
     const clientFilterInput = document.getElementById('client_filter_input');
+    // --- Búsqueda y selección avanzada como en gastos ---
     function normalizeClientSearch(value) {
         return (value || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
     }
@@ -52,47 +34,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (index === 0) { option.hidden = false; return; }
             option.hidden = !clientOptionMatches(option, term);
         });
-        expandClientSelect();
         if (term === '') {
             clientSelect.value = '';
-        }
-    }
-
-    // Expande la lista al enfocar el input
-    if (clientFilterInput) {
-        clientFilterInput.addEventListener('focus', function() {
+            collapseClientSelect();
+        } else {
             expandClientSelect();
-        });
-        clientFilterInput.addEventListener('blur', function() {
-            setTimeout(collapseClientSelect, 200); // Espera para permitir selección
-        });
-        clientFilterInput.addEventListener('input', filterClientOptions);
-        clientFilterInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                selectFirstMatchingClientOption();
-                collapseClientSelect();
-            } else if (event.key === 'ArrowDown') {
-                event.preventDefault();
-                // Selecciona el siguiente visible
-                let idx = clientSelect.selectedIndex;
-                let options = Array.from(clientSelect.options);
-                let next = options.findIndex((opt, i) => i > idx && !opt.hidden);
-                if (next !== -1) {
-                    clientSelect.selectedIndex = next;
-                }
-                expandClientSelect();
-            } else if (event.key === 'ArrowUp') {
-                event.preventDefault();
-                let idx = clientSelect.selectedIndex;
-                let options = Array.from(clientSelect.options);
-                let prev = options.slice(0, idx).reverse().findIndex(opt => !opt.hidden);
-                if (prev !== -1) {
-                    clientSelect.selectedIndex = idx - prev - 1;
-                }
-                expandClientSelect();
-            }
-        });
+        }
     }
     function expandClientSelect() {
         if (!clientSelect || clientSelect.value) return;
@@ -111,6 +58,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const firstMatch = Array.from(clientSelect.options).find(function(option, index) { return index > 0 && !option.hidden; });
         if (firstMatch) {
             clientSelect.value = firstMatch.value;
+            clientSelect.dispatchEvent(new Event('change'));
+        }
+    }
+    if (clientFilterInput) {
+        clientFilterInput.addEventListener('input', filterClientOptions);
+        clientFilterInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                selectFirstMatchingClientOption();
+            }
+        });
+        clientFilterInput.addEventListener('focus', function() {
+            expandClientSelect();
+        });
+        clientFilterInput.addEventListener('blur', function() {
+            setTimeout(collapseClientSelect, 150);
+        });
+    }
+});
+</script>
+@endpush
             clientSelect.dispatchEvent(new Event('change'));
         }
     }
