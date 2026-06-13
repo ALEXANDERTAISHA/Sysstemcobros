@@ -51,7 +51,16 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php $currentBranchId = null; @endphp
                     @forelse($clients as $client)
+                        @if (auth()->user()?->isSuperAdmin() && is_null($branchId) && $currentBranchId !== $client->branch_id)
+                            <tr class="table-secondary">
+                                <td colspan="{{ auth()->user()?->isSuperAdmin() ? 7 : 6 }}">
+                                    <strong>{{ $client->branch?->name ?? 'Sin sucursal' }}</strong>
+                                </td>
+                            </tr>
+                            @php $currentBranchId = $client->branch_id; @endphp
+                        @endif
                         <tr>
                             <td>
                                 <a href="{{ route('clients.show', $client) }}" class="font-weight-bold">
