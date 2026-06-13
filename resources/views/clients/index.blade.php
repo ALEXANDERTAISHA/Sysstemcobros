@@ -9,6 +9,16 @@
             <form method="GET" class="form-inline">
                 <input type="text" name="search" class="form-control mr-2" placeholder="Buscar por nombre o teléfono..."
                     value="{{ $search }}">
+                @if (auth()->user()?->isSuperAdmin())
+                    <select name="branch_id" class="form-control mr-2">
+                        <option value="">Todas las sucursales</option>
+                        @foreach ($branches as $branch)
+                            <option value="{{ $branch->id }}" {{ (string) $branchId === (string) $branch->id ? 'selected' : '' }}>
+                                {{ $branch->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
                 <button class="btn btn-primary mr-1"><i class="fas fa-search"></i></button>
                 <a href="{{ route('clients.index') }}" class="btn btn-secondary"><i class="fas fa-redo"></i></a>
             </form>
@@ -33,6 +43,9 @@
                         <th>Teléfono</th>
                         <th>Correo</th>
                         <th>WhatsApp</th>
+                        @if (auth()->user()?->isSuperAdmin())
+                            <th>Sucursal</th>
+                        @endif
                         <th>Estado</th>
                         <th class="text-center">Acciones</th>
                     </tr>
@@ -63,6 +76,9 @@
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
+                            @if (auth()->user()?->isSuperAdmin())
+                                <td>{{ $client->branch?->name ?? 'Sin sucursal' }}</td>
+                            @endif
                             <td>
                                 <span class="badge badge-{{ $client->is_active ? 'success' : 'secondary' }}">
                                     {{ $client->is_active ? 'Activo' : 'Inactivo' }}
@@ -85,7 +101,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4"><i
+                            <td colspan="{{ auth()->user()?->isSuperAdmin() ? 7 : 6 }}" class="text-center text-muted py-4"><i
                                     class="fas fa-users fa-2x d-block mb-2"></i> Sin clientes</td>
                         </tr>
                     @endforelse

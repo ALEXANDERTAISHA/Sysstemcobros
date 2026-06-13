@@ -24,6 +24,12 @@
                         </span>
                     </p>
                     <ul class="list-group list-group-unbordered mb-3">
+                        @if (auth()->user()?->isSuperAdmin())
+                            <li class="list-group-item">
+                                <b><i class="fas fa-code-branch mr-1"></i>Sucursal</b>
+                                <span class="float-right">{{ $client->branch?->name ?? 'Sin sucursal' }}</span>
+                            </li>
+                        @endif
                         @if ($client->phone)
                             <li class="list-group-item">
                                 <b><i class="fas fa-phone mr-1"></i>Teléfono</b>

@@ -85,7 +85,11 @@ class DashboardController extends Controller
         $activeCredits = $summary['active_credit_balance'];
 
         $companies = Company::where('is_active', true)->orderByBusinessList()->get();
-        $totalClients = Client::where('is_active', true)->count();
+        $clientsCountQuery = Client::where('is_active', true)->forCurrentBranch();
+        if (BranchContext::isPrivileged() && $branchId) {
+            $clientsCountQuery->where('branch_id', $branchId);
+        }
+        $totalClients = $clientsCountQuery->count();
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
 
         // Cuentas por pagar activas (pendientes)

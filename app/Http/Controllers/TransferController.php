@@ -45,7 +45,7 @@ class TransferController extends Controller
     public function create()
     {
         $companies = Company::where('is_active', true)->orderByBusinessList()->get();
-        $clients = Client::orderBy('name')->get(['id', 'name', 'phone']);
+        $clients = Client::forCurrentBranch()->orderBy('name')->get(['id', 'name', 'phone']);
         $users = User::orderBy('name')->get(['id', 'name']);
 
         return view('transfers.create', compact('companies', 'clients', 'users'));
@@ -90,7 +90,7 @@ class TransferController extends Controller
         BranchContext::abortIfForbidden($transfer->branch_id);
 
         $companies = Company::where('is_active', true)->orderByBusinessList()->get();
-        $clients = Client::orderBy('name')->get(['id', 'name', 'phone']);
+        $clients = Client::forCurrentBranch()->orderBy('name')->get(['id', 'name', 'phone']);
         return view('transfers.edit', compact('transfer', 'companies', 'clients'));
     }
 

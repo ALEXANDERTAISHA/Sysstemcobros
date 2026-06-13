@@ -51,9 +51,12 @@ class AccountPayableController extends Controller
             'client_id' => 'required|exists:clients,id',
         ]);
         $clientId = $request->input('client_id');
-        $accounts = AccountPayable::where('client_id', $clientId)
-            ->where('status', '!=', 'paid')
-            ->get();
+        BranchContext::abortIfForbidden(Client::findOrFail($clientId)->branch_id);
+
+        $accountsQuery = AccountPayable::where('client_id', $clientId)
+            ->where('status', '!=', 'paid');
+        BranchContext::scope($accountsQuery);
+        $accounts = $accountsQuery->get();
         $total = 0;
         foreach ($accounts as $account) {
             $balance = $account->balance;
@@ -76,7 +79,7 @@ class AccountPayableController extends Controller
 
     public function create()
     {
-        $clients = Client::where('is_active', true)->orderBy('name')->get();
+        $clients = Client::where('is_active', true)->forCurrentBranch()->orderBy('name')->get();
         $companies = Company::where('is_active', true)->ofType(Company::TYPE_EXPENSE_DEBIT)->orderByBusinessList()->get();
 
         return view('accounts-payable.create', compact('clients', 'companies'));
@@ -93,6 +96,8 @@ class AccountPayableController extends Controller
             'due_date' => 'nullable|date|after_or_equal:issued_date',
             'notes' => 'nullable|string',
         ]);
+
+        BranchContext::abortIfForbidden(Client::findOrFail($data['client_id'])->branch_id);
 
         $data['issued_date'] = $data['issued_date'] ?? today()->toDateString();
 

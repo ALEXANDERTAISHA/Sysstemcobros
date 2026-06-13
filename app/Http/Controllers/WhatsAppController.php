@@ -14,7 +14,7 @@ class WhatsAppController extends Controller
     public function index(Request $request)
     {
         $notifications = WhatsappNotification::orderByDesc('created_at')->paginate(30);
-        $clients = Client::where('is_active', true)->orderBy('name')->get();
+        $clients = Client::where('is_active', true)->forCurrentBranch()->orderBy('name')->get();
         $hasCallMeBot = !empty(config('services.callmebot.api_key'));
         $hasMeta = !empty(config('services.meta_whatsapp.token'))
             && !empty(config('services.meta_whatsapp.phone_number_id'));

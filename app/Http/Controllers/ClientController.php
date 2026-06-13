@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Client;
 use App\Models\Credit;
+use App\Support\BranchContext;
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
@@ -11,17 +13,38 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         $search = $request->get('search');
-        $clients = Client::when($search, fn($q) => $q->where('name', 'like', "%$search%")
-            ->orWhere('phone', 'like', "%$search%")
-            ->orWhere('email', 'like', "%$search%"))
-            ->orderBy('name')
+        $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
+        $clientsQuery = Client::with('branch')
+            ->when($search, fn($q) => $q->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('clients.name', 'like', "%$search%")
+                    ->orWhere('clients.phone', 'like', "%$search%")
+                    ->orWhere('clients.email', 'like', "%$search%");
+            }));
+
+        if (BranchContext::isPrivileged() && $branchId) {
+            $clientsQuery->where('branch_id', $branchId);
+        } else {
+            BranchContext::scope($clientsQuery);
+        }
+
+        $clients = $clientsQuery
+            ->leftJoin('branches as client_branches', 'client_branches.id', '=', 'clients.branch_id')
+            ->select('clients.*')
+            ->orderByRaw('clients.branch_id IS NULL')
+            ->orderBy('client_branches.name')
+            ->orderBy('clients.name')
             ->paginate(20);
-        return view('clients.index', compact('clients', 'search'));
+
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
+        return view('clients.index', compact('clients', 'search', 'branches', 'branchId'));
     }
 
     public function create()
     {
-        return view('clients.create');
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
+        return view('clients.create', compact('branches'));
     }
 
     public function store(Request $request)
@@ -34,8 +57,11 @@ class ClientController extends Controller
             'address'   => 'nullable|string|max:250',
             'notes'     => 'nullable|string',
             'is_active' => 'nullable|boolean',
+            'branch_id'  => 'nullable|exists:branches,id',
         ]);
         $data['is_active'] = $request->boolean('is_active', true);
+        $data = BranchContext::assign($data);
+        $data['branch_id'] ??= Branch::where('is_active', true)->orderBy('id')->value('id');
         $client = Client::create($data);
 
         if ($request->expectsJson()) {
@@ -54,6 +80,8 @@ class ClientController extends Controller
 
     public function show(Client $client)
     {
+        BranchContext::abortIfForbidden($client->branch_id);
+
         $credits = $client->credits()->with('payments')->latest()->get();
         $totalDebt = $credits->whereIn('status', ['active', 'partial'])
             ->sum(fn($c) => $c->total_amount - $c->paid_amount);
@@ -62,11 +90,17 @@ class ClientController extends Controller
 
     public function edit(Client $client)
     {
-        return view('clients.edit', compact('client'));
+        BranchContext::abortIfForbidden($client->branch_id);
+
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+
+        return view('clients.edit', compact('client', 'branches'));
     }
 
     public function update(Request $request, Client $client)
     {
+        BranchContext::abortIfForbidden($client->branch_id);
+
         $data = $request->validate([
             'name'      => 'required|string|max:150',
             'email'     => 'nullable|email|max:150',
@@ -75,14 +109,18 @@ class ClientController extends Controller
             'address'   => 'nullable|string|max:250',
             'notes'     => 'nullable|string',
             'is_active' => 'nullable|boolean',
+            'branch_id'  => 'nullable|exists:branches,id',
         ]);
         $data['is_active'] = $request->boolean('is_active');
+        $data = BranchContext::assign($data);
         $client->update($data);
         return redirect()->route('clients.index')->with('success', 'Cliente actualizado.');
     }
 
     public function destroy(Client $client)
     {
+        BranchContext::abortIfForbidden($client->branch_id);
+
         if ($client->credits()->exists()) {
             return back()->with('error', 'No se puede eliminar un cliente con fiados registrados.');
         }

@@ -48,7 +48,7 @@ class ExpenseController extends Controller
 
     public function create()
     {
-        $clients = Client::where('is_active', true)->orderBy('name')->get();
+        $clients = Client::where('is_active', true)->forCurrentBranch()->orderBy('name')->get();
         $companies = Company::where('is_active', true)->ofType(Company::TYPE_EXPENSE_DEBIT)->orderByBusinessList()->get();
 
         return view('expenses.create', compact('clients', 'companies'));
@@ -70,6 +70,8 @@ class ExpenseController extends Controller
         ]);
 
         $data['is_active'] = true;
+        $data = BranchContext::assign($data);
+        $data['branch_id'] ??= Branch::where('is_active', true)->orderBy('id')->value('id');
 
         $client = Client::create($data);
 
@@ -134,6 +136,8 @@ class ExpenseController extends Controller
             'notes' => 'notas',
         ]);
 
+        BranchContext::abortIfForbidden(Client::findOrFail($data['client_id'])->branch_id);
+
         $company = Company::findOrFail($data['company_id']);
         $specialNoDueDateCompanies = ['TRANSFERENCIA ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO', 'PRODUCTOS DE LA TIENDA'];
         $isSpecialNoDueDateCompany = in_array(mb_strtoupper(trim((string) $company->name)), $specialNoDueDateCompanies, true);
@@ -185,7 +189,7 @@ class ExpenseController extends Controller
     {
         BranchContext::abortIfForbidden($credit->branch_id);
 
-        $clients = Client::where('is_active', true)->orderBy('name')->get();
+        $clients = Client::where('is_active', true)->forCurrentBranch()->orderBy('name')->get();
         $companies = Company::where('is_active', true)->ofType(Company::TYPE_EXPENSE_DEBIT)->orderByBusinessList()->get();
 
         return view('expenses.edit', compact('credit', 'clients', 'companies'));
@@ -204,6 +208,8 @@ class ExpenseController extends Controller
             'due_date' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
+
+        BranchContext::abortIfForbidden(Client::findOrFail($data['client_id'])->branch_id);
 
         $credit->update($data);
 

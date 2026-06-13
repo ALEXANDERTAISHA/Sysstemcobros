@@ -51,7 +51,11 @@ class OtherIncomeController extends Controller
         }
         $incomes = $incomesQuery->get();
         $total = $incomes->sum('amount');
-        $clients = Client::where('is_active', true)->orderBy('name')->get();
+        $clientsQuery = Client::where('is_active', true)->forCurrentBranch();
+        if (BranchContext::isPrivileged() && $branchId) {
+            $clientsQuery->where('branch_id', $branchId);
+        }
+        $clients = $clientsQuery->orderBy('name')->get();
 
         // Filtro de transferencias especiales
         $specialCompanies = ['TRANSFERENCIA ZELLE', 'ZELLE', 'GASTOS TIENDA', 'GIRO REENVIADO'];
@@ -389,7 +393,10 @@ class OtherIncomeController extends Controller
         $branchId = BranchContext::isPrivileged() ? ($request->integer('branch_id') ?: null) : BranchContext::branchId();
         $clientSearch = trim((string) $data['client_search']);
 
-        $matchedClientsQuery = Client::query();
+        $matchedClientsQuery = Client::forCurrentBranch();
+        if (BranchContext::isPrivileged() && $branchId) {
+            $matchedClientsQuery->where('branch_id', $branchId);
+        }
         $this->applyClientTokenSearch(
             $matchedClientsQuery,
             collect(preg_split('/\s+/', $clientSearch) ?: [])->filter()->values()
@@ -622,7 +629,11 @@ class OtherIncomeController extends Controller
         $clientSearch = trim($data['client_search']);
         $date = $data['date'];
 
-        $clients = Client::where('name', 'like', "%{$clientSearch}%")->get();
+        $clientsQuery = Client::forCurrentBranch()->where('name', 'like', "%{$clientSearch}%");
+        if (BranchContext::isPrivileged() && $branchId) {
+            $clientsQuery->where('branch_id', $branchId);
+        }
+        $clients = $clientsQuery->get();
         if ($clients->isEmpty()) {
             return back()->withErrors(['client_search' => 'No se encontró el cliente.']);
         }

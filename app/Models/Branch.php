@@ -22,4 +22,9 @@ class Branch extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function clients(): HasMany
+    {
+        return $this->hasMany(Client::class);
+    }
 }

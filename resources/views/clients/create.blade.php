@@ -24,6 +24,22 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        @if (auth()->user()?->isSuperAdmin())
+                            <div class="form-group">
+                                <label>Sucursal *</label>
+                                <select name="branch_id" class="form-control @error('branch_id') is-invalid @enderror" required>
+                                    <option value="">Selecciona una sucursal</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ (string) old('branch_id', auth()->user()?->branch_id) === (string) $branch->id ? 'selected' : '' }}>
+                                            {{ $branch->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('branch_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @endif
                         <div class="form-group">
                             <label>Correo electrónico</label>
                             <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
