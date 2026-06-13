@@ -33,7 +33,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::middleware('role:super_admin,admin')->group(function () {
+    Route::middleware('role:super_admin,admin,operator')->group(function () {
         // Empresas
         Route::prefix('companies/gastos-debitos')->name('companies.gastos-debitos.')->group(function () {
             Route::get('/', [CompanyController::class, 'gastosDebitos'])->name('index');
