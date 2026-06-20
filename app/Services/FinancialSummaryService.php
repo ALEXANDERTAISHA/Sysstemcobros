@@ -37,6 +37,13 @@ class FinancialSummaryService
         'PAQUETERIA',
     ];
 
+    private const EXPENSE_TRANSFER_COMPANIES = [
+        'VIAS AMERICAS CHEQUES',
+        'VIAS AMERICAS TRANSFERENCIAS TARJETA DE DEBITO',
+        'LA NACIONAL CHEQUES',
+        'LA NACIONAL TARJETA DE DEBITO',
+    ];
+
     public function transferQuery(string $dateFrom, string $dateTo, ?int $companyId = null, ?int $branchId = null): Builder
     {
         $query = Transfer::query()
@@ -131,15 +138,21 @@ class FinancialSummaryService
 
     private function isIncomeTransferCompany(?Company $company): bool
     {
-        if ($company?->company_type === Company::TYPE_GENERAL) {
-            return true;
-        }
-
         if ($company?->company_type === Company::TYPE_EXPENSE_DEBIT) {
             return false;
         }
 
         $normalized = mb_strtoupper(trim((string) $company?->name));
+        
+        // Si está en las empresas de gasto, no es ingreso
+        if (in_array($normalized, self::EXPENSE_TRANSFER_COMPANIES, true)) {
+            return false;
+        }
+
+        if ($company?->company_type === Company::TYPE_GENERAL) {
+            return true;
+        }
+
         return in_array($normalized, self::INCOME_TRANSFER_COMPANIES, true);
     }
 
