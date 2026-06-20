@@ -113,6 +113,10 @@
             background: #fff3cd;
         }
 
+        .special-debit-row td {
+            background: #dbeafe;
+        }
+
         .special-debit-badge {
             display: inline-block;
             color: #0f3ea8;
@@ -203,16 +207,18 @@
                         $specialDebitCompanies = [
                             'VIAS AMERICAS CHEQUES',
                             'VIAS AMERICAS TRANSFERENCIAS TARJETA DEBITO',
+                            'VIAS AMERICAS TRANSFERENCIAS TARJETA DE DEBITO',
                             'LA NACIONAL CHEQUE',
                             'LA NACIONAL CHEQUES',
                             'LA NACIONAL TARJETA DEBITO',
+                            'LA NACIONAL TARJETA DE DEBITO',
                         ];
                     @endphp
                     @forelse($debitRows as $i => $row)
                         @php
                             $isSpecialDebitCompany = in_array(mb_strtoupper(trim((string) ($row->company?->name ?? ''))), $specialDebitCompanies, true);
                         @endphp
-                        <tr class="{{ $sameDayPaidCreditIds->contains($row->id) ? 'same-day-highlight' : '' }}">
+                        <tr class="{{ $sameDayPaidCreditIds->contains($row->id) ? 'same-day-highlight' : '' }} {{ $isSpecialDebitCompany ? 'special-debit-row' : '' }}">
                             <td class="center">{{ $i + 1 }}</td>
                             <td class="right mono">
                                 <span class="{{ $isSpecialDebitCompany ? 'special-debit-badge' : '' }}">$ {{ number_format((float) $row->total_amount, 2) }}</span>
