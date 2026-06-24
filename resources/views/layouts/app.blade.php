@@ -418,7 +418,7 @@
                                 <a href="#" class="nav-link {{ $operacionesOpen ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-cogs"></i>
                                     <p>
-                                        FUNCIONES
+                                        OPERACIONES
                                         @unless ($hasTodayInitialCash)
                                             <span class="operation-lock-badge">BLOQUEADO</span>
                                         @endunless
