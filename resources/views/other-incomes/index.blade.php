@@ -342,19 +342,44 @@
             <div class="card card-outline card-info mt-3">
                 <div class="card-header">
                     <div class="d-flex flex-wrap align-items-end w-100">
-                        <h3 class="card-title mr-3 mb-2"><i class="fas fa-plus-circle mr-1"></i> Ingresos del
-                            {{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}</h3>
-                        <form id="income_table_search_form" class="flex-grow-1 mr-3 mb-2"
-                            style="max-width: 640px; min-width: 280px;" autocomplete="off">
-                            <label for="income_table_search_input" class="mb-1">Cliente/Empresa (opcional)</label>
-                            <div class="input-group">
-                                <input type="text" id="income_table_search_input" class="form-control"
+                        <h3 class="card-title mr-3 mb-2"><i class="fas fa-plus-circle mr-1"></i>
+                            @if($dateStart && $dateEnd && $dateStart !== $dateEnd)
+                                Ingresos del {{ \Carbon\Carbon::parse($dateStart)->format('d/m/Y') }} al
+                                {{ \Carbon\Carbon::parse($dateEnd)->format('d/m/Y') }}
+                            @else
+                                Ingresos del {{ \Carbon\Carbon::parse($dateStart ?: $dateEnd ?: $date)->format('d/m/Y') }}
+                            @endif
+                        </h3>
+                        <form method="GET" action="{{ route('other-incomes.index') }}" id="income_table_search_form"
+                            class="d-flex flex-wrap align-items-end flex-grow-1 mr-3 mb-2"
+                            style="max-width: 960px; min-width: 280px; gap: .5rem;" autocomplete="off">
+                            <input type="hidden" name="date" value="{{ $date }}">
+                            @if(!empty($clientSearch))
+                                <input type="hidden" name="client_search" value="{{ $clientSearch }}">
+                            @endif
+                            @if(auth()->user()->isSuperAdmin() && $branchId)
+                                <input type="hidden" name="branch_id" value="{{ $branchId }}">
+                            @endif
+                            <div class="flex-grow-1" style="min-width: 240px;">
+                                <label for="income_table_search_input" class="mb-1">Cliente/Empresa (opcional)</label>
+                                <input type="text" name="income_search" id="income_table_search_input"
+                                    class="form-control" value="{{ $incomeSearch }}"
                                     placeholder="Escribe para buscar cliente o empresa...">
-                                <div class="input-group-append">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search mr-1"></i> Buscar
-                                    </button>
-                                </div>
+                            </div>
+                            <div style="min-width: 145px;">
+                                <label for="income_date_start" class="mb-1">Desde</label>
+                                <input type="date" name="date_start" id="income_date_start" class="form-control"
+                                    value="{{ $dateStart ?: $date }}">
+                            </div>
+                            <div style="min-width: 145px;">
+                                <label for="income_date_end" class="mb-1">Hasta</label>
+                                <input type="date" name="date_end" id="income_date_end" class="form-control"
+                                    value="{{ $dateEnd ?: $date }}">
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary px-4" aria-label="Buscar ingresos">
+                                    <i class="fas fa-search mr-1"></i> Buscar
+                                </button>
                             </div>
                         </form>
                         <div class="card-tools ml-auto mb-2">
@@ -717,10 +742,6 @@
 
             clientSearchInput.addEventListener('change', syncCollectForm);
             if (incomeSearchForm && incomeSearchInput) {
-                incomeSearchForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    applyIncomeTableFilter();
-                });
                 incomeSearchInput.addEventListener('input', applyIncomeTableFilter);
             }
             if (clientSearchClear) {

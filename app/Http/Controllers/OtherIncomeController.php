@@ -32,6 +32,7 @@ class OtherIncomeController extends Controller
         $dateStart = $request->get('date_start');
         $dateEnd = $request->get('date_end');
         $specialSearch = trim((string) $request->get('special_search', ''));
+        $incomeSearch = trim((string) $request->get('income_search', ''));
         $date = $request->get('date', today()->toDateString());
         $selectedClientId = $request->filled('client_id') ? (int) $request->get('client_id') : null;
         $clientSearch = trim((string) $request->get('client_search', ''));
@@ -41,8 +42,15 @@ class OtherIncomeController extends Controller
         $incomesQuery = OtherIncome::with('client', 'credit.company', 'branch');
         if ($dateStart && $dateEnd) {
             $incomesQuery->whereBetween('income_date', [$dateStart, $dateEnd]);
+        } elseif ($dateStart) {
+            $incomesQuery->whereDate('income_date', '>=', $dateStart);
+        } elseif ($dateEnd) {
+            $incomesQuery->whereDate('income_date', '<=', $dateEnd);
         } else {
             $incomesQuery->whereDate('income_date', $date);
+        }
+        if ($incomeSearch !== '') {
+            $this->applySearchToOtherIncomes($incomesQuery, $incomeSearch);
         }
         if (BranchContext::isPrivileged() && $branchId) {
             $incomesQuery->where('branch_id', $branchId);
@@ -148,6 +156,7 @@ class OtherIncomeController extends Controller
             'dateStart',
             'dateEnd',
             'specialSearch',
+            'incomeSearch',
             'total',
             'clients',
             'branches',
@@ -944,6 +953,24 @@ class OtherIncomeController extends Controller
         $creditsQuery->whereHas('client', function ($clientQuery) use ($tokens) {
             $this->applyClientTokenSearch($clientQuery, $tokens);
         });
+    }
+
+    private function applySearchToOtherIncomes($incomesQuery, string $search): void
+    {
+        $tokens = collect(preg_split('/\s+/', trim($search)) ?: [])
+            ->filter()
+            ->values();
+
+        foreach ($tokens as $token) {
+            $like = '%' . $token . '%';
+            $incomesQuery->where(function ($query) use ($like) {
+                $query->whereHas('client', function ($clientQuery) use ($like) {
+                    $clientQuery->where('name', 'like', $like);
+                })->orWhereHas('credit.company', function ($companyQuery) use ($like) {
+                    $companyQuery->where('name', 'like', $like);
+                });
+            });
+        }
     }
 
     private function applyClientTokenSearch($clientQuery, $tokens): void

@@ -105,6 +105,50 @@ class OtherIncomeZelleCollectionTest extends TestCase
             ->assertSee('Debito por cliente compuesto');
     }
 
+    public function test_daily_income_table_filters_by_date_range_and_company(): void
+    {
+        [$branch, $company, $client, $user] = $this->baseData();
+        $credit = Credit::create([
+            'branch_id' => $branch->id,
+            'client_id' => $client->id,
+            'company_id' => $company->id,
+            'concept' => 'Debito para filtrar ingresos',
+            'total_amount' => 100,
+            'paid_amount' => 100,
+            'granted_date' => '2026-08-10',
+            'status' => 'paid',
+        ]);
+
+        OtherIncome::create([
+            'branch_id' => $branch->id,
+            'client_id' => $client->id,
+            'credit_id' => $credit->id,
+            'income_date' => '2026-08-10',
+            'description' => 'Ingreso incluido en rango',
+            'amount' => 60,
+        ]);
+        OtherIncome::create([
+            'branch_id' => $branch->id,
+            'client_id' => $client->id,
+            'credit_id' => $credit->id,
+            'income_date' => '2026-08-15',
+            'description' => 'Ingreso excluido del rango',
+            'amount' => 40,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('other-incomes.index', [
+                'date_start' => '2026-08-09',
+                'date_end' => '2026-08-11',
+                'income_search' => 'AMERICA',
+            ]))
+            ->assertOk()
+            ->assertSee('Ingreso incluido en rango')
+            ->assertDontSee('Ingreso excluido del rango')
+            ->assertSee('value="2026-08-09"', false)
+            ->assertSee('value="2026-08-11"', false);
+    }
+
     private function baseData(): array
     {
         $branch = Branch::create([
