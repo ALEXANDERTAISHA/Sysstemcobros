@@ -250,22 +250,6 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <form id="income_table_search_form" class="p-3 border-bottom" autocomplete="off">
-                        <div class="form-row align-items-end">
-                            <div class="col-md-6 col-lg-5">
-                                <label for="income_table_search_input" class="mb-1">Cliente/Empresa (opcional)</label>
-                                <div class="input-group">
-                                    <input type="text" id="income_table_search_input" class="form-control"
-                                        placeholder="Escribe para buscar cliente o empresa...">
-                                    <div class="input-group-append">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-search mr-1"></i> Buscar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
                     <div class="table-responsive">
                     <table class="table table-hover table-sm mb-0">
                         <thead class="thead-dark">
@@ -357,10 +341,25 @@
 
             <div class="card card-outline card-info mt-3">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-plus-circle mr-1"></i> Ingresos del
-                        {{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}</h3>
-                    <div class="card-tools">
-                        <span class="badge badge-info">Total: ${{ number_format($total, 2) }}</span>
+                    <div class="d-flex flex-wrap align-items-end w-100">
+                        <h3 class="card-title mr-3 mb-2"><i class="fas fa-plus-circle mr-1"></i> Ingresos del
+                            {{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}</h3>
+                        <form id="income_table_search_form" class="flex-grow-1 mr-3 mb-2"
+                            style="max-width: 640px; min-width: 280px;" autocomplete="off">
+                            <label for="income_table_search_input" class="mb-1">Cliente/Empresa (opcional)</label>
+                            <div class="input-group">
+                                <input type="text" id="income_table_search_input" class="form-control"
+                                    placeholder="Escribe para buscar cliente o empresa...">
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search mr-1"></i> Buscar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="card-tools ml-auto mb-2">
+                            <span class="badge badge-info">Total: ${{ number_format($total, 2) }}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
