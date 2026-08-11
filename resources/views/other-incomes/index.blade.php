@@ -250,27 +250,6 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <form id="income_table_search_form" class="p-3 border-bottom" autocomplete="off">
-                        <div class="form-row align-items-end">
-                            <div class="col-md-6 col-lg-5">
-                                <label for="income_table_search_input" class="mb-1">Cliente/Empresa (opcional)</label>
-                                <div class="input-group">
-                                    <input type="text" id="income_table_search_input" class="form-control"
-                                        placeholder="Escribe para buscar cliente o empresa...">
-                                    <div class="input-group-append">
-                                        <button type="button" id="income_table_search_clear"
-                                            class="btn btn-outline-secondary" title="Limpiar búsqueda"
-                                            aria-label="Limpiar búsqueda" style="display: none;">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-search mr-1"></i> Buscar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
                     <div class="table-responsive">
                     <table class="table table-hover table-sm mb-0">
                         <thead class="thead-dark">
@@ -395,8 +374,7 @@
                                     $creditIsToday = $incomeCredit && $incomeCredit->granted_date->isToday();
                                     $incomeNote = trim((string) ($income->notes ?: ($incomeCredit?->notes ?? '')));
                                 @endphp
-                                <tr class="filterable-income-row{{ $isToday && $creditIsToday ? ' table-warning' : '' }}"
-                                    data-search="{{ trim(($income->client?->name ?? '') . ' ' . ($incomeCredit?->company?->name ?? '')) }}">
+                                <tr class="filterable-income-row{{ $isToday && $creditIsToday ? ' table-warning' : '' }}">
                                     <td>
                                         {{ $income->income_date->format('d/m/Y') }}
                                         @if($isToday && $creditIsToday)
@@ -568,11 +546,6 @@
             const collectBranchId = document.getElementById('collect_branch_id');
             const pendingRows = Array.from(document.querySelectorAll('.filterable-pending-row'));
             const pendingNoResults = document.getElementById('pending_debts_no_results');
-            const incomeSearchForm = document.getElementById('income_table_search_form');
-            const incomeSearchInput = document.getElementById('income_table_search_input');
-            const incomeSearchClear = document.getElementById('income_table_search_clear');
-            const incomeRows = Array.from(document.querySelectorAll('.filterable-income-row'));
-            const incomesNoResults = document.getElementById('incomes_no_results');
 
             if (!filterForm || !clientSearchInput) {
                 return;
@@ -649,28 +622,6 @@
                 });
             }
 
-            function applyIncomeTableFilter() {
-                if (!incomeSearchInput) {
-                    return;
-                }
-
-                const query = incomeSearchInput.value.trim();
-                let visibleIncomes = 0;
-
-                incomeRows.forEach(function(row) {
-                    const matched = clientSearchMatches(row.dataset.search || '', query);
-                    row.style.display = matched ? '' : 'none';
-                    if (matched) visibleIncomes++;
-                });
-
-                if (incomesNoResults) {
-                    incomesNoResults.style.display = incomeRows.length > 0 && visibleIncomes === 0 ? '' : 'none';
-                }
-                if (incomeSearchClear) {
-                    incomeSearchClear.style.display = query.length > 0 ? '' : 'none';
-                }
-            }
-
             function queueInstantFilter() {
                 if (localFilterFrame) {
                     window.cancelAnimationFrame(localFilterFrame);
@@ -726,20 +677,6 @@
             }
 
             clientSearchInput.addEventListener('change', syncCollectForm);
-            if (incomeSearchForm && incomeSearchInput) {
-                incomeSearchForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    applyIncomeTableFilter();
-                });
-                incomeSearchInput.addEventListener('input', applyIncomeTableFilter);
-            }
-            if (incomeSearchClear && incomeSearchInput) {
-                incomeSearchClear.addEventListener('click', function() {
-                    incomeSearchInput.value = '';
-                    applyIncomeTableFilter();
-                    incomeSearchInput.focus();
-                });
-            }
             if (clientSearchClear) {
                 clientSearchClear.addEventListener('click', function() {
                     clientSearchInput.value = '';
@@ -780,7 +717,6 @@
             syncCollectForm();
             updateClearButton();
             applyInstantTableFilter();
-            applyIncomeTableFilter();
         });
     </script>
 @endpush
