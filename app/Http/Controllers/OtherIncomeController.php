@@ -712,8 +712,10 @@ class OtherIncomeController extends Controller
         $groups       = $pendingCredits->groupBy('client_id');
         $sentCount    = 0;
         $waSentCount  = 0;
+        $waErrors     = 0;
         $errors       = 0;
         $firstError   = null;
+        $firstWaError = null;
 
         foreach ($groups as $clientCredits) {
             $client = $clientCredits->first()->client;
@@ -774,20 +776,36 @@ class OtherIncomeController extends Controller
                 }
             }
 
-            // Enviar WhatsApp si tiene teléfono
-            if (!empty($client->phone)) {
+            // Prefer the dedicated WhatsApp number. The general phone is only a fallback.
+            $waPhone = $client->whatsapp ?: $client->phone;
+            if (!empty($waPhone)) {
                 $waMessage = "Estimado/a {$client->name}, le recordamos que tiene {$count} deuda(s) pendiente(s) por un total de $"
                     . number_format($totalDebt, 2)
                     . ($dueDateForEmail ? ". Vencimiento: {$dueDateForEmail}" : '')
                     . ". Por favor regularice su pago. Gracias.";
 
                 try {
-                    $this->whatsApp->send($client->phone, $waMessage, $client->name, 'credit', $clientCredits->first()->id);
-                    $waSentCount++;
+                    $notification = $this->whatsApp->send(
+                        $waPhone,
+                        $waMessage,
+                        $client->name,
+                        'credit',
+                        $clientCredits->first()->id
+                    );
+
+                    if ($notification->status === 'sent') {
+                        $waSentCount++;
+                    } else {
+                        $waErrors++;
+                        $firstWaError ??= $notification->error_message
+                            ?: 'WhatChimp no confirmó el envío.';
+                    }
                 } catch (\Throwable $e) {
+                    $waErrors++;
+                    $firstWaError ??= $e->getMessage();
                     \Illuminate\Support\Facades\Log::error('Error enviando recordatorio por WhatsApp', [
                         'client_id' => $client->id,
-                        'phone'     => $client->phone,
+                        'phone'     => $waPhone,
                         'error'     => $e->getMessage(),
                     ]);
                 }
@@ -795,11 +813,16 @@ class OtherIncomeController extends Controller
         }
 
         $clientsWithEmail = $groups->filter(fn($g) => !empty($g->first()->client?->email))->count();
-        $clientsWithPhone = $groups->filter(fn($g) => !empty($g->first()->client?->phone))->count();
+        $clientsWithPhone = $groups->filter(function ($group) {
+            $client = $group->first()->client;
 
-        if ($errors > 0 && $sentCount === 0 && $waSentCount === 0) {
+            return !empty($client?->whatsapp) || !empty($client?->phone);
+        })->count();
+
+        if (($errors > 0 || $waErrors > 0) && $sentCount === 0 && $waSentCount === 0) {
             return redirect()->route('other-incomes.index')
-                ->with('error', 'No se pudo enviar ningún recordatorio. Detalle: ' . ($firstError ?: 'SMTP no disponible. Configura BREVO_API_KEY para fallback por HTTPS.'));
+                ->with('error', 'No se pudo enviar ningún recordatorio. Detalle: '
+                    . ($firstWaError ?: $firstError ?: 'No hay un proveedor disponible.'));
         }
 
         $msg = "Recordatorios enviados: {$sentCount} correo(s) de {$clientsWithEmail} deudor(es) con email";
@@ -807,6 +830,12 @@ class OtherIncomeController extends Controller
             $msg .= ", {$waSentCount} WhatsApp(s) de {$clientsWithPhone} con teléfono";
         }
         $msg .= '.';
+
+        if ($waErrors > 0) {
+            $msg .= " {$waErrors} WhatsApp(s) fallaron. Detalle: {$firstWaError}";
+
+            return redirect()->route('other-incomes.index')->with('warning', $msg);
+        }
 
         return redirect()->route('other-incomes.index')
             ->with('success', $msg);
