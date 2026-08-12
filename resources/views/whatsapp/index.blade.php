@@ -16,13 +16,19 @@
                         @if (!$hasApiKey)
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle mr-1"></i>
-                                <strong>Configuración API:</strong> Para envío automático, configura
-                                <code>META_WHATSAPP_TOKEN</code> y <code>META_WHATSAPP_PHONE_NUMBER_ID</code>
-                                (recomendado) o <code>CALLMEBOT_API_KEY</code> en el archivo <code>.env</code>.
-                                <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/" target="_blank" class="alert-link">Meta Cloud API</a>
-                                o
-                                <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank" class="alert-link">CallMeBot</a>.
+                                <strong>Configuración API:</strong> Para envío automático con WhatChimp configura
+                                <code>WHATCHIMP_API_TOKEN</code>, <code>WHATCHIMP_PHONE_NUMBER_ID</code> y
+                                <code>WHATCHIMP_TEMPLATE_NAME</code> en el archivo <code>.env</code>.
+                                La plantilla debe estar aprobada y usar <code>@{{1}}</code> para el nombre y
+                                <code>@{{2}}</code> para la notificación.
+                                <a href="https://help.whatchimp.com/docs/whatchimp-apis/send-template-message-via-whatchimp-api"
+                                    target="_blank" class="alert-link">Ver guía de WhatChimp</a>.
                                 Sin API, se generará un enlace de WhatsApp Web.
+                            </div>
+                        @elseif ($hasWhatChimp)
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                WhatChimp está configurado. Las notificaciones se enviarán con la plantilla aprobada.
                             </div>
                         @else
                             <div class="alert alert-success">

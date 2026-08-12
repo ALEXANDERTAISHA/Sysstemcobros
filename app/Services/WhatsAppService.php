@@ -27,7 +27,46 @@ class WhatsAppService
             'related_id'      => $relatedId,
         ]);
 
-        // 1) Try Meta WhatsApp Cloud API first if configured.
+        // 1) Try WhatChimp first. Outbound notifications use an approved template,
+        // because free-form text is only accepted during the 24-hour session window.
+        $whatChimpToken = (string) config('services.whatchimp.api_token', '');
+        $whatChimpPhoneNumberId = (string) config('services.whatchimp.phone_number_id', '');
+        $whatChimpTemplate = (string) config('services.whatchimp.template_name', '');
+
+        if ($whatChimpToken !== '' && $whatChimpPhoneNumberId !== '' && $whatChimpTemplate !== '') {
+            $whatChimpResult = $this->sendViaWhatChimp(
+                $normalizedPhone,
+                $finalMessage,
+                $name,
+                $whatChimpToken,
+                $whatChimpPhoneNumberId,
+                $whatChimpTemplate,
+            );
+
+            if ($whatChimpResult['ok']) {
+                $notification->update([
+                    'status' => 'sent',
+                    'provider' => 'whatchimp',
+                    'provider_message_id' => $whatChimpResult['message_id'],
+                    'sent_at' => now(),
+                    'error_message' => null,
+                ]);
+
+                return $notification;
+            }
+
+            $notification->update([
+                'provider' => 'whatchimp',
+                'error_message' => $whatChimpResult['error'],
+            ]);
+
+            Log::warning('WhatChimp WhatsApp send failed, trying configured fallback.', [
+                'phone' => $normalizedPhone,
+                'error' => $whatChimpResult['error'],
+            ]);
+        }
+
+        // 2) Try Meta WhatsApp Cloud API if configured.
         $metaToken = (string) config('services.meta_whatsapp.token', '');
         $metaPhoneNumberId = (string) config('services.meta_whatsapp.phone_number_id', '');
         if ($metaToken !== '' && $metaPhoneNumberId !== '') {
@@ -48,7 +87,7 @@ class WhatsAppService
             ]);
         }
 
-        // 2) Try Twilio WhatsApp if configured.
+        // 3) Try Twilio WhatsApp if configured.
         $twilioSid = (string) config('services.twilio_whatsapp.account_sid', '');
         $twilioToken = (string) config('services.twilio_whatsapp.auth_token', '');
         $twilioFrom = (string) config('services.twilio_whatsapp.from', '');
@@ -71,7 +110,7 @@ class WhatsAppService
             ]);
         }
 
-        // 3) Fallback to CallMeBot if configured.
+        // 4) Fallback to CallMeBot if configured.
         $apiKey = config('services.callmebot.api_key');
         if (!empty($apiKey)) {
             try {
@@ -104,6 +143,13 @@ class WhatsAppService
             return $notification;
         }
 
+        // WhatChimp was configured and attempted, but no fallback delivered it.
+        if ($notification->provider === 'whatchimp' && $notification->error_message) {
+            $notification->update(['status' => 'failed']);
+
+            return $notification;
+        }
+
         // No provider configured.
         Log::info('No WhatsApp provider configured. Message queued for manual send.', [
             'phone'   => $normalizedPhone,
@@ -111,6 +157,58 @@ class WhatsAppService
         ]);
 
         return $notification;
+    }
+
+    private function sendViaWhatChimp(
+        string $normalizedPhone,
+        string $message,
+        ?string $name,
+        string $apiToken,
+        string $phoneNumberId,
+        string $templateName,
+    ): array {
+        $endpoint = (string) config(
+            'services.whatchimp.endpoint',
+            'https://app.whatchimp.com/api/v1/whatsapp/send'
+        );
+
+        try {
+            $response = Http::asForm()
+                ->timeout(20)
+                ->post($endpoint, [
+                    'apiToken' => $apiToken,
+                    'phone_number_id' => $phoneNumberId,
+                    'phone_number' => $this->providerPhone($normalizedPhone),
+                    'template_name' => $templateName,
+                    'language_code' => (string) config('services.whatchimp.template_language', 'es'),
+                    'variable1' => $name ?: 'Cliente',
+                    'variable2' => $message,
+                ]);
+
+            $payload = $response->json();
+            $accepted = $response->successful()
+                && is_array($payload)
+                && (string) ($payload['status'] ?? '') === '1';
+
+            if ($accepted) {
+                return [
+                    'ok' => true,
+                    'message_id' => $payload['wa_message_id']
+                        ?? data_get($payload, 'data.message_id'),
+                    'error' => null,
+                ];
+            }
+
+            return [
+                'ok' => false,
+                'message_id' => null,
+                'error' => is_array($payload)
+                    ? (string) ($payload['message'] ?? $response->body())
+                    : $response->body(),
+            ];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'message_id' => null, 'error' => $e->getMessage()];
+        }
     }
 
     private function sendViaMetaCloud(string $normalizedPhone, string $message, string $token, string $phoneNumberId): array

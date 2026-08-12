@@ -40,6 +40,14 @@ return [
         'default_country_code' => env('WHATSAPP_DEFAULT_COUNTRY_CODE', '593'),
     ],
 
+    'whatchimp' => [
+        'api_token' => env('WHATCHIMP_API_TOKEN', ''),
+        'phone_number_id' => env('WHATCHIMP_PHONE_NUMBER_ID', ''),
+        'template_name' => env('WHATCHIMP_TEMPLATE_NAME', ''),
+        'template_language' => env('WHATCHIMP_TEMPLATE_LANGUAGE', 'es'),
+        'endpoint' => env('WHATCHIMP_API_URL', 'https://app.whatchimp.com/api/v1/whatsapp/send'),
+    ],
+
     'meta_whatsapp' => [
         'token' => env('META_WHATSAPP_TOKEN', ''),
         'phone_number_id' => env('META_WHATSAPP_PHONE_NUMBER_ID', ''),

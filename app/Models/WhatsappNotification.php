@@ -11,6 +11,8 @@ class WhatsappNotification extends Model
         'recipient_name',
         'message',
         'status',
+        'provider',
+        'provider_message_id',
         'related_type',
         'related_id',
         'error_message',

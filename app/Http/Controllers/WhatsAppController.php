@@ -18,9 +18,15 @@ class WhatsAppController extends Controller
         $hasCallMeBot = !empty(config('services.callmebot.api_key'));
         $hasMeta = !empty(config('services.meta_whatsapp.token'))
             && !empty(config('services.meta_whatsapp.phone_number_id'));
-        $hasApiKey = $hasCallMeBot || $hasMeta;
+        $hasWhatChimp = !empty(config('services.whatchimp.api_token'))
+            && !empty(config('services.whatchimp.phone_number_id'))
+            && !empty(config('services.whatchimp.template_name'));
+        $hasTwilio = !empty(config('services.twilio_whatsapp.account_sid'))
+            && !empty(config('services.twilio_whatsapp.auth_token'))
+            && !empty(config('services.twilio_whatsapp.from'));
+        $hasApiKey = $hasWhatChimp || $hasCallMeBot || $hasMeta || $hasTwilio;
 
-        return view('whatsapp.index', compact('notifications', 'clients', 'hasApiKey'));
+        return view('whatsapp.index', compact('notifications', 'clients', 'hasApiKey', 'hasWhatChimp'));
     }
 
     public function send(Request $request)
@@ -39,6 +45,10 @@ class WhatsAppController extends Controller
 
         // Fallback WhatsApp Web link
         $link = $this->whatsApp->chatUrl($data['phone'], $data['message']);
-        return back()->with('info', "API no configurada. <a href=\"{$link}\" target=\"_blank\" class=\"alert-link\">Abrir WhatsApp Web para enviar</a>.");
+        $reason = $notification->status === 'failed'
+            ? 'El proveedor rechazó el mensaje.'
+            : 'No hay un proveedor automático completamente configurado.';
+
+        return back()->with('info', "{$reason} <a href=\"{$link}\" target=\"_blank\" class=\"alert-link\">Abrir WhatsApp Web para enviar</a>.");
     }
 }
