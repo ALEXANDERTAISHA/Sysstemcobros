@@ -69,16 +69,16 @@ class WhatsAppService
         // 2) Try WhatChimp when configured.
         $whatChimpToken = (string) config('services.whatchimp.api_token', '');
         $whatChimpPhoneNumberId = (string) config('services.whatchimp.phone_number_id', '');
-        $whatChimpTemplate = (string) config('services.whatchimp.template_name', '');
+        $whatChimpTemplateId = (string) config('services.whatchimp.template_id', '');
 
-        if ($whatChimpToken !== '' && $whatChimpPhoneNumberId !== '' && $whatChimpTemplate !== '') {
+        if ($whatChimpToken !== '' && $whatChimpPhoneNumberId !== '' && $whatChimpTemplateId !== '') {
             $whatChimpResult = $this->sendViaWhatChimp(
                 $normalizedPhone,
                 $finalMessage,
                 $name,
                 $whatChimpToken,
                 $whatChimpPhoneNumberId,
-                $whatChimpTemplate,
+                $whatChimpTemplateId,
             );
 
             if ($whatChimpResult['ok']) {
@@ -102,6 +102,13 @@ class WhatsAppService
                 'phone' => $normalizedPhone,
                 'error' => $whatChimpResult['error'],
             ]);
+
+            // WhatChimp is the explicitly configured provider for system
+            // notifications. Do not hide its rejection behind another provider,
+            // since that can report a false positive while no message is delivered.
+            $notification->update(['status' => 'failed']);
+
+            return $notification;
         }
 
         // 3) Try Twilio WhatsApp if configured.
@@ -182,11 +189,11 @@ class WhatsAppService
         ?string $name,
         string $apiToken,
         string $phoneNumberId,
-        string $templateName,
+        string $templateId,
     ): array {
         $endpoint = (string) config(
-            'services.whatchimp.endpoint',
-            'https://app.whatchimp.com/api/v1/whatsapp/send'
+            'services.whatchimp.template_endpoint',
+            'https://app.whatchimp.com/api/v1/whatsapp/send/template'
         );
 
         try {
@@ -195,11 +202,10 @@ class WhatsAppService
                 ->post($endpoint, [
                     'apiToken' => $apiToken,
                     'phone_number_id' => $phoneNumberId,
+                    'template_id' => $templateId,
+                    'templateVariable-nombreCliente-1' => $name ?: 'Cliente',
+                    'templateVariable-detalleNotificacion-2' => $message,
                     'phone_number' => $this->providerPhone($normalizedPhone),
-                    'template_name' => $templateName,
-                    'language_code' => (string) config('services.whatchimp.template_language', 'es'),
-                    'variable1' => $name ?: 'Cliente',
-                    'variable2' => $message,
                 ]);
 
             $payload = $response->json();

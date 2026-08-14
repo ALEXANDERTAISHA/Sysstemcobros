@@ -34,14 +34,13 @@ class WhatsAppServiceWhatChimpTest extends TestCase
         $this->assertSame('wamid.test-123', $notification->provider_message_id);
 
         Http::assertSent(function ($request) {
-            return $request->url() === 'https://app.whatchimp.com/api/v1/whatsapp/send'
+            return $request->url() === 'https://app.whatchimp.com/api/v1/whatsapp/send/template'
                 && $request['apiToken'] === 'test-token'
                 && $request['phone_number_id'] === '123456789'
                 && $request['phone_number'] === '573001234567'
-                && $request['template_name'] === 'notificacion_sistema'
-                && $request['language_code'] === 'es'
-                && $request['variable1'] === 'Ana'
-                && str_contains($request['variable2'], 'Tu pago fue recibido.');
+                && $request['template_id'] === '424860'
+                && $request['templateVariable-nombreCliente-1'] === 'Ana'
+                && str_contains($request['templateVariable-detalleNotificacion-2'], 'Tu pago fue recibido.');
         });
     }
 
@@ -65,6 +64,32 @@ class WhatsAppServiceWhatChimpTest extends TestCase
         $this->assertSame('failed', $notification->status);
         $this->assertSame('whatchimp', $notification->provider);
         $this->assertSame('Template not approved.', $notification->error_message);
+    }
+
+    public function test_a_whatchimp_rejection_is_not_hidden_by_a_fallback_provider(): void
+    {
+        $this->configureWhatChimp();
+        config()->set('services.callmebot.api_key', 'fallback-key');
+
+        Http::fake([
+            'app.whatchimp.com/*' => Http::response([
+                'status' => '0',
+                'message' => 'WhatsApp account not found.',
+            ]),
+            'api.callmebot.com/*' => Http::response('Message queued.'),
+        ]);
+
+        $notification = app(WhatsAppService::class)->send(
+            '+593988000222',
+            'Recordatorio de pago.',
+            'Ana',
+        );
+
+        $this->assertSame('failed', $notification->status);
+        $this->assertSame('whatchimp', $notification->provider);
+        $this->assertSame('WhatsApp account not found.', $notification->error_message);
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'app.whatchimp.com'));
     }
 
     public function test_whatchimp_success_without_message_id_is_not_marked_as_sent(): void
@@ -95,8 +120,10 @@ class WhatsAppServiceWhatChimpTest extends TestCase
             'api_token' => 'test-token',
             'phone_number_id' => '123456789',
             'template_name' => 'notificacion_sistema',
+            'template_id' => '424860',
             'template_language' => 'es',
             'endpoint' => 'https://app.whatchimp.com/api/v1/whatsapp/send',
+            'template_endpoint' => 'https://app.whatchimp.com/api/v1/whatsapp/send/template',
         ]);
         config()->set('services.meta_whatsapp', ['token' => '', 'phone_number_id' => '']);
         config()->set('services.twilio_whatsapp', ['account_sid' => '', 'auth_token' => '', 'from' => '']);

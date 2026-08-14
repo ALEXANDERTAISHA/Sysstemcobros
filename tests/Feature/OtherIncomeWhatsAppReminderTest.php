@@ -109,8 +109,10 @@ class OtherIncomeWhatsAppReminderTest extends TestCase
             'api_token' => 'test-token',
             'phone_number_id' => '123456789',
             'template_name' => 'notificacion_sistema',
+            'template_id' => '424860',
             'template_language' => 'es',
             'endpoint' => 'https://app.whatchimp.com/api/v1/whatsapp/send',
+            'template_endpoint' => 'https://app.whatchimp.com/api/v1/whatsapp/send/template',
         ]);
         config()->set('services.meta_whatsapp', ['token' => '', 'phone_number_id' => '']);
         config()->set('services.twilio_whatsapp', ['account_sid' => '', 'auth_token' => '', 'from' => '']);
