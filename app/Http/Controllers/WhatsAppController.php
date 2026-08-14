@@ -21,7 +21,7 @@ class WhatsAppController extends Controller
             && !empty(config('services.meta_whatsapp.template_name'));
         $hasWhatChimp = !empty(config('services.whatchimp.api_token'))
             && !empty(config('services.whatchimp.phone_number_id'))
-            && !empty(config('services.whatchimp.template_name'));
+            && !empty(config('services.whatchimp.template_id'));
         $hasTwilio = !empty(config('services.twilio_whatsapp.account_sid'))
             && !empty(config('services.twilio_whatsapp.auth_token'))
             && !empty(config('services.twilio_whatsapp.from'));

@@ -18,7 +18,7 @@
                                 <i class="fas fa-info-circle mr-1"></i>
                                 <strong>Configuración API:</strong> Para envío automático con WhatChimp configura
                                 <code>WHATCHIMP_API_TOKEN</code>, <code>WHATCHIMP_PHONE_NUMBER_ID</code> y
-                                <code>WHATCHIMP_TEMPLATE_NAME</code> en el archivo <code>.env</code>.
+                                <code>WHATCHIMP_TEMPLATE_ID</code> en el archivo <code>.env</code>.
                                 La plantilla debe estar aprobada y usar <code>@{{1}}</code> para el nombre y
                                 <code>@{{2}}</code> para la notificación.
                                 <a href="https://help.whatchimp.com/docs/whatchimp-apis/send-template-message-via-whatchimp-api"
@@ -137,6 +137,12 @@
                                             class="badge badge-{{ $notif->status === 'sent' ? 'success' : ($notif->status === 'failed' ? 'danger' : 'warning') }}">
                                             {{ $notif->status === 'sent' ? 'Enviado' : ($notif->status === 'failed' ? 'Fallido' : 'Pendiente') }}
                                         </span>
+                                        @if ($notif->error_message)
+                                            <br>
+                                            <small class="text-danger" title="{{ $notif->error_message }}">
+                                                {{ Str::limit($notif->error_message, 80) }}
+                                            </small>
+                                        @endif
                                     </td>
                                     <td><small>{{ $notif->created_at->format('d/m/Y H:i') }}</small></td>
                                 </tr>
