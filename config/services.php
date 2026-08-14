@@ -51,7 +51,9 @@ return [
     'meta_whatsapp' => [
         'token' => env('META_WHATSAPP_TOKEN', ''),
         'phone_number_id' => env('META_WHATSAPP_PHONE_NUMBER_ID', ''),
-        'api_version' => env('META_WHATSAPP_API_VERSION', 'v21.0'),
+        'template_name' => env('META_WHATSAPP_TEMPLATE_NAME', ''),
+        'template_language' => env('META_WHATSAPP_TEMPLATE_LANGUAGE', 'es'),
+        'api_version' => env('META_WHATSAPP_API_VERSION', 'v23.0'),
     ],
 
     'twilio_whatsapp' => [

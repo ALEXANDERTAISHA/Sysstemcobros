@@ -17,7 +17,8 @@ class WhatsAppController extends Controller
         $clients = Client::where('is_active', true)->forCurrentBranch()->orderBy('name')->get();
         $hasCallMeBot = !empty(config('services.callmebot.api_key'));
         $hasMeta = !empty(config('services.meta_whatsapp.token'))
-            && !empty(config('services.meta_whatsapp.phone_number_id'));
+            && !empty(config('services.meta_whatsapp.phone_number_id'))
+            && !empty(config('services.meta_whatsapp.template_name'));
         $hasWhatChimp = !empty(config('services.whatchimp.api_token'))
             && !empty(config('services.whatchimp.phone_number_id'))
             && !empty(config('services.whatchimp.template_name'));

@@ -27,8 +27,46 @@ class WhatsAppService
             'related_id'      => $relatedId,
         ]);
 
-        // 1) Try WhatChimp first. Outbound notifications use an approved template,
-        // because free-form text is only accepted during the 24-hour session window.
+        // 1) Prefer Meta Cloud API when configured. Outbound notifications must use
+        // an approved template because free-form text is blocked outside 24 hours.
+        $metaToken = (string) config('services.meta_whatsapp.token', '');
+        $metaPhoneNumberId = (string) config('services.meta_whatsapp.phone_number_id', '');
+        $metaTemplate = (string) config('services.meta_whatsapp.template_name', '');
+
+        if ($metaToken !== '' && $metaPhoneNumberId !== '' && $metaTemplate !== '') {
+            $metaResult = $this->sendViaMetaCloud(
+                $normalizedPhone,
+                $finalMessage,
+                $name,
+                $metaToken,
+                $metaPhoneNumberId,
+                $metaTemplate,
+            );
+
+            if ($metaResult['ok']) {
+                $notification->update([
+                    'status' => 'sent',
+                    'provider' => 'meta',
+                    'provider_message_id' => $metaResult['message_id'],
+                    'sent_at' => now(),
+                    'error_message' => null,
+                ]);
+
+                return $notification;
+            }
+
+            $notification->update([
+                'provider' => 'meta',
+                'error_message' => $metaResult['error'],
+            ]);
+
+            Log::warning('Meta WhatsApp template send failed, trying configured fallback.', [
+                'phone' => $normalizedPhone,
+                'error' => $metaResult['error'],
+            ]);
+        }
+
+        // 2) Try WhatChimp when configured.
         $whatChimpToken = (string) config('services.whatchimp.api_token', '');
         $whatChimpPhoneNumberId = (string) config('services.whatchimp.phone_number_id', '');
         $whatChimpTemplate = (string) config('services.whatchimp.template_name', '');
@@ -63,27 +101,6 @@ class WhatsAppService
             Log::warning('WhatChimp WhatsApp send failed, trying configured fallback.', [
                 'phone' => $normalizedPhone,
                 'error' => $whatChimpResult['error'],
-            ]);
-        }
-
-        // 2) Try Meta WhatsApp Cloud API if configured.
-        $metaToken = (string) config('services.meta_whatsapp.token', '');
-        $metaPhoneNumberId = (string) config('services.meta_whatsapp.phone_number_id', '');
-        if ($metaToken !== '' && $metaPhoneNumberId !== '') {
-            $metaResult = $this->sendViaMetaCloud($normalizedPhone, $finalMessage, $metaToken, $metaPhoneNumberId);
-            if ($metaResult['ok']) {
-                $notification->update([
-                    'status'  => 'sent',
-                    'sent_at' => now(),
-                    'error_message' => null,
-                ]);
-
-                return $notification;
-            }
-
-            Log::warning('Meta WhatsApp send failed, trying CallMeBot fallback.', [
-                'phone' => $normalizedPhone,
-                'error' => $metaResult['error'],
             ]);
         }
 
@@ -143,8 +160,8 @@ class WhatsAppService
             return $notification;
         }
 
-        // WhatChimp was configured and attempted, but no fallback delivered it.
-        if ($notification->provider === 'whatchimp' && $notification->error_message) {
+        // A provider was attempted, but no fallback delivered the notification.
+        if ($notification->provider && $notification->error_message) {
             $notification->update(['status' => 'failed']);
 
             return $notification;
@@ -186,15 +203,19 @@ class WhatsAppService
                 ]);
 
             $payload = $response->json();
+            $messageId = is_array($payload)
+                ? ($payload['wa_message_id'] ?? data_get($payload, 'data.message_id'))
+                : null;
             $accepted = $response->successful()
                 && is_array($payload)
-                && (string) ($payload['status'] ?? '') === '1';
+                && (string) ($payload['status'] ?? '') === '1'
+                && is_string($messageId)
+                && $messageId !== '';
 
             if ($accepted) {
                 return [
                     'ok' => true,
-                    'message_id' => $payload['wa_message_id']
-                        ?? data_get($payload, 'data.message_id'),
+                    'message_id' => $messageId,
                     'error' => null,
                 ];
             }
@@ -202,18 +223,26 @@ class WhatsAppService
             return [
                 'ok' => false,
                 'message_id' => null,
-                'error' => is_array($payload)
-                    ? (string) ($payload['message'] ?? $response->body())
-                    : $response->body(),
+                'error' => is_array($payload) && (string) ($payload['status'] ?? '') === '1'
+                    ? 'WhatChimp aceptó la solicitud, pero no devolvió un wa_message_id.'
+                    : (is_array($payload)
+                        ? (string) ($payload['message'] ?? $response->body())
+                        : $response->body()),
             ];
         } catch (\Throwable $e) {
             return ['ok' => false, 'message_id' => null, 'error' => $e->getMessage()];
         }
     }
 
-    private function sendViaMetaCloud(string $normalizedPhone, string $message, string $token, string $phoneNumberId): array
-    {
-        $version = (string) config('services.meta_whatsapp.api_version', 'v21.0');
+    private function sendViaMetaCloud(
+        string $normalizedPhone,
+        string $message,
+        ?string $name,
+        string $token,
+        string $phoneNumberId,
+        string $templateName,
+    ): array {
+        $version = (string) config('services.meta_whatsapp.api_version', 'v23.0');
         $url = "https://graph.facebook.com/{$version}/{$phoneNumberId}/messages";
 
         try {
@@ -221,18 +250,40 @@ class WhatsAppService
                 ->timeout(20)
                 ->post($url, [
                     'messaging_product' => 'whatsapp',
+                    'recipient_type' => 'individual',
                     'to' => $this->providerPhone($normalizedPhone),
-                    'type' => 'text',
-                    'text' => ['body' => $message],
+                    'type' => 'template',
+                    'template' => [
+                        'name' => $templateName,
+                        'language' => [
+                            'code' => (string) config('services.meta_whatsapp.template_language', 'es'),
+                        ],
+                        'components' => [[
+                            'type' => 'body',
+                            'parameters' => [
+                                ['type' => 'text', 'text' => $name ?: 'Cliente'],
+                                ['type' => 'text', 'text' => $message],
+                            ],
+                        ]],
+                    ],
                 ]);
 
-            if ($response->successful()) {
-                return ['ok' => true, 'error' => null];
+            $payload = $response->json();
+            $messageId = is_array($payload) ? data_get($payload, 'messages.0.id') : null;
+
+            if ($response->successful() && is_string($messageId) && $messageId !== '') {
+                return ['ok' => true, 'message_id' => $messageId, 'error' => null];
             }
 
-            return ['ok' => false, 'error' => $response->body()];
+            return [
+                'ok' => false,
+                'message_id' => null,
+                'error' => is_array($payload)
+                    ? (string) (data_get($payload, 'error.message') ?? $response->body())
+                    : $response->body(),
+            ];
         } catch (\Throwable $e) {
-            return ['ok' => false, 'error' => $e->getMessage()];
+            return ['ok' => false, 'message_id' => null, 'error' => $e->getMessage()];
         }
     }
 

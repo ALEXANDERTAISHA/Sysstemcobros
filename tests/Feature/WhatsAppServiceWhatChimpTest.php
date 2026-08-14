@@ -67,6 +67,28 @@ class WhatsAppServiceWhatChimpTest extends TestCase
         $this->assertSame('Template not approved.', $notification->error_message);
     }
 
+    public function test_whatchimp_success_without_message_id_is_not_marked_as_sent(): void
+    {
+        $this->configureWhatChimp();
+
+        Http::fake([
+            'app.whatchimp.com/*' => Http::response([
+                'status' => '1',
+                'message' => 'Message accepted.',
+            ]),
+        ]);
+
+        $notification = app(WhatsAppService::class)->send(
+            '+573001234567',
+            'Recordatorio de pago.',
+            'Ana',
+        );
+
+        $this->assertSame('failed', $notification->status);
+        $this->assertNull($notification->provider_message_id);
+        $this->assertStringContainsString('wa_message_id', $notification->error_message);
+    }
+
     private function configureWhatChimp(): void
     {
         config()->set('services.whatchimp', [
