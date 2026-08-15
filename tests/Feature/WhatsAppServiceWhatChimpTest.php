@@ -66,6 +66,29 @@ class WhatsAppServiceWhatChimpTest extends TestCase
         $this->assertSame('Template not approved.', $notification->error_message);
     }
 
+    public function test_it_removes_forbidden_whitespace_from_template_variables(): void
+    {
+        $this->configureWhatChimp();
+
+        Http::fake([
+            'app.whatchimp.com/*' => Http::response([
+                'status' => '1',
+                'wa_message_id' => 'wamid.whitespace-test',
+            ]),
+        ]);
+
+        app(WhatsAppService::class)->send(
+            '+593988000222',
+            "Primera línea.\n\tSegunda línea.     Fin.",
+            "Ana\tPérez",
+        );
+
+        Http::assertSent(function ($request) {
+            return $request['templateVariable-nombreCliente-1'] === 'Ana Pérez'
+                && $request['templateVariable-detalleNotificacion-2'] === '[Systemcobros] Primera línea. Segunda línea. Fin.';
+        });
+    }
+
     public function test_a_whatchimp_rejection_is_not_hidden_by_a_fallback_provider(): void
     {
         $this->configureWhatChimp();
