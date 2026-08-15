@@ -89,6 +89,26 @@ class WhatsAppServiceWhatChimpTest extends TestCase
         });
     }
 
+    public function test_it_adds_the_us_country_code_to_a_ten_digit_number(): void
+    {
+        $this->configureWhatChimp();
+
+        Http::fake([
+            'app.whatchimp.com/*' => Http::response([
+                'status' => '1',
+                'wa_message_id' => 'wamid.us-number-test',
+            ]),
+        ]);
+
+        app(WhatsAppService::class)->send(
+            '6318757682',
+            'Recordatorio de pago.',
+            'Cesar Guzman',
+        );
+
+        Http::assertSent(fn ($request) => $request['phone_number'] === '16318757682');
+    }
+
     public function test_a_whatchimp_rejection_is_not_hidden_by_a_fallback_provider(): void
     {
         $this->configureWhatChimp();
