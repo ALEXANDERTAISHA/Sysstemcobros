@@ -359,6 +359,12 @@ class WhatsAppService
             $clean = $countryCode . ltrim($clean, '0');
         }
 
+        // North American numbers are often stored locally with 10 digits.
+        // WhatsApp requires the NANP country code (1) in front of them.
+        if (strlen($clean) === 10 && preg_match('/^[2-9]/', $clean) === 1) {
+            $clean = '1' . $clean;
+        }
+
         return '+' . $clean;
     }
 
