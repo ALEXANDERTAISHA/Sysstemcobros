@@ -203,8 +203,8 @@ class WhatsAppService
                     'apiToken' => $apiToken,
                     'phone_number_id' => $phoneNumberId,
                     'template_id' => $templateId,
-                    'templateVariable-nombreCliente-1' => $name ?: 'Cliente',
-                    'templateVariable-detalleNotificacion-2' => $message,
+                    'templateVariable-nombreCliente-1' => $this->sanitizeTemplateVariable($name ?: 'Cliente'),
+                    'templateVariable-detalleNotificacion-2' => $this->sanitizeTemplateVariable($message),
                     'phone_number' => $this->providerPhone($normalizedPhone),
                 ]);
 
@@ -365,5 +365,12 @@ class WhatsAppService
     private function providerPhone(string $phone): string
     {
         return preg_replace('/\D+/', '', $phone);
+    }
+
+    private function sanitizeTemplateVariable(string $value): string
+    {
+        $value = preg_replace('/[\r\n\t]+/u', ' ', $value) ?? $value;
+
+        return trim(preg_replace('/ {2,}/u', ' ', $value) ?? $value);
     }
 }
