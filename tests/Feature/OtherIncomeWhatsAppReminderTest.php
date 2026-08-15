@@ -59,6 +59,31 @@ class OtherIncomeWhatsAppReminderTest extends TestCase
             ->assertSessionHas('error', fn (string $message) => str_contains($message, 'WhatsApp account not found.'));
     }
 
+    public function test_single_expense_reminder_shows_the_exact_whatchimp_error(): void
+    {
+        [$user, $client, $credit] = $this->createPendingDebt();
+        $client->update(['whatsapp' => '593988000222']);
+        $this->configureWhatChimp();
+
+        Http::fake([
+            'app.whatchimp.com/*' => Http::response([
+                'status' => '0',
+                'message' => 'Payment method is not valid.',
+            ]),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('expenses.send-reminder', $credit))
+            ->assertRedirect()
+            ->assertSessionHas('error', fn (string $message) => str_contains($message, 'Payment method is not valid.'));
+
+        $this->actingAs($user)
+            ->get(route('expenses.show', $credit))
+            ->assertOk()
+            ->assertSee('Último intento: Fallido.')
+            ->assertSee('Payment method is not valid.');
+    }
+
     private function createPendingDebt(): array
     {
         $branch = Branch::create([
@@ -100,7 +125,7 @@ class OtherIncomeWhatsAppReminderTest extends TestCase
             'status' => 'active',
         ]);
 
-        return [$user, $client];
+        return [$user, $client, Credit::query()->latest('id')->firstOrFail()];
     }
 
     private function configureWhatChimp(): void

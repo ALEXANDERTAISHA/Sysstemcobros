@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Company;
 use App\Models\Credit;
 use App\Models\CreditPayment;
+use App\Models\WhatsappNotification;
 use App\Support\BranchContext;
 use App\Services\EmailDeliveryService;
 use App\Services\WhatsAppService;
@@ -182,7 +183,13 @@ class ExpenseController extends Controller
 
         $credit->load('client', 'payments');
 
-        return view('expenses.show', compact('credit'));
+        $latestWhatsAppNotification = WhatsappNotification::query()
+            ->where('related_type', Credit::class)
+            ->where('related_id', $credit->id)
+            ->latest()
+            ->first();
+
+        return view('expenses.show', compact('credit', 'latestWhatsAppNotification'));
     }
 
     public function edit(Credit $credit)
@@ -312,10 +319,16 @@ class ExpenseController extends Controller
         }
 
         if ($notification->status === 'pending') {
-            return back()->with('warning', 'No se pudo enviar automáticamente: falta configurar CALLMEBOT_API_KEY en .env.');
+            return back()->with('warning', 'El mensaje quedó pendiente porque no hay un proveedor de WhatsApp configurado en el hosting.');
         }
 
-        return back()->withErrors(['whatsapp' => 'No se pudo enviar el recordatorio por WhatsApp. Revisa la configuración/API.']);
+        $detail = trim((string) $notification->error_message);
+        $message = 'No se pudo enviar el recordatorio por WhatsApp.';
+        if ($detail !== '') {
+            $message .= ' Detalle: ' . $detail;
+        }
+
+        return back()->with('error', $message);
     }
 
     public function destroy(Credit $credit)

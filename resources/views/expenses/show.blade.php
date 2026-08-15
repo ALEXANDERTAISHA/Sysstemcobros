@@ -69,13 +69,32 @@
                     @endif
 
                     @if ($credit->client->whatsapp)
-                        <div class="mt-3">
+                        <div class="mt-3" id="whatsapp-reminder">
                             <form method="POST" action="{{ route('expenses.send-reminder', $credit) }}">
                                 @csrf
                                 <button type="submit" class="btn btn-success btn-block">
                                     <i class="fab fa-whatsapp mr-1"></i> Enviar recordatorio WhatsApp
                                 </button>
                             </form>
+
+                            @if ($latestWhatsAppNotification)
+                                @php
+                                    $whatsAppStatus = [
+                                        'sent' => ['success', 'Enviado'],
+                                        'failed' => ['danger', 'Fallido'],
+                                        'pending' => ['warning', 'Pendiente'],
+                                    ][$latestWhatsAppNotification->status] ?? ['secondary', $latestWhatsAppNotification->status];
+                                @endphp
+                                <div class="alert alert-{{ $whatsAppStatus[0] }} mt-2 mb-0 py-2">
+                                    <strong>Último intento: {{ $whatsAppStatus[1] }}.</strong>
+                                    @if ($latestWhatsAppNotification->provider)
+                                        Proveedor: {{ ucfirst($latestWhatsAppNotification->provider) }}.
+                                    @endif
+                                    @if ($latestWhatsAppNotification->error_message)
+                                        <div class="mt-1">Detalle: {{ $latestWhatsAppNotification->error_message }}</div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
