@@ -539,6 +539,9 @@ class OtherIncomeController extends Controller
 
         $total = 0.0;
         $creditsPaid = 0;
+        $paymentAmountsByClient = $pendingDebts
+            ->groupBy('client_id')
+            ->map(fn ($clientCredits) => (float) $clientCredits->sum(fn (Credit $credit) => (float) $credit->balance));
 
         DB::transaction(function () use ($pendingDebts, $date, &$total, &$creditsPaid) {
             $company = $this->zelleCompany();
@@ -576,6 +579,15 @@ class OtherIncomeController extends Controller
                 $creditsPaid++;
             }
         });
+
+        $pendingDebts
+            ->groupBy('client_id')
+            ->each(function ($clientCredits, $clientId) use ($paymentAmountsByClient) {
+                $client = $clientCredits->first()->client;
+                $totalPaid = (float) ($paymentAmountsByClient->get($clientId) ?? 0);
+
+                $this->sendPaymentConfirmation($client, $clientCredits->first(), $totalPaid, 0.0);
+            });
 
         return $this->zelleCollectionResponse(
             $request,
