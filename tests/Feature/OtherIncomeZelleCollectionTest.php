@@ -12,11 +12,54 @@ use App\Models\OtherIncome;
 use App\Models\User;
 use App\Services\FinancialSummaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class OtherIncomeZelleCollectionTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_partial_collection_sends_the_payment_confirmation_template_with_remaining_balance(): void
+    {
+        [$branch, $company, $client, $user] = $this->baseData();
+        $client->update(['whatsapp' => '+593988000222']);
+        $credit = Credit::create([
+            'branch_id' => $branch->id,
+            'client_id' => $client->id,
+            'company_id' => $company->id,
+            'concept' => 'Débito de prueba',
+            'total_amount' => 150,
+            'paid_amount' => 0,
+            'granted_date' => '2026-05-06',
+            'status' => 'active',
+        ]);
+
+        config()->set('services.whatchimp', [
+            'api_token' => 'test-token',
+            'phone_number_id' => '123456789',
+            'template_id' => '432022',
+            'payment_template_id' => '432038',
+            'template_endpoint' => 'https://app.whatchimp.com/api/v1/whatsapp/send/template',
+        ]);
+        config()->set('services.meta_whatsapp', ['token' => '', 'phone_number_id' => '']);
+        config()->set('services.twilio_whatsapp', ['account_sid' => '', 'auth_token' => '', 'from' => '']);
+        config()->set('services.callmebot.api_key', '');
+        Http::fake(['app.whatchimp.com/*' => Http::response([
+            'status' => '1',
+            'wa_message_id' => 'wamid.payment-test',
+        ])]);
+
+        $this->actingAs($user)->post(route('other-incomes.collect-debit'), [
+            'credit_id' => $credit->id,
+            'payment_date' => '2026-05-07',
+            'amount' => 50,
+        ])->assertRedirect(route('other-incomes.index', ['date' => '2026-05-07']));
+
+        Http::assertSent(fn ($request) => $request['template_id'] === '432038'
+            && $request['templateVariable-nombrecliente-1'] === 'Cesar Guzman'
+            && str_contains($request['templateVariable-detallesolicitud-2'], 'Pago recibido: $50.00.')
+            && str_contains($request['templateVariable-detallesolicitud-2'], 'Saldo pendiente: $100.00.'));
+    }
 
     public function test_partial_zelle_collection_keeps_remaining_balance_in_pending_followup(): void
     {

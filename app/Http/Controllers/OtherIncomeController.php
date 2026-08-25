@@ -242,7 +242,9 @@ class OtherIncomeController extends Controller
             return back()->withErrors(['amount' => 'El cobro no puede superar el saldo pendiente de $' . number_format($remaining, 2)]);
         }
 
-        DB::transaction(function () use ($credit, $data, $amount) {
+        $newBalance = 0.0;
+
+        DB::transaction(function () use ($credit, $data, $amount, &$newBalance) {
             $this->zelleCompany();
             $newPaid = (float) $credit->paid_amount + $amount;
             $newStatus = $newPaid >= (float) $credit->total_amount ? 'paid' : 'partial';
@@ -258,6 +260,7 @@ class OtherIncomeController extends Controller
                 'paid_amount' => min($newPaid, (float) $credit->total_amount),
                 'status' => $newStatus,
             ]);
+            $newBalance = max((float) $credit->total_amount - $newPaid, 0);
 
             OtherIncome::create([
                 'income_date' => $data['payment_date'],
@@ -269,6 +272,8 @@ class OtherIncomeController extends Controller
                 'notes' => $data['notes'] ?? 'Cobro realizado via ZELLE desde seguimiento de debitos.',
             ]);
         });
+
+        $this->sendPaymentConfirmation($credit->client, $credit, $amount, $newBalance);
 
         return redirect()
             ->route('other-incomes.index', ['date' => $data['payment_date']])
@@ -360,24 +365,8 @@ class OtherIncomeController extends Controller
             }
         }
 
-        if ($client && !empty($client->whatsapp)) {
-            $statusText = $newStatus === 'paid' ? 'PAGADO' : 'PAGO PARCIAL';
-            $waMessage = "Estimado/a {$client->name}, gracias por su pago de $" . number_format((float) $data['amount'], 2)
-                . " correspondiente a '{$credit->concept}'. "
-                . "Saldo restante: $" . number_format($newBalance, 2) . ". "
-                . "Estado actual: {$statusText}.";
-
-            $waNotification = $this->whatsApp->send(
-                $client->whatsapp,
-                $waMessage,
-                $client->name,
-                Credit::class,
-                $credit->id
-            );
-
-            if ($waNotification->status === 'sent') {
-                $notifiedChannels[] = 'WhatsApp';
-            }
+        if ($this->sendPaymentConfirmation($client, $credit, (float) $data['amount'], $newBalance)) {
+            $notifiedChannels[] = 'WhatsApp';
         }
 
         $successMessage = 'Cobro registrado y aplicado al débito correctamente.';
@@ -411,7 +400,7 @@ class OtherIncomeController extends Controller
             collect(preg_split('/\s+/', $clientSearch) ?: [])->filter()->values()
         );
 
-        $matchedClients = $matchedClientsQuery->orderBy('name')->get(['id', 'name']);
+        $matchedClients = $matchedClientsQuery->orderBy('name')->get(['id', 'name', 'whatsapp']);
 
         if ($matchedClients->isEmpty()) {
             return redirect()->route('other-incomes.index', [
@@ -494,6 +483,8 @@ class OtherIncomeController extends Controller
                 $creditsPaid++;
             }
         });
+
+        $this->sendPaymentConfirmation($client, $credits->first(), $totalCollected, 0.0);
 
         return redirect()->route('other-incomes.index', [
             'date' => $paymentDate,
@@ -610,6 +601,28 @@ class OtherIncomeController extends Controller
             'client_search' => $clientSearch,
             'branch_id' => $branchId,
         ])->with($ok ? 'success' : $level, $message);
+    }
+
+    private function sendPaymentConfirmation(?Client $client, Credit $credit, float $amount, float $balance): bool
+    {
+        if (!$client || empty($client->whatsapp)) {
+            return false;
+        }
+
+        $detail = 'Pago recibido: $' . number_format($amount, 2) . '.'
+            . ($balance > 0
+                ? ' Saldo pendiente: $' . number_format($balance, 2) . '.'
+                : ' Su saldo pendiente es $0.00.');
+
+        $notification = $this->whatsApp->sendPaymentConfirmation(
+            $client->whatsapp,
+            $detail,
+            $client->name,
+            Credit::class,
+            $credit->id,
+        );
+
+        return $notification?->status === 'sent';
     }
 
     private function zelleCompany(): Company

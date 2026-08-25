@@ -12,7 +12,7 @@ class WhatsAppService
      * Send a WhatsApp message using CallMeBot API (free, no account needed).
      * User must first add the bot: https://www.callmebot.com/blog/free-api-whatsapp-messages/
      */
-    public function send(string $phone, string $message, ?string $name = null, ?string $relatedType = null, ?int $relatedId = null): WhatsappNotification
+    public function send(string $phone, string $message, ?string $name = null, ?string $relatedType = null, ?int $relatedId = null, ?string $whatChimpTemplateId = null): WhatsappNotification
     {
         $normalizedPhone = $this->normalizePhone($phone);
         $appName = (string) config('app.name', 'Systemcobros');
@@ -33,7 +33,7 @@ class WhatsAppService
         $metaPhoneNumberId = (string) config('services.meta_whatsapp.phone_number_id', '');
         $metaTemplate = (string) config('services.meta_whatsapp.template_name', '');
 
-        if ($metaToken !== '' && $metaPhoneNumberId !== '' && $metaTemplate !== '') {
+        if ($whatChimpTemplateId === null && $metaToken !== '' && $metaPhoneNumberId !== '' && $metaTemplate !== '') {
             $metaResult = $this->sendViaMetaCloud(
                 $normalizedPhone,
                 $finalMessage,
@@ -69,7 +69,7 @@ class WhatsAppService
         // 2) Try WhatChimp when configured.
         $whatChimpToken = (string) config('services.whatchimp.api_token', '');
         $whatChimpPhoneNumberId = (string) config('services.whatchimp.phone_number_id', '');
-        $whatChimpTemplateId = (string) config('services.whatchimp.template_id', '');
+        $whatChimpTemplateId ??= (string) config('services.whatchimp.template_id', '');
 
         if ($whatChimpToken !== '' && $whatChimpPhoneNumberId !== '' && $whatChimpTemplateId !== '') {
             $whatChimpResult = $this->sendViaWhatChimp(
@@ -181,6 +181,23 @@ class WhatsAppService
         ]);
 
         return $notification;
+    }
+
+    /**
+     * Send the dedicated approved template for payment confirmations.
+     * Returns null until that template is configured in the environment.
+     */
+    public function sendPaymentConfirmation(string $phone, string $message, ?string $name = null, ?string $relatedType = null, ?int $relatedId = null): ?WhatsappNotification
+    {
+        $templateId = trim((string) config('services.whatchimp.payment_template_id', ''));
+
+        if ($templateId === '') {
+            Log::warning('WhatsApp payment confirmation was skipped because no payment template is configured.');
+
+            return null;
+        }
+
+        return $this->send($phone, $message, $name, $relatedType, $relatedId, $templateId);
     }
 
     private function sendViaWhatChimp(

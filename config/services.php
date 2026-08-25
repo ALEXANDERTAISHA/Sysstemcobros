@@ -45,6 +45,7 @@ return [
         'phone_number_id' => env('WHATCHIMP_PHONE_NUMBER_ID', ''),
         'template_name' => env('WHATCHIMP_TEMPLATE_NAME', ''),
         'template_id' => env('WHATCHIMP_TEMPLATE_ID', ''),
+        'payment_template_id' => env('WHATCHIMP_PAYMENT_TEMPLATE_ID', ''),
         'template_language' => env('WHATCHIMP_TEMPLATE_LANGUAGE', 'es'),
         'endpoint' => env('WHATCHIMP_API_URL', 'https://app.whatchimp.com/api/v1/whatsapp/send'),
         'template_endpoint' => env('WHATCHIMP_TEMPLATE_API_URL', 'https://app.whatchimp.com/api/v1/whatsapp/send/template'),
