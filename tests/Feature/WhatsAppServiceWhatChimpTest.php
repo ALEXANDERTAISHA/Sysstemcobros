@@ -39,8 +39,8 @@ class WhatsAppServiceWhatChimpTest extends TestCase
                 && $request['phone_number_id'] === '123456789'
                 && $request['phone_number'] === '573001234567'
                 && $request['template_id'] === '424860'
-                && $request['templateVariable-nombreCliente-1'] === 'Ana'
-                && str_contains($request['templateVariable-detalleNotificacion-2'], 'Tu pago fue recibido.');
+                && $request['templateVariable-nombrecliente-1'] === 'Ana'
+                && str_contains($request['templateVariable-detallesolicitud-2'], 'Tu pago fue recibido.');
         });
     }
 
@@ -84,8 +84,8 @@ class WhatsAppServiceWhatChimpTest extends TestCase
         );
 
         Http::assertSent(function ($request) {
-            return $request['templateVariable-nombreCliente-1'] === 'Ana Pérez'
-                && $request['templateVariable-detalleNotificacion-2'] === '[Systemcobros] Primera línea. Segunda línea. Fin.';
+            return $request['templateVariable-nombrecliente-1'] === 'Ana Pérez'
+                && $request['templateVariable-detallesolicitud-2'] === '[Systemcobros] Primera línea. Segunda línea. Fin.';
         });
     }
 

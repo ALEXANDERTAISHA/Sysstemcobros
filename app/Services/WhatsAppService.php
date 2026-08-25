@@ -203,8 +203,10 @@ class WhatsAppService
                     'apiToken' => $apiToken,
                     'phone_number_id' => $phoneNumberId,
                     'template_id' => $templateId,
-                    'templateVariable-nombreCliente-1' => $this->sanitizeTemplateVariable($name ?: 'Cliente'),
-                    'templateVariable-detalleNotificacion-2' => $this->sanitizeTemplateVariable($message),
+                    // The WhatChimp template `recordatorio_pago_karinita` uses
+                    // these custom-variable names, in the same order as its body.
+                    'templateVariable-nombrecliente-1' => $this->sanitizeTemplateVariable($name ?: 'Cliente'),
+                    'templateVariable-detallesolicitud-2' => $this->sanitizeTemplateVariable($message),
                     'phone_number' => $this->providerPhone($normalizedPhone),
                 ]);
 
