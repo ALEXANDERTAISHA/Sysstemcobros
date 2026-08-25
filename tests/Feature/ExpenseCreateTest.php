@@ -9,11 +9,50 @@ use App\Models\Credit;
 use App\Models\OtherIncome;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class ExpenseCreateTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_creating_a_debt_does_not_send_a_whatsapp_notification(): void
+    {
+        $user = User::factory()->create(['role' => 'super_admin']);
+        CashBoxInitial::create([
+            'date' => today()->toDateString(),
+            'initial_amount' => 1,
+        ]);
+        $client = Client::create([
+            'name' => 'Cliente sin aviso de deuda',
+            'whatsapp' => '+593988000222',
+            'is_active' => true,
+        ]);
+        $company = Company::create([
+            'name' => 'Empresa de prueba',
+            'code' => 'PRU',
+            'color' => '#123456',
+            'is_active' => true,
+            'company_type' => Company::TYPE_EXPENSE_DEBIT,
+        ]);
+
+        config()->set('services.whatchimp', [
+            'api_token' => 'test-token',
+            'phone_number_id' => '123456789',
+            'template_id' => '432022',
+        ]);
+        Http::fake();
+
+        $this->actingAs($user)->post(route('expenses.store'), [
+            'client_id' => $client->id,
+            'company_id' => $company->id,
+            'concept' => 'Débito sin notificación',
+            'total_amount' => 25,
+            'granted_date' => '2026-05-25',
+        ])->assertRedirect(route('dashboard'));
+
+        Http::assertNothingSent();
+    }
 
     public function test_productos_de_la_tienda_credit_can_be_created_without_due_date_and_with_notes(): void
     {
